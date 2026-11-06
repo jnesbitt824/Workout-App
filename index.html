@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Solo Leveling Daily Quest Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        system: {
+                            950: '#1a212d', // Soft Blueish Grey
+                            900: '#212936', // Primary Card Surface
+                            850: '#273142', // Elevated Element
+                            800: '#313d52', // Hover / Secondary Accent
+                            border: '#3b4961', // Crisp Slate Edge
+                            accent: '#a78bfa', // Glow Purple
+                            neon: '#38bdf8',   // Neon Cyan Glow
+                            glow: '#00f0ff'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['Courier New', 'monospace'],
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a212d;
+            color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .system-font { font-family: 'Share Tech Mono', monospace; }
+        .system-title { font-family: 'Cinzel', serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .btn-active:active { transform: scale(0.96); opacity: 0.9; }
+        .timer-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .quest-box-pulse {
+            animation: systemPulse 2.5s infinite alternate ease-in-out;
+        }
+        @keyframes systemPulse {
+            0% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.25), inset 0 0 10px rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); }
+            100% { box-shadow: 0 0 25px rgba(167, 139, 250, 0.5), inset 0 0 15px rgba(167, 139, 250, 0.25); border-color: rgba(167, 139, 250, 0.8); }
+        }
+        .loading-bar {
+            animation: loadingProgress 2.5s ease-in-out forwards;
+        }
+        @keyframes loadingProgress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+    </style>
+
+    <!-- Firebase SDK Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-SoloLevelingAppKeyDummy123456",
+            authDomain: "solo-leveling-tracker.firebaseapp.com",
+            projectId: "solo-leveling-tracker",
+            storageBucket: "solo-leveling-tracker.appspot.com",
+            messagingSenderId: "998877665544",
+            appId: "1:998877665544:web:abcd1234efgh5678"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+
+            window.syncHunterToLeaderboard = async function() {
+                if (!window.appState || !window.appState.hunterName) return;
+                const uid = window.appState.hunterId || ('hunter_' + Math.random().toString(36).substring(2, 9));
+                window.appState.hunterId = uid;
+                if (window.saveStateToStorage) window.saveStateToStorage();
+
+                try {
+                    await setDoc(doc(db, "leaderboard", uid), {
+                        name: window.appState.hunterName,
+                        level: window.appState.playerLevel || 1,
+                        xp: window.appState.playerXP || 0,
+                        questsCompleted: window.appState.completedQuestsCount || 0,
+                        profileClass: window.appState.profileClass || 'male',
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                } catch(e) { console.log("Firebase sync state:", e.message); }
+            };
+
+            window.initLeaderboardListener = function() {
+                const q = query(collection(db, "leaderboard"), orderBy("level", "desc"), orderBy("xp", "desc"), limit(3));
+                let resolved = false;
+
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const topHunters = [];
+                    snapshot.forEach((doc) => {
+                        topHunters.push(doc.data());
+                    });
+                    resolved = true;
+                    if (window.renderLeaderboard) window.renderLeaderboard(topHunters);
+                }, (error) => {
+                    if (!resolved && window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
+                });
+
+                setTimeout(() => {
+                    if (!resolved && window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
+                }, 1200);
+            };
+        } catch(err) {
+            console.log("Firebase fallback mode enabled");
+            window.syncHunterToLeaderboard = function() {};
+            window.initLeaderboardListener = function() {
+                if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
+            };
+        }
+    </script>
+</head>
+<body class="bg-system-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased pb-20 selection:bg-system-neon selection:text-system-950">
+
+    <!-- SPLASH SCREEN OVERLAY (TIMED) -->
+    <div id="splash-screen" class="fixed inset-0 z-50 bg-system-950 flex flex-col items-center justify-center p-6 text-center font-mono space-y-8 transition-opacity duration-700 opacity-100">
+        <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-purple-700 via-system-accent to-system-neon flex items-center justify-center text-system-950 text-3xl font-black shadow-2xl quest-box-pulse">
+            <i class="fa-solid fa-atom"></i>
+        </div>
+        <div class="space-y-2">
+            <span class="text-[11px] text-system-neon uppercase font-bold tracking-widest">[ SYSTEM BOOT SEQUENCE ]</span>
+            <h1 class="text-2xl font-black text-white system-title">SOLO LEVELING</h1>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto">Daily Quest & Dungeons Protocol v4.0</p>
+        </div>
+        
+        <!-- Loading Animation -->
+        <div class="w-full max-w-[160px] space-y-2 mt-4">
+            <div class="w-full h-1 bg-system-900 rounded-full overflow-hidden">
+                <div class="h-full bg-system-neon loading-bar rounded-full shadow-[0_0_8px_#38bdf8]"></div>
+            </div>
+            <p class="text-[9px] text-system-neon uppercase tracking-widest font-bold animate-pulse">Initializing System Link...</p>
+        </div>
+
+        <!-- Developer Credit -->
+        <div class="absolute bottom-8 text-[10px] text-slate-500 font-bold tracking-widest uppercase">
+            Developed by <span class="text-system-neon">Omighty AI</span>
+        </div>
+    </div>
+
+    <!-- TIMEOUT WARNING OVERLAY -->
+    <div id="timeout-warning-overlay" class="fixed inset-0 z-[60] bg-rose-950/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center font-mono opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="absolute inset-0 border-[12px] border-rose-600 animate-pulse pointer-events-none"></div>
+        <i class="fa-solid fa-triangle-exclamation text-7xl text-rose-500 mb-6 animate-bounce"></i>
+        <h1 class="text-4xl font-black text-white system-title mb-2 tracking-widest text-rose-500 drop-shadow-[0_0_15px_rgba(244,63,94,0.8)]">TIME UP</h1>
+        <p class="text-rose-300 mb-10 font-bold text-sm tracking-widest">[ REST PROTOCOL CONCLUDED ]</p>
+        <button onclick="dismissTimeoutWarning()" class="btn-active bg-rose-600 hover:bg-rose-500 text-white font-black text-lg px-8 py-3.5 rounded-xl border-2 border-rose-400 shadow-[0_0_20px_rgba(225,29,72,0.5)] cursor-pointer tracking-wider">
+            ACKNOWLEDGE
+        </button>
+    </div>
+
+    <!-- Header / System Notification Bar -->
+    <header class="sticky top-0 z-40 bg-system-900/90 backdrop-blur-md border-b border-system-border px-4 py-3 pt-safe font-mono">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2.5">
+                <div onclick="openProfileDrawer()" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-700 via-system-accent to-system-neon flex items-center justify-center text-system-950 shadow-md border border-purple-300/40 cursor-pointer">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+                <div>
+                    <div onclick="openProfileDrawer()" class="cursor-pointer flex items-center gap-1.5 group">
+                        <span id="player-rank" class="bg-system-accent/20 border border-system-accent/60 text-system-glow text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider group-hover:border-system-neon">E-RANK</span>
+                        <h1 id="header-username" class="font-black tracking-widest text-white uppercase truncate max-w-[140px] text-xs">SUNG JIN-WOO</h1>
+                    </div>
+                    <p class="text-[9px] text-system-neon/90 uppercase tracking-widest font-semibold flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> SYSTEM ACTIVE
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button onclick="openSettingsModal()" class="btn-active bg-system-800 hover:bg-system-850 border border-system-border text-system-glow text-xs p-2 rounded-xl font-mono shadow-sm cursor-pointer" title="System Settings">
+                    <i class="fa-solid fa-gear text-system-neon text-sm"></i>
+                </button>
+                <button id="open-timer-btn" class="btn-active flex items-center space-x-1.5 bg-system-800 hover:bg-system-850 border border-system-border text-system-glow text-xs px-3 py-1.5 rounded-xl font-mono shadow-sm cursor-pointer">
+                    <i class="fa-regular fa-clock text-system-neon"></i>
+                    <span id="timer-badge">01:30</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- SIDE-PANE PROFILE DRAWER -->
+    <div id="profile-drawer-backdrop" onclick="closeProfileDrawer()" class="fixed inset-0 z-50 bg-system-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    <div id="profile-drawer" class="fixed top-0 left-0 bottom-0 z-50 w-72 bg-system-900 border-r border-system-border/80 shadow-2xl p-5 -translate-x-full transition-transform duration-300 ease-in-out flex flex-col justify-between font-mono">
+        <div class="space-y-5">
+            <div class="flex justify-between items-center border-b border-system-border/50 pb-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-id-card text-system-neon"></i>
+                    <span class="text-xs font-black text-white uppercase tracking-wider">HUNTER LICENSE</span>
+                </div>
+                <button onclick="closeProfileDrawer()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Profile Summary Card -->
+            <div class="bg-system-950 border border-system-border/60 rounded-2xl p-4 text-center space-y-2 relative overflow-hidden">
+                <div class="w-12 h-12 mx-auto rounded-full bg-gradient-to-tr from-purple-600 to-system-neon flex items-center justify-center text-system-950 text-xl font-black shadow-lg">
+                    <i class="fa-solid fa-user-ninja"></i>
+                </div>
+                <div>
+                    <h3 id="drawer-username" class="font-black text-sm text-white uppercase truncate">SUNG JIN-WOO</h3>
+                    <div id="drawer-profile-title" class="text-[10px] text-system-neon font-bold uppercase mt-0.5">NOVICE HUNTER</div>
+                </div>
+                <div class="flex justify-center items-center gap-2 pt-1">
+                    <span id="drawer-rank" class="bg-system-accent/20 border border-system-accent/60 text-system-glow text-[10px] font-black px-2 py-0.5 rounded uppercase">E-RANK</span>
+                    <span class="text-[10px] text-slate-400">LVL <strong id="drawer-level" class="text-white">1</strong></span>
+                </div>
+            </div>
+
+            <!-- Quick Stats Overview -->
+            <div class="space-y-2">
+                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">EXP STATUS</span>
+                <div class="bg-system-950 p-3 rounded-xl border border-system-border/40 space-y-1.5">
+                    <div class="flex justify-between text-[11px]">
+                        <span class="text-slate-400">Current XP</span>
+                        <span class="text-system-neon font-bold"><span id="drawer-xp">0</span> / <span id="drawer-next-xp">100</span> XP</span>
+                    </div>
+                    <div class="w-full h-2 bg-system-900 rounded-full overflow-hidden">
+                        <div id="drawer-xp-bar" class="h-full bg-gradient-to-r from-purple-600 to-system-neon rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">HUNTER RECORDS</span>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 text-center">
+                        <div class="text-[9px] text-slate-400 uppercase">Quests Cleared</div>
+                        <div id="drawer-quests-count" class="font-black text-system-glow text-base mt-0.5">0</div>
+                    </div>
+                    <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 text-center">
+                        <div class="text-[9px] text-slate-400 uppercase">Pull-ups (Today)</div>
+                        <div id="drawer-pullups-count" class="font-black text-emerald-400 text-base mt-0.5">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="closeProfileDrawer(); openSettingsModal();" class="btn-active w-full py-2.5 bg-system-800 hover:bg-system-850 border border-system-border text-system-glow text-xs font-bold rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
+            <i class="fa-solid fa-gear text-system-neon"></i>
+            <span>SYSTEM CONFIGURATION</span>
+        </button>
+    </div>
+
+    <!-- FIRST-LAUNCH INITIALIZATION MODAL -->
+    <div id="init-modal" class="fixed inset-0 z-50 bg-system-950/95 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-system-900 border-2 border-system-accent rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl font-mono space-y-4">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-purple-700 to-system-neon flex items-center justify-center text-system-950 text-2xl font-black shadow-lg">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+                <span class="text-[10px] text-system-neon uppercase font-bold tracking-widest">[ SYSTEM ASSIGNMENT ]</span>
+                <h2 class="text-xl font-black text-white system-title mt-1">SELECT HUNTER PROFILE</h2>
+                <p class="text-xs text-slate-400 mt-1">Choose your physical parameters to calibrate daily quests & vitals.</p>
+            </div>
+
+            <!-- Hunter Alias Input -->
+            <div class="text-left space-y-1 bg-system-950 p-3 rounded-2xl border border-system-border">
+                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Hunter Alias (Name)</label>
+                <input type="text" id="init-username-input" placeholder="e.g. Sung Jin-Woo" class="w-full bg-system-900 border border-system-border/80 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-system-neon">
+            </div>
+
+            <div class="space-y-2.5 text-left">
+                <button onclick="selectProfileClass('male')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
+                    <div class="w-9 h-9 rounded-xl bg-purple-600/30 text-purple-300 flex items-center justify-center text-base"><i class="fa-solid fa-mars"></i></div>
+                    <div>
+                        <div class="text-xs font-black text-white">SHADOW MONARCH (MALE)</div>
+                        <div class="text-[10px] text-slate-400">34yo • 160 lbs • Full Workout Routine</div>
+                    </div>
+                </button>
+                <button onclick="selectProfileClass('female')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
+                    <div class="w-9 h-9 rounded-xl bg-pink-600/30 text-pink-300 flex items-center justify-center text-base"><i class="fa-solid fa-venus"></i></div>
+                    <div>
+                        <div class="text-xs font-black text-white">SHADOW ASSASSIN (FEMALE)</div>
+                        <div class="text-[10px] text-slate-400">29yo • 115 lbs • Customized Growth Scaling</div>
+                    </div>
+                </button>
+                <button onclick="selectProfileClass('child')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
+                    <div class="w-9 h-9 rounded-xl bg-cyan-600/30 text-cyan-300 flex items-center justify-center text-base"><i class="fa-solid fa-child font-black"></i></div>
+                    <div>
+                        <div class="text-xs font-black text-white">SHADOW APPRENTICE (CHILD)</div>
+                        <div class="text-[10px] text-slate-400">13yo Boy • Scaled Quests & Vitals</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SYSTEM SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 z-50 bg-system-950/85 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-system-900 border border-system-border rounded-3xl p-5 w-full max-w-xs font-mono space-y-4 shadow-2xl relative">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-gear text-system-neon text-base"></i>
+                <h3 class="text-sm font-black text-white uppercase tracking-wider">SYSTEM CONFIGURATION</h3>
+            </div>
+
+            <!-- Hunter Username Change -->
+            <div class="space-y-1.5 pt-2 border-t border-system-border/60">
+                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Hunter Alias (Name)</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="settings-username-input" class="flex-1 bg-system-950 border border-system-border rounded-xl px-3 py-2 text-xs text-white font-bold focus:outline-none focus:border-system-neon">
+                    <button onclick="updateHunterName(document.getElementById('settings-username-input').value)" class="btn-active bg-system-accent text-system-950 font-black text-xs px-3 rounded-xl cursor-pointer">SAVE</button>
+                </div>
+            </div>
+
+            <!-- Active Profile Class Changer -->
+            <div class="space-y-2 pt-2 border-t border-system-border/60">
+                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Switch Hunter Class</label>
+                <div class="grid grid-cols-3 gap-1.5 text-xs">
+                    <button onclick="setProfileClass('male')" id="profile-btn-male" class="py-2 rounded-xl border border-system-border text-[11px] font-bold text-slate-300 cursor-pointer">Male</button>
+                    <button onclick="setProfileClass('female')" id="profile-btn-female" class="py-2 rounded-xl border border-system-border text-[11px] font-bold text-slate-300 cursor-pointer">Female</button>
+                    <button onclick="setProfileClass('child')" id="profile-btn-child" class="py-2 rounded-xl border border-system-border text-[11px] font-bold text-slate-300 cursor-pointer">Child</button>
+                </div>
+            </div>
+
+            <!-- Daily Midnight Force Trigger -->
+            <div class="pt-2 border-t border-system-border/60 space-y-2">
+                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Daily Reset Engine</label>
+                <button onclick="forceMidnightReset()" class="btn-active w-full py-2.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
+                    <i class="fa-solid fa-rotate text-xs"></i>
+                    <span>FORCE MIDNIGHT RESET NOW</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Containers -->
+    <main class="max-w-md mx-auto w-full flex-1 px-4 py-4 space-y-4">
+
+        <!-- TAB 1: DAILY QUEST & PENALTY SYSTEM -->
+        <section id="tab-quest" class="space-y-4">
+            
+            <!-- Combined Pulsing Daily Quest Notification & Penalty Warning -->
+            <div class="bg-system-900 border border-system-neon rounded-2xl p-4 quest-box-pulse space-y-3 relative overflow-hidden font-mono">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-system-accent/20 border border-system-accent/60 text-system-glow text-[9px] font-bold uppercase px-2 py-0.5 rounded-md">[ DAILY QUEST NOTIFICATION ]</span>
+                        </div>
+                        <h2 class="text-base font-black text-white uppercase tracking-wider system-title mt-1.5 flex items-center gap-2">
+                            <span>PREPARATIONS TO BECOME STRONG</span>
+                        </h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] text-rose-400 font-bold uppercase block tracking-wider animate-pulse">CUTOFF: 12:01 AM</span>
+                    </div>
+                </div>
+
+                <!-- Daily Quest Progress Grid -->
+                <div id="quest-items-grid" class="space-y-2.5 pt-1"></div>
+
+                <!-- System Warning Banner -->
+                <div class="bg-rose-950/40 border border-rose-500/40 rounded-xl p-3 flex items-start space-x-2.5">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm mt-0.5 animate-pulse"></i>
+                    <p class="text-[11px] text-rose-200/90 leading-tight">
+                        <strong class="text-rose-400 uppercase font-black">WARNING:</strong> FAILURE TO COMPLETE THE DAILY QUEST BEFORE 12:01 AM WILL TRIGGER THE PENALTY ZONE PROTOCOL.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Daily Quest Quick Action Controls -->
+            <div class="bg-system-900 border border-system-border rounded-2xl p-4 font-mono space-y-3">
+                <h3 class="text-xs font-bold text-system-neon uppercase tracking-wider">LOG DAILY QUEST PROGRESS</h3>
+                <div id="quest-buttons-container" class="grid grid-cols-2 gap-2 text-xs"></div>
+            </div>
+
+            <!-- Complete Daily Quest Action Button -->
+            <button onclick="claimDailyQuestReward()" id="claim-quest-btn" class="btn-active w-full py-3.5 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-cyan-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer">
+                <i class="fa-solid fa-award text-base"></i>
+                <span>CLAIM DAILY QUEST REWARDS (+100 XP)</span>
+            </button>
+        </section>
+
+        <!-- TAB 2: VITALS & ENERGY INTAKE -->
+        <section id="tab-vitals" class="space-y-4 hidden">
+            <!-- Hydration Tracker Card -->
+            <div class="bg-system-900 border border-system-border rounded-2xl p-4 space-y-3 font-mono">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] text-system-neon uppercase font-bold tracking-wider">[ MANA RECOVERY ]</span>
+                        <h3 class="text-base font-extrabold text-slate-100 system-title">HYDRATION INTAKE</h3>
+                    </div>
+                    <div class="text-right">
+                        <span id="water-current" class="text-2xl font-black text-system-neon">0</span>
+                        <span class="text-xs text-slate-400">/ <span id="water-target">105</span> oz</span>
+                    </div>
+                </div>
+                <div class="w-full h-3 bg-system-950 rounded-full overflow-hidden p-0.5 border border-system-border">
+                    <div id="water-progress-bar" class="h-full bg-gradient-to-r from-sky-500 to-system-neon rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="addWater(8)" class="btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-200 cursor-pointer">+8 oz</button>
+                    <button onclick="addWater(16)" class="btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-200 cursor-pointer">+16 oz</button>
+                    <button onclick="resetWater()" class="btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-400 cursor-pointer">Reset</button>
+                </div>
+            </div>
+
+            <!-- Calorie & Meal Tracker Card -->
+            <div class="bg-system-900 border border-system-border rounded-2xl p-4 space-y-3 font-mono">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] text-system-neon uppercase font-bold tracking-wider">[ ENERGY RECOVERY ]</span>
+                        <h3 class="text-base font-extrabold text-slate-100 system-title">CALORIE INTAKE</h3>
+                    </div>
+                    <div class="text-right">
+                        <span id="cal-current" class="text-2xl font-black text-system-glow">0</span>
+                        <span class="text-xs text-slate-400">/ <span id="cal-target">2450</span> kcal</span>
+                    </div>
+                </div>
+
+                <!-- Add Meal Input -->
+                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-system-border/60">
+                    <select id="meal-type" class="bg-system-950 border border-system-border text-xs rounded-xl px-2 py-2 text-slate-200 focus:outline-none">
+                        <option value="Breakfast">Breakfast</option>
+                        <option value="Lunch">Lunch</option>
+                        <option value="Dinner">Dinner</option>
+                        <option value="Snack">Snack</option>
+                    </select>
+                    <input type="number" id="meal-cals" placeholder="kcal (e.g. 500)" class="bg-system-950 border border-system-border text-xs rounded-xl px-2 py-2 text-slate-200 focus:outline-none">
+                    <button onclick="logMeal()" class="btn-active bg-system-neon text-system-950 font-bold text-xs rounded-xl py-2 cursor-pointer">Add Meal</button>
+                </div>
+
+                <!-- Meal History -->
+                <div id="meal-log-list" class="space-y-2 pt-2"></div>
+            </div>
+        </section>
+
+        <!-- TAB 3: DUNGEONS & WORKOUT ROUTINES -->
+        <section id="tab-workout" class="space-y-4 hidden">
+            <!-- Routine Selector -->
+            <div class="bg-system-900 border border-system-border rounded-2xl p-3 shadow-md font-mono">
+                <label class="block text-xs font-semibold text-system-neon uppercase tracking-wider mb-2">Active Training Split</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="switchRoutine('pull')" id="routine-btn-pull" class="routine-tab-btn btn-active py-2 px-2 text-xs font-bold rounded-xl border border-system-neon bg-system-neon/15 text-system-glow flex flex-col items-center justify-center space-y-1 shadow-sm cursor-pointer">
+                        <i class="fa-solid fa-person-pulling"></i>
+                        <span class="truncate w-full text-center">Pull & Arms</span>
+                    </button>
+                    <button onclick="switchRoutine('push')" id="routine-btn-push" class="routine-tab-btn btn-active py-2 px-2 text-xs font-bold rounded-xl border border-system-border bg-system-850 text-slate-400 hover:text-slate-200 flex flex-col items-center justify-center space-y-1 cursor-pointer">
+                        <i class="fa-solid fa-child"></i>
+                        <span class="truncate w-full text-center">Push & Chest</span>
+                    </button>
+                    <button onclick="switchRoutine('calisthenics')" id="routine-btn-calisthenics" class="routine-tab-btn btn-active py-2 px-2 text-xs font-bold rounded-xl border border-system-border bg-system-850 text-slate-400 hover:text-slate-200 flex flex-col items-center justify-center space-y-1 cursor-pointer">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span class="truncate w-full text-center">Legs & Core</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Routine Card Info -->
+            <div class="bg-system-900/80 border border-system-border rounded-xl p-3 flex justify-between items-center font-mono">
+                <div>
+                    <h2 id="routine-title" class="font-bold text-sm text-slate-100">Pull & Arm Hypertrophy</h2>
+                    <p id="routine-desc" class="text-xs text-slate-400">Targeting Lats, Biceps with Pull-Up Bar & 2x 10lb Dumbbells.</p>
+                </div>
+                <button onclick="resetCurrentRoutine()" class="text-xs text-system-neon hover:text-white bg-system-850 px-2.5 py-1 rounded-md border border-system-border cursor-pointer">
+                    <i class="fa-solid fa-rotate-right mr-1"></i>Reset
+                </button>
+            </div>
+
+            <div id="exercise-list-container" class="space-y-4"></div>
+
+            <button onclick="finishWorkout()" class="btn-active w-full py-3.5 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-cyan-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer">
+                <i class="fa-solid fa-circle-check text-base"></i>
+                <span>CLEAR DUNGEON (+50 XP)</span>
+            </button>
+        </section>
+
+        <!-- TAB 4: STATUS & LEADERBOARD -->
+        <section id="tab-stats" class="space-y-4 hidden">
+            <!-- Player Status & Level Card -->
+            <div class="bg-system-900 border border-system-border rounded-2xl p-4 font-mono space-y-3 relative overflow-hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] text-system-neon uppercase font-bold tracking-widest">[ SYSTEM PLAYER STATUS ]</span>
+                        <h2 id="player-title" class="text-lg font-black text-white uppercase tracking-wider system-title mt-0.5">NOVICE HUNTER</h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block font-bold">LEVEL</span>
+                        <span id="player-level" class="text-3xl font-black text-system-glow">1</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">EXP Progress</span>
+                        <span class="text-system-neon font-bold"><span id="player-xp-stats">0</span> / <span id="player-next-xp-stats">100</span> XP</span>
+                    </div>
+                    <div class="w-full h-3 bg-system-950 rounded-full overflow-hidden p-0.5 border border-system-border">
+                        <div id="xp-progress-bar-stats" class="h-full bg-gradient-to-r from-purple-600 via-system-accent to-system-neon rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WEEKLY QUEST COMPLETION CALENDAR -->
+            <div class="bg-system-900 border border-system-border rounded-2xl p-4 font-mono space-y-3">
+                <h3 class="text-xs font-bold text-system-neon uppercase tracking-wider">7-Day Quest Tracker</h3>
+                <div id="weekly-calendar" class="pt-1">
+                    <!-- Calendar populated via JS -->
+                </div>
+            </div>
+
+            <!-- ONLINE HUNTERS LEADERBOARD (TOP 3 REAL PLAYERS) -->
+            <div class="bg-system-900 border border-system-border rounded-2xl p-4 font-mono space-y-3">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-trophy text-amber-400 text-sm"></i>
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider">TOP 3 HUNTERS</h3>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="forceSyncLeaderboard()" class="text-[9px] bg-system-850 hover:bg-system-800 border border-system-border text-system-neon font-bold px-2 py-0.5 rounded flex items-center gap-1 transition cursor-pointer">
+                            <i class="fa-solid fa-rotate text-[8px]"></i> SYNC NOW
+                        </button>
+                    </div>
+                </div>
+
+                <div id="leaderboard-container" class="space-y-2">
+                    <div class="text-center py-4 text-slate-500 text-xs">Connecting to Hunter Association network...</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2.5 font-mono">
+                <div class="bg-system-900 border border-system-border rounded-2xl p-3 text-center">
+                    <div class="text-[9px] text-system-neon uppercase font-semibold">Quests Cleared</div>
+                    <div id="stat-total-quests" class="text-xl font-black text-system-glow mt-1">0</div>
+                </div>
+                <div class="bg-system-900 border border-system-border rounded-2xl p-3 text-center">
+                    <div class="text-[9px] text-system-neon uppercase font-semibold">Dungeons</div>
+                    <div id="stat-total-workouts" class="text-xl font-black text-cyan-300 mt-1">0</div>
+                </div>
+                <div class="bg-system-900 border border-system-border rounded-2xl p-3 text-center">
+                    <div class="text-[9px] text-system-neon uppercase font-semibold">Volume (lbs)</div>
+                    <div id="stat-total-volume" class="text-xl font-black text-purple-300 mt-1">0</div>
+                </div>
+            </div>
+
+            <div class="bg-system-900 border border-system-border rounded-2xl p-4 font-mono">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-xs font-bold text-system-neon uppercase tracking-wider">Dungeon History Log</h3>
+                    <button onclick="clearAllData()" class="text-[10px] text-slate-500 hover:text-rose-400 cursor-pointer">Clear Storage</button>
+                </div>
+                <div id="workout-history-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-system-900/95 backdrop-blur-lg border-t border-system-border pb-safe font-mono">
+        <div class="max-w-md mx-auto grid grid-cols-4 py-2">
+            <button onclick="switchTab('quest')" id="nav-btn-quest" class="nav-tab-btn flex flex-col items-center justify-center space-y-1 text-system-neon cursor-pointer">
+                <i class="fa-solid fa-scroll text-lg"></i>
+                <span class="text-[10px] font-bold">Daily Quest</span>
+            </button>
+            <button onclick="switchTab('vitals')" id="nav-btn-vitals" class="nav-tab-btn flex flex-col items-center justify-center space-y-1 text-slate-500 cursor-pointer">
+                <i class="fa-solid fa-flask text-lg"></i>
+                <span class="text-[10px] font-bold">Vitals</span>
+            </button>
+            <button onclick="switchTab('workout')" id="nav-btn-workout" class="nav-tab-btn flex flex-col items-center justify-center space-y-1 text-slate-500 cursor-pointer">
+                <i class="fa-solid fa-dungeon text-lg"></i>
+                <span class="text-[10px] font-bold">Dungeons</span>
+            </button>
+            <button onclick="switchTab('stats')" id="nav-btn-stats" class="nav-tab-btn flex flex-col items-center justify-center space-y-1 text-slate-500 cursor-pointer">
+                <i class="fa-solid fa-shield-cat text-lg"></i>
+                <span class="text-[10px] font-bold">Status</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Rest Protocol Timer Overlay Modal -->
+    <div id="timer-modal" class="fixed inset-0 z-[55] bg-system-950/85 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300 font-mono">
+        <div class="bg-system-900 border border-system-neon rounded-3xl p-6 w-full max-w-xs text-center shadow-2xl relative">
+            <button onclick="closeTimerModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <h3 class="text-xs font-bold text-system-neon uppercase tracking-wider mb-4">[ SYSTEM REST PROTOCOL ]</h3>
+
+            <div class="relative w-44 h-44 mx-auto mb-6 flex items-center justify-center">
+                <svg class="w-full h-full" viewBox="0 0 100 100">
+                    <circle class="text-system-950" stroke-width="6" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
+                    <circle id="timer-ring" class="text-system-neon timer-ring-circle" stroke-width="6" stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
+                </svg>
+                <div class="absolute flex flex-col items-center">
+                    <span id="timer-display" class="text-4xl font-black text-white">01:30</span>
+                    <span id="timer-status" class="text-[10px] uppercase font-bold text-system-neon">RESTING</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button onclick="startRestTimer(60)" class="btn-active bg-system-850 text-slate-200 text-xs font-bold py-2 rounded-xl border border-system-border cursor-pointer">60s</button>
+                <button onclick="startRestTimer(90)" class="btn-active bg-system-850 text-slate-200 text-xs font-bold py-2 rounded-xl border border-system-border cursor-pointer">90s</button>
+                <button onclick="startRestTimer(120)" class="btn-active bg-system-850 text-slate-200 text-xs font-bold py-2 rounded-xl border border-system-border cursor-pointer">120s</button>
+            </div>
+
+            <div class="flex space-x-2">
+                <button id="timer-toggle-btn" onclick="toggleTimerPause()" class="btn-active flex-1 bg-gradient-to-r from-purple-600 to-system-neon text-system-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-1 shadow-md cursor-pointer">
+                    <i id="timer-toggle-icon" class="fa-solid fa-play"></i>
+                    <span id="timer-toggle-text">Start</span>
+                </button>
+                <button onclick="stopRestTimer()" class="btn-active bg-system-850 text-slate-300 border border-system-border px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Notification Toast Box -->
+    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-[70] bg-system-neon text-system-950 text-xs font-black px-4 py-2.5 rounded-full shadow-lg flex items-center space-x-2 opacity-0 pointer-events-none transition-all duration-300 border border-cyan-200/50 font-mono">
+        <i class="fa-solid fa-shield-cat"></i>
+        <span id="toast-message">System Notification</span>
+    </div>
+
+    <!-- Main JavaScript Logic Engine -->
+    <script>
+        const CLASS_QUEST_CONFIGS = {
+            male: {
+                title: "Shadow Monarch (Male)",
+                quests: { pushups: 25, pullups: 25, squats: 25, runMiles: 0, jumprope: 2000 },
+                targets: { water: 105, cals: 2450 }
+            },
+            female: {
+                title: "Shadow Assassin (Female)",
+                quests: { pushups: 15, pullups: 10, squats: 20, runMiles: 1.0, jumprope: 1000 },
+                targets: { water: 69, cals: 1600 }
+            },
+            child: {
+                title: "Shadow Apprentice (Child)",
+                quests: { pushups: 15, pullups: 10, squats: 15, runMiles: 0, jumprope: 1000 },
+                targets: { water: 70, cals: 1800 }
+            }
+        };
+
+        // Dynamic Equipment & Exercise Progression System based on Level & Class
+        function getPresetRoutines(level, pClass = 'male') {
+            const isMid = level >= 10;
+            const isHigh = level >= 25;
+            const isFem = pClass === 'female';
+
+            // Base variations
+            let pullEx1 = isHigh ? "L-Sit Pull-Ups" : (isMid ? "Archer Pull-Ups" : "Pull-Ups (Wide or Neutral)");
+            if (isFem) pullEx1 = isHigh ? "Pull-Up Negatives" : (isMid ? "Single Pull-Ups (1 Rep Max)" : "Dead Hangs (Secs)");
+
+            let pullEx2 = isHigh ? "Heavy Single-Arm DB Rows" : (isMid ? "DB Renegade Rows" : "Single-Arm DB Row");
+            
+            let pullEx3 = isHigh ? "Muscle-Up Transitions" : (isMid ? "Explosive Pull-Ups" : "Eccentric Pull-Up Negatives");
+            if (isFem) pullEx3 = isHigh ? "Jump Rope Double Unders" : (isMid ? "Jump Rope (Fast Pace)" : "Jump Rope (Basic Rounds)");
+
+            let pullEx4 = isHigh ? "DB Zottman Curls" : (isMid ? "DB Alternating Curls" : "DB Hammer Curls");
+
+            let pushEx1 = isHigh ? "Weighted Dips (DB held)" : (isMid ? "Lean-Forward Dips" : "Station Bodyweight Dips");
+            if (isFem) pushEx1 = isHigh ? "Station Bodyweight Dips" : (isMid ? "Assisted Dip Holds (Secs)" : "Incline / Knee Push-Ups");
+
+            let pushEx2 = isHigh ? "Handstand Push-Up Negatives" : (isMid ? "Decline / Pike Push-Ups" : "Elevated / Incline Push-Ups");
+            if (isFem) pushEx2 = isHigh ? "Weighted Planks (Secs)" : (isMid ? "Plank with Shoulder Taps" : "Forearm Planks (Secs)");
+
+            let pushEx3 = isHigh ? "DB Arnold Press" : (isMid ? "Seated DB Press" : "DB Standing Overhead Press");
+            let pushEx4 = isHigh ? "DB Lateral to Front Raises" : (isMid ? "Isometric Lateral Holds" : "DB Lateral Raises");
+
+            let legEx1 = isHigh ? "Assisted Pistol Squats" : (isMid ? "Bulgarian Split Squats (DB)" : "DB Goblet Squats");
+            
+            let legEx2 = isHigh ? "Toes-to-Bar" : (isMid ? "Hanging Leg Raises" : "Dip Station Knee Raises");
+            if (isFem) legEx2 = isHigh ? "Hanging Knee Tucks" : (isMid ? "Lying Leg Raises" : "Hollow Body Holds (Secs)");
+
+            let legEx3 = isHigh ? "DB Thrusters" : (isMid ? "DB Romanian Deadlifts" : "Bodyweight Walking Lunges");
+
+            // Set Configurations tailored by class
+            let setsPull1 = [{reps: 6, wt: "BW", done: false}, {reps: 5, wt: "BW", done: false}, {reps: 5, wt: "BW", done: false}];
+            if (isFem && !isMid) setsPull1 = [{reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}]; // 30 sec dead hangs
+            else if (isFem && isMid && !isHigh) setsPull1 = [{reps: 1, wt: "BW", done: false}, {reps: 1, wt: "BW", done: false}, {reps: 1, wt: "BW", done: false}]; // 1 rep maxes
+
+            let setsPull3 = [{reps: 4, wt: "BW", done: false}, {reps: 4, wt: "BW", done: false}];
+            if (isFem) setsPull3 = [{reps: 50, wt: "BW", done: false}, {reps: 50, wt: "BW", done: false}, {reps: 50, wt: "BW", done: false}]; // jump rope reps
+            
+            let setsPush1 = [{reps: 8, wt: "BW", done: false}, {reps: 8, wt: "BW", done: false}, {reps: 6, wt: "BW", done: false}];
+            if (isFem && !isHigh) setsPush1 = [{reps: 12, wt: "BW", done: false}, {reps: 12, wt: "BW", done: false}, {reps: 12, wt: "BW", done: false}];
+
+            let setsPush2 = [{reps: 12, wt: "BW", done: false}, {reps: 12, wt: "BW", done: false}, {reps: 12, wt: "BW", done: false}];
+            if (isFem && !isHigh) setsPush2 = [{reps: 45, wt: "BW", done: false}, {reps: 45, wt: "BW", done: false}, {reps: 45, wt: "BW", done: false}]; // 45 sec planks
+
+            let setsLeg2 = [{reps: 12, wt: "BW", done: false}, {reps: 12, wt: "BW", done: false}];
+            if (isFem && !isMid) setsLeg2 = [{reps: 45, wt: "BW", done: false}, {reps: 45, wt: "BW", done: false}]; // time holds
+
+            return {
+                pull: {
+                    title: `Pull & Arm Focus (Lv.${level} Scaling)`,
+                    desc: isFem ? "Back & Grip Focus with Jump Rope Conditioning." : "Progressive Overload based on Hunter Level.",
+                    exercises: [
+                        { id: "p1", name: pullEx1, equip: "Pull-up Bar", defaultWt: "BW", sets: setsPull1 },
+                        { id: "p2", name: pullEx2, equip: "2x 10 lb DBs", defaultWt: "20 lbs", sets: [{reps: 12, wt: "20 lbs", done: false}, {reps: 12, wt: "20 lbs", done: false}, {reps: 12, wt: "20 lbs", done: false}] },
+                        { id: "p3", name: pullEx3, equip: isFem ? "Jump Rope" : "Pull-up Bar", defaultWt: "BW", sets: setsPull3 },
+                        { id: "p4", name: pullEx4, equip: "2x 10 lb DBs", defaultWt: "20 lbs", sets: [{reps: 10, wt: "20 lbs", done: false}, {reps: 10, wt: "20 lbs", done: false}, {reps: 12, wt: "10 lbs", done: false}] }
+                    ]
+                },
+                push: {
+                    title: `Push & Chest (Lv.${level} Scaling)`,
+                    desc: isFem ? "Core Planking and Push Variations." : "Progressive Overload based on Hunter Level.",
+                    exercises: [
+                        { id: "u1", name: pushEx1, equip: "Dip Station / Floor", defaultWt: "BW", sets: setsPush1 },
+                        { id: "u2", name: pushEx2, equip: "Floor / Wall", defaultWt: "BW", sets: setsPush2 },
+                        { id: "u3", name: pushEx3, equip: "2x 10 lb DBs", defaultWt: "20 lbs", sets: [{reps: 10, wt: "20 lbs", done: false}, {reps: 10, wt: "20 lbs", done: false}, {reps: 10, wt: "20 lbs", done: false}] },
+                        { id: "u4", name: pushEx4, equip: "2x 10 lb DBs", defaultWt: "10 lbs", sets: [{reps: 15, wt: "10 lbs", done: false}, {reps: 15, wt: "10 lbs", done: false}, {reps: 15, wt: "10 lbs", done: false}] }
+                    ]
+                },
+                calisthenics: {
+                    title: `Legs & Core Burn (Lv.${level} Scaling)`,
+                    desc: "Progressive Overload based on Hunter Level.",
+                    exercises: [
+                        { id: "c1", name: legEx1, equip: "2x 10 lb DBs", defaultWt: "20 lbs", sets: [{reps: 12, wt: "20 lbs", done: false}, {reps: 12, wt: "20 lbs", done: false}] },
+                        { id: "c2", name: legEx2, equip: "Pull-Up Bar / Floor", defaultWt: "BW", sets: setsLeg2 },
+                        { id: "c3", name: legEx3, equip: "2x 10 lb DBs", defaultWt: "20 lbs", sets: [{reps: 15, wt: "20 lbs", done: false}, {reps: 15, wt: "20 lbs", done: false}] }
+                    ]
+                }
+            };
+        }
+
+        window.appState = {
+            profileClass: 'male',
+            hunterName: 'Sung Jin-Woo',
+            hunterId: null,
+            lastActiveDate: new Date().toDateString(),
+            playerLevel: 1,
+            playerXP: 0,
+            completedQuestsCount: 0,
+            completedDates: [], // Tracking daily quests dates for weekly calendar
+            dailyQuestState: { pushups: 0, pullups: 0, squats: 0, runMiles: 0.0, jumprope: 0, claimed: false },
+            waterIntake: 0,
+            meals: [],
+            activeRoutineKey: 'pull',
+            activeRoutineData: null,
+            history: []
+        };
+
+        let timerInterval = null;
+        let timerTotalSeconds = 90;
+        let timerRemainingSeconds = 90;
+        let isTimerRunning = false;
+        const CIRCLE_RADIUS = 42;
+        const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
+
+        window.onload = function() {
+            loadStateFromStorage();
+            checkDailyMidnightReset();
+
+            renderPlayerHUD();
+            renderDailyQuests();
+            renderActiveRoutine();
+            renderNutritionSection();
+            renderStatsSection();
+
+            if (window.initLeaderboardListener) window.initLeaderboardListener();
+
+            // Execute automated timed splash screen logic (2.5 Seconds)
+            setTimeout(dismissSplashScreen, 2500);
+        };
+
+        function dismissSplashScreen() {
+            const splash = document.getElementById('splash-screen');
+            if (splash) {
+                // Trigger CSS fade out
+                splash.classList.remove('opacity-100');
+                splash.classList.add('opacity-0');
+                
+                // Wait for the CSS transition (700ms) to complete before removing from DOM flow
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    if (!localStorage.getItem('solo_leveling_initialized')) {
+                        document.getElementById('init-modal').classList.remove('hidden');
+                    }
+                }, 700);
+            }
+        }
+
+        function loadStateFromStorage() {
+            const saved = localStorage.getItem('solo_leveling_v3_data');
+            if (saved) {
+                try { window.appState = { ...window.appState, ...JSON.parse(saved) }; } catch(e){}
+            }
+            if (!window.appState.completedDates) {
+                window.appState.completedDates = [];
+            }
+            if (!window.appState.activeRoutineData) {
+                window.appState.activeRoutineData = JSON.parse(JSON.stringify(getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass)[window.appState.activeRoutineKey]));
+            }
+        }
+
+        function saveStateToStorage() {
+            localStorage.setItem('solo_leveling_v3_data', JSON.stringify(window.appState));
+        }
+
+        function checkDailyMidnightReset() {
+            const todayStr = new Date().toDateString();
+            if (window.appState.lastActiveDate !== todayStr) {
+                forceMidnightReset(true);
+            }
+        }
+
+        function forceMidnightReset(silent = false) {
+            window.appState.lastActiveDate = new Date().toDateString();
+            window.appState.dailyQuestState = { pushups: 0, pullups: 0, squats: 0, runMiles: 0.0, jumprope: 0, claimed: false };
+            window.appState.waterIntake = 0;
+            window.appState.meals = [];
+            saveStateToStorage();
+            renderDailyQuests();
+            renderNutritionSection();
+            renderStatsSection();
+            closeSettingsModal();
+            if (!silent) showToast("12:01 AM MIDNIGHT RESET EXECUTED!");
+        }
+
+        function selectProfileClass(cls) {
+            const initInput = document.getElementById('init-username-input');
+            if (initInput && initInput.value.trim()) {
+                window.appState.hunterName = initInput.value.trim();
+            }
+            window.appState.profileClass = cls;
+            localStorage.setItem('solo_leveling_initialized', 'true');
+            document.getElementById('init-modal').classList.add('hidden');
+            
+            // Force reset routine based on new class
+            resetCurrentRoutine();
+
+            saveStateToStorage();
+            renderDailyQuests();
+            renderNutritionSection();
+            renderPlayerHUD();
+            if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard();
+            showToast(`CLASS REGISTERED: ${CLASS_QUEST_CONFIGS[cls].title.toUpperCase()}`);
+        }
+
+        function setProfileClass(cls) {
+            window.appState.profileClass = cls;
+            resetCurrentRoutine();
+            saveStateToStorage();
+            renderDailyQuests();
+            renderNutritionSection();
+            renderPlayerHUD();
+            if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard();
+            showToast(`PROFILE UPDATED: ${CLASS_QUEST_CONFIGS[cls].title.toUpperCase()}`);
+        }
+
+        function updateHunterName(name) {
+            const clean = name.trim() || 'Sung Jin-Woo';
+            window.appState.hunterName = clean;
+            saveStateToStorage();
+            renderPlayerHUD();
+            if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard();
+            showToast(`HUNTER ALIAS UPDATED: ${clean.toUpperCase()}`);
+        }
+
+        function openProfileDrawer() {
+            renderPlayerHUD();
+            document.getElementById('profile-drawer-backdrop').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('profile-drawer').classList.remove('-translate-x-full');
+        }
+
+        function closeProfileDrawer() {
+            document.getElementById('profile-drawer-backdrop').classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('profile-drawer').classList.add('-translate-x-full');
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settings-username-input').value = window.appState.hunterName || 'Sung Jin-Woo';
+            ['male', 'female', 'child'].forEach(c => {
+                const btn = document.getElementById(`profile-btn-${c}`);
+                if (btn) {
+                    if (window.appState.profileClass === c) {
+                        btn.className = "py-2 rounded-xl border border-system-neon bg-system-neon/20 font-bold text-system-glow cursor-pointer";
+                    } else {
+                        btn.className = "py-2 rounded-xl border border-system-border text-slate-300 font-bold cursor-pointer";
+                    }
+                }
+            });
+            document.getElementById('settings-modal').classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+                btn.classList.remove('text-system-neon');
+                btn.classList.add('text-slate-500');
+            });
+            document.getElementById(`nav-btn-${tabId}`).classList.remove('text-slate-500');
+            document.getElementById(`nav-btn-${tabId}`).classList.add('text-system-neon');
+        }
+
+        function awardXP(amount) {
+            window.appState.playerXP += amount;
+            const nextXP = window.appState.playerLevel * 100;
+            if (window.appState.playerXP >= nextXP) {
+                window.appState.playerXP -= nextXP;
+                window.appState.playerLevel += 1;
+                showToast(`LEVEL UP! REACHED LEVEL ${window.appState.playerLevel}`);
+                // Refresh routines naturally for new level scaling
+                resetCurrentRoutine();
+            }
+            saveStateToStorage();
+            renderPlayerHUD();
+            if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard();
+        }
+
+        function renderPlayerHUD() {
+            const hName = (window.appState.hunterName || 'Sung Jin-Woo').toUpperCase();
+            const headerNameEl = document.getElementById('header-username');
+            if (headerNameEl) {
+                headerNameEl.innerText = hName;
+                if (hName.length > 18) {
+                    headerNameEl.className = "font-black tracking-wider text-white uppercase truncate max-w-[120px] text-[10px]";
+                } else if (hName.length > 12) {
+                    headerNameEl.className = "font-black tracking-wider text-white uppercase truncate max-w-[130px] text-[11px]";
+                } else {
+                    headerNameEl.className = "font-black tracking-widest text-white uppercase truncate max-w-[140px] text-xs";
+                }
+            }
+
+            document.getElementById('player-level').innerText = window.appState.playerLevel;
+            const levelStats = document.getElementById('player-level-stats');
+            if (levelStats) levelStats.innerText = window.appState.playerLevel;
+            
+            const xpStats = document.getElementById('player-xp-stats');
+            if (xpStats) xpStats.innerText = window.appState.playerXP;
+            
+            const nextXP = window.appState.playerLevel * 100;
+            const nextXpStats = document.getElementById('player-next-xp-stats');
+            if (nextXpStats) nextXpStats.innerText = nextXP;
+
+            const pct = Math.min(100, Math.round((window.appState.playerXP / nextXP) * 100));
+            const xpBarStats = document.getElementById('xp-progress-bar-stats');
+            if (xpBarStats) xpBarStats.style.width = `${pct}%`;
+
+            let rank = 'E-RANK';
+            let title = 'NOVICE HUNTER';
+            if (window.appState.playerLevel >= 5) { rank = 'D-RANK'; title = 'STRIKER HUNTER'; }
+            if (window.appState.playerLevel >= 10) { rank = 'C-RANK'; title = 'SHADOW ASSASSIN'; }
+            if (window.appState.playerLevel >= 20) { rank = 'B-RANK'; title = 'MONARCH VESSEL'; }
+            if (window.appState.playerLevel >= 35) { rank = 'S-RANK'; title = 'SHADOW MONARCH'; }
+
+            document.getElementById('player-rank').innerText = rank;
+            document.getElementById('player-title').innerText = title;
+
+            // Sync Side Drawer Elements
+            const drawerName = document.getElementById('drawer-username');
+            if (drawerName) drawerName.innerText = hName;
+            const drawerTitle = document.getElementById('drawer-profile-title');
+            if (drawerTitle) drawerTitle.innerText = title;
+            const drawerRank = document.getElementById('drawer-rank');
+            if (drawerRank) drawerRank.innerText = rank;
+            const drawerLevel = document.getElementById('drawer-level');
+            if (drawerLevel) drawerLevel.innerText = window.appState.playerLevel;
+            const drawerXP = document.getElementById('drawer-xp');
+            if (drawerXP) drawerXP.innerText = window.appState.playerXP;
+            const drawerNextXP = document.getElementById('drawer-next-xp');
+            if (drawerNextXP) drawerNextXP.innerText = nextXP;
+            const drawerXPBar = document.getElementById('drawer-xp-bar');
+            if (drawerXPBar) drawerXPBar.style.width = `${pct}%`;
+            const drawerQuests = document.getElementById('drawer-quests-count');
+            if (drawerQuests) drawerQuests.innerText = window.appState.completedQuestsCount || 0;
+            const drawerPullups = document.getElementById('drawer-pullups-count');
+            if (drawerPullups) drawerPullups.innerText = window.appState.dailyQuestState?.pullups || 0;
+        }
+
+        // --- DAILY QUESTS ENGINE ---
+        function renderDailyQuests() {
+            const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'];
+            const target = config.quests;
+            const current = window.appState.dailyQuestState;
+
+            const grid = document.getElementById('quest-items-grid');
+            const btns = document.getElementById('quest-buttons-container');
+            grid.innerHTML = '';
+            btns.innerHTML = '';
+
+            const items = [
+                { key: 'pushups', name: 'PUSH-UPS', cur: current.pushups, max: target.pushups, unit: 'reps', inc: 5 },
+                { key: 'pullups', name: 'PULL-UPS', cur: current.pullups, max: target.pullups, unit: 'reps', inc: 3 },
+                { key: 'squats', name: 'SQUATS', cur: current.squats, max: target.squats, unit: 'reps', inc: 5 }
+            ];
+
+            if (target.runMiles > 0) {
+                items.push({ key: 'runMiles', name: 'RUNNING', cur: current.runMiles, max: target.runMiles, unit: 'mi', inc: 0.25 });
+            } else {
+                items.push({ key: 'jumprope', name: 'JUMP ROPE / CIRCUIT', cur: current.jumprope, max: target.jumprope, unit: 'reps', inc: 250 });
+            }
+
+            let allComplete = true;
+
+            items.forEach(item => {
+                const done = item.cur >= item.max;
+                if (!done) allComplete = false;
+
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center text-xs border-b border-system-border/40 pb-1.5";
+                row.innerHTML = `
+                    <span class="text-slate-300 font-bold flex items-center gap-1.5">
+                        <i class="fa-solid ${done ? 'fa-square-check text-emerald-400' : 'fa-square text-slate-600'}"></i>
+                        ${item.name}
+                    </span>
+                    <span class="${done ? 'text-emerald-400 font-extrabold' : 'text-system-glow font-bold'}">
+                        ${item.cur} / ${item.max} ${item.unit}
+                    </span>
+                `;
+                grid.appendChild(row);
+
+                const btn = document.createElement('button');
+                btn.className = "btn-active bg-system-850 hover:bg-system-800 border border-system-border p-2.5 rounded-xl flex justify-between items-center cursor-pointer";
+                btn.onclick = () => addQuestProgress(item.key, item.inc);
+                btn.innerHTML = `
+                    <span class="font-bold text-slate-200">+${item.inc} ${item.key === 'runMiles' ? 'Mi' : ''} ${item.name.split(' ')[0]}</span>
+                    <i class="fa-solid fa-plus text-system-neon"></i>
+                `;
+                btns.appendChild(btn);
+            });
+
+            const claimBtn = document.getElementById('claim-quest-btn');
+            if (current.claimed) {
+                claimBtn.className = "w-full py-3.5 bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 font-black text-xs rounded-xl flex items-center justify-center space-x-2 font-mono uppercase cursor-default opacity-80";
+                claimBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>DAILY QUEST REWARDS CLAIMED FOR TODAY</span>`;
+                claimBtn.onclick = null;
+            } else {
+                claimBtn.className = "btn-active w-full py-3.5 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-cyan-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer";
+                claimBtn.innerHTML = `<i class="fa-solid fa-award text-base"></i><span>CLAIM DAILY QUEST REWARDS (+100 XP)</span>`;
+                claimBtn.onclick = claimDailyQuestReward;
+            }
+        }
+
+        function addQuestProgress(key, inc) {
+            if (window.appState.dailyQuestState[key] === undefined) window.appState.dailyQuestState[key] = 0;
+            window.appState.dailyQuestState[key] = Math.round((window.appState.dailyQuestState[key] + inc) * 100) / 100;
+            saveStateToStorage();
+            renderDailyQuests();
+            showToast(`+${inc} logged to Daily Quest!`);
+        }
+
+        function claimDailyQuestReward() {
+            const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].quests;
+            const state = window.appState.dailyQuestState;
+
+            let complete = state.pushups >= config.pushups && state.pullups >= config.pullups && state.squats >= config.squats;
+            if (config.runMiles > 0) complete = complete && state.runMiles >= config.runMiles;
+            else complete = complete && state.jumprope >= config.jumprope;
+
+            if (!complete) {
+                showToast("COMPLETE ALL DAILY QUEST QUOTAS FIRST!");
+                return;
+            }
+
+            state.claimed = true;
+            window.appState.completedQuestsCount = (window.appState.completedQuestsCount || 0) + 1;
+            
+            // Register Completion to Weekly Calendar Date Log
+            const todayStr = new Date().toDateString();
+            if (!window.appState.completedDates) window.appState.completedDates = [];
+            if (!window.appState.completedDates.includes(todayStr)) {
+                window.appState.completedDates.push(todayStr);
+            }
+
+            awardXP(100);
+            renderDailyQuests();
+            renderStatsSection();
+            showToast("QUEST CLEARED! REWARD +100 XP GRANTED!");
+        }
+
+        // --- DUNGEONS & WORKOUT SYSTEM ---
+        function switchRoutine(key) {
+            window.appState.activeRoutineKey = key;
+            window.appState.activeRoutineData = JSON.parse(JSON.stringify(getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass)[key]));
+            document.querySelectorAll('.routine-tab-btn').forEach(btn => {
+                btn.className = "routine-tab-btn btn-active py-2 px-2 text-xs font-bold rounded-xl border border-system-border bg-system-850 text-slate-400 flex flex-col items-center justify-center space-y-1 cursor-pointer";
+            });
+            document.getElementById(`routine-btn-${key}`).className = "routine-tab-btn btn-active py-2 px-2 text-xs font-bold rounded-xl border border-system-neon bg-system-neon/15 text-system-glow flex flex-col items-center justify-center space-y-1 shadow-sm cursor-pointer";
+            renderActiveRoutine();
+            saveStateToStorage();
+        }
+
+        function resetCurrentRoutine() {
+            window.appState.activeRoutineData = JSON.parse(JSON.stringify(getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass)[window.appState.activeRoutineKey]));
+            renderActiveRoutine();
+            saveStateToStorage();
+            showToast("Routine sets reset");
+        }
+
+        function renderActiveRoutine() {
+            const data = window.appState.activeRoutineData;
+            document.getElementById('routine-title').innerText = data.title;
+            document.getElementById('routine-desc').innerText = data.desc;
+
+            const container = document.getElementById('exercise-list-container');
+            container.innerHTML = '';
+
+            data.exercises.forEach((ex, exIndex) => {
+                const exCard = document.createElement('div');
+                exCard.className = "bg-system-900 border border-system-border rounded-2xl p-4 space-y-3 font-mono shadow-sm";
+
+                const unitLabel = ex.name.includes('(Secs)') ? 'secs' : 'reps';
+
+                let setsHTML = ex.sets.map((set, setIndex) => `
+                    <div class="flex items-center justify-between bg-system-950 p-2 rounded-xl border ${set.done ? 'border-system-neon/60 bg-system-neon/10' : 'border-system-border/60'}">
+                        <span class="text-xs font-bold text-system-neon/80 w-12">SET ${setIndex + 1}</span>
+                        <div class="flex items-center space-x-2">
+                            <input type="number" value="${set.reps}" onchange="updateSetVal(${exIndex}, ${setIndex}, 'reps', this.value)" class="w-14 bg-system-900 border border-system-border rounded-lg px-2 py-1 text-center text-xs font-bold text-white focus:outline-none focus:border-system-neon">
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase">${unitLabel}</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <input type="text" value="${set.wt}" onchange="updateSetVal(${exIndex}, ${setIndex}, 'wt', this.value)" class="w-16 bg-system-900 border border-system-border rounded-lg px-2 py-1 text-center text-xs font-bold text-white focus:outline-none focus:border-system-neon">
+                        </div>
+                        <button onclick="toggleSetDone(${exIndex}, ${setIndex})" class="btn-active w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer ${set.done ? 'bg-system-neon text-system-950 font-black shadow-sm' : 'bg-system-850 text-slate-500 hover:text-slate-300'}">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                const ytQuery = encodeURIComponent(`${ex.name.replace(/\(Secs\)/g, '')} exercise tutorial form`);
+                const ytLink = `https://www.youtube.com/results?search_query=${ytQuery}`;
+
+                exCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-sm text-white">${ex.name}</h3>
+                                <a href="${ytLink}" target="_blank" title="Search Tutorial on YouTube" class="text-rose-500 hover:text-rose-400 transition-colors cursor-pointer text-sm">
+                                    <i class="fa-brands fa-youtube"></i>
+                                </a>
+                            </div>
+                            <span class="text-[10px] bg-system-850 text-system-neon px-2 py-0.5 rounded-full border border-system-border inline-block mt-1">${ex.equip}</span>
+                        </div>
+                        <button onclick="addSetToExercise(${exIndex})" class="text-[11px] font-semibold text-system-neon hover:underline flex items-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-plus text-[9px]"></i> Add Set
+                        </button>
+                    </div>
+                    <div class="space-y-2">${setsHTML}</div>
+                `;
+                container.appendChild(exCard);
+            });
+        }
+
+        function updateSetVal(exIndex, setIndex, field, val) {
+            window.appState.activeRoutineData.exercises[exIndex].sets[setIndex][field] = val;
+            saveStateToStorage();
+        }
+
+        function toggleSetDone(exIndex, setIndex) {
+            const current = window.appState.activeRoutineData.exercises[exIndex].sets[setIndex].done;
+            window.appState.activeRoutineData.exercises[exIndex].sets[setIndex].done = !current;
+            if (!current) {
+                awardXP(15);
+                showToast("SET LOGGED (+15 XP)! REST TIMER STARTED");
+                startRestTimer(90);
+                openTimerModal();
+            }
+            renderActiveRoutine();
+            saveStateToStorage();
+        }
+
+        function addSetToExercise(exIndex) {
+            const ex = window.appState.activeRoutineData.exercises[exIndex];
+            const lastSet = ex.sets[ex.sets.length - 1] || { reps: 8, wt: ex.defaultWt, done: false };
+            ex.sets.push({ reps: lastSet.reps, wt: lastSet.wt, done: false });
+            renderActiveRoutine();
+            saveStateToStorage();
+        }
+
+        function finishWorkout() {
+            const activeData = window.appState.activeRoutineData;
+            let totalCompletedSets = 0;
+            let sessionVolume = 0;
+
+            activeData.exercises.forEach(ex => {
+                ex.sets.forEach(s => {
+                    if (s.done) {
+                        totalCompletedSets++;
+                        const numericWt = parseFloat(s.wt) || 0;
+                        const numericReps = parseInt(s.reps) || 0;
+                        
+                        // Volume only aggregates for actual reps, not isometric seconds holds.
+                        if (!ex.name.includes('(Secs)')) {
+                            sessionVolume += (numericWt * numericReps);
+                        }
+                    }
+                });
+            });
+
+            if (totalCompletedSets === 0) {
+                showToast("COMPLETE AT LEAST 1 SET FIRST!");
+                return;
+            }
+
+            window.appState.history.unshift({
+                id: Date.now(),
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                title: activeData.title,
+                completedSets: totalCompletedSets,
+                volume: sessionVolume
+            });
+
+            awardXP(50);
+            resetCurrentRoutine();
+            renderStatsSection();
+            showToast("DUNGEON CLEARED (+50 XP)!");
+            switchTab('stats');
+        }
+
+        // --- NUTRITION & HYDRATION ---
+        function addWater(oz) {
+            window.appState.waterIntake = (window.appState.waterIntake || 0) + oz;
+            saveStateToStorage();
+            renderNutritionSection();
+            showToast(`+${oz} oz Water Added!`);
+        }
+
+        function resetWater() {
+            window.appState.waterIntake = 0;
+            saveStateToStorage();
+            renderNutritionSection();
+        }
+
+        function logMeal() {
+            const type = document.getElementById('meal-type').value;
+            const cals = parseInt(document.getElementById('meal-cals').value);
+            if (cals && cals > 0) {
+                window.appState.meals.unshift({ id: Date.now(), type, cals });
+                document.getElementById('meal-cals').value = '';
+                saveStateToStorage();
+                renderNutritionSection();
+                showToast("Meal Logged!");
+            }
+        }
+
+        function renderNutritionSection() {
+            const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets;
+            document.getElementById('water-target').innerText = config.water;
+            document.getElementById('cal-target').innerText = config.cals;
+
+            const currentWater = window.appState.waterIntake || 0;
+            document.getElementById('water-current').innerText = currentWater;
+            const wPct = Math.min(100, Math.round((currentWater / config.water) * 100));
+            document.getElementById('water-progress-bar').style.width = `${wPct}%`;
+
+            const currentCals = (window.appState.meals || []).reduce((acc, m) => acc + m.cals, 0);
+            document.getElementById('cal-current').innerText = currentCals;
+
+            const mealContainer = document.getElementById('meal-log-list');
+            mealContainer.innerHTML = '';
+            (window.appState.meals || []).forEach(m => {
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center bg-system-950 p-2 rounded-xl border border-system-border/60 text-xs font-mono";
+                item.innerHTML = `
+                    <span class="font-bold text-slate-200">${m.type}</span>
+                    <span class="font-extrabold text-system-neon">${m.cals} kcal</span>
+                `;
+                mealContainer.appendChild(item);
+            });
+        }
+
+        // --- WEEKLY CALENDAR ENGINE ---
+        function getCurrentWeekDates() {
+            const now = new Date();
+            // Get day of week (0 is Sunday, so convert to 1-7 for Mon-Sun)
+            const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); 
+            const dates = [];
+            for (let i = 1; i <= 7; i++) {
+                const d = new Date(now);
+                d.setDate(now.getDate() - dayOfWeek + i);
+                dates.push(d);
+            }
+            return dates;
+        }
+
+        function renderWeeklyCalendar() {
+            const container = document.getElementById('weekly-calendar');
+            if (!container) return;
+
+            const weekDates = getCurrentWeekDates();
+            const daysLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+            
+            let calHTML = '<div class="grid grid-cols-7 gap-1.5 text-center">';
+            
+            weekDates.forEach((d, i) => {
+                const dateStr = d.toDateString();
+                const isToday = dateStr === new Date().toDateString();
+                const isCompleted = (window.appState.completedDates || []).includes(dateStr);
+                const isFuture = d > new Date() && !isToday;
+                
+                let icon = '';
+                if (isCompleted) {
+                    icon = '<i class="fa-solid fa-check text-emerald-400"></i>';
+                } else if (!isFuture) {
+                    icon = '<i class="fa-solid fa-xmark text-slate-600"></i>';
+                } else {
+                    icon = '<span class="w-1.5 h-1.5 rounded-full bg-slate-700 inline-block"></span>';
+                }
+
+                calHTML += `
+                    <div class="flex flex-col items-center justify-center py-2 bg-system-950 rounded-lg border ${isToday ? 'border-system-neon shadow-[0_0_8px_rgba(56,189,248,0.25)]' : 'border-system-border/40'}">
+                        <span class="text-[9px] font-bold ${isToday ? 'text-system-neon' : 'text-slate-400'}">${daysLabels[i]}</span>
+                        <div class="mt-1 h-4 flex items-center justify-center text-xs">${icon}</div>
+                    </div>
+                `;
+            });
+            calHTML += '</div>';
+            container.innerHTML = calHTML;
+        }
+
+        // --- LEADERBOARD & STATS ENGINE ---
+        window.forceSyncLeaderboard = function() {
+            if (window.syncHunterToLeaderboard) {
+                window.syncHunterToLeaderboard();
+                showToast("HUNTER DATA SYNCED TO CLOUD!");
+            }
+        };
+
+        window.renderLeaderboard = function(topHunters) {
+            const container = document.getElementById('leaderboard-container');
+            if (!container) return;
+
+            if (!topHunters || topHunters.length === 0) {
+                window.renderFallbackLeaderboard();
+                return;
+            }
+
+            container.innerHTML = '';
+            topHunters.forEach((hunter, idx) => {
+                const rankBadges = [
+                    '<span class="w-6 h-6 rounded-lg bg-amber-400 text-system-950 font-black text-xs flex items-center justify-center">1</span>',
+                    '<span class="w-6 h-6 rounded-lg bg-slate-300 text-system-950 font-black text-xs flex items-center justify-center">2</span>',
+                    '<span class="w-6 h-6 rounded-lg bg-amber-700 text-slate-100 font-black text-xs flex items-center justify-center">3</span>'
+                ];
+
+                const isMe = hunter.name === window.appState.hunterName;
+
+                const item = document.createElement('div');
+                item.className = `flex justify-between items-center p-2.5 rounded-xl border text-xs font-mono ${isMe ? 'bg-system-accent/10 border-system-accent' : 'bg-system-950 border-system-border/60'}`;
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2.5">
+                        ${rankBadges[idx] || '#'}
+                        <div>
+                            <div class="font-bold text-white flex items-center gap-1.5">
+                                <span>${hunter.name}</span>
+                                ${isMe ? '<span class="text-[9px] bg-system-neon/20 text-system-neon px-1 rounded font-bold">YOU</span>' : ''}
+                            </div>
+                            <div class="text-[10px] text-slate-400">LVL ${hunter.level} • ${hunter.questsCompleted || 0} Quests Cleared</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-black text-system-glow">${hunter.xp} XP</span>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        };
+
+        window.renderFallbackLeaderboard = function() {
+            const container = document.getElementById('leaderboard-container');
+            if (!container) return;
+
+            const myStats = {
+                name: window.appState.hunterName || 'Sung Jin-Woo',
+                level: window.appState.playerLevel || 1,
+                xp: window.appState.playerXP || 0,
+                questsCompleted: window.appState.completedQuestsCount || 0
+            };
+
+            container.innerHTML = '';
+            const item = document.createElement('div');
+            item.className = 'flex justify-between items-center p-2.5 rounded-xl border text-xs font-mono bg-system-accent/10 border-system-accent';
+            item.innerHTML = `
+                <div class="flex items-center space-x-2.5">
+                    <span class="w-6 h-6 rounded-lg bg-amber-400 text-system-950 font-black text-xs flex items-center justify-center">1</span>
+                    <div>
+                        <div class="font-bold text-white flex items-center gap-1.5">
+                            <span>${myStats.name}</span>
+                            <span class="text-[9px] bg-system-neon/20 text-system-neon px-1 rounded font-bold">YOU</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400">LVL ${myStats.level} • ${myStats.questsCompleted} Quests Cleared</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="font-black text-system-glow">${myStats.xp} XP</span>
+                </div>
+            `;
+            container.appendChild(item);
+        };
+
+        function renderStatsSection() {
+            document.getElementById('stat-total-quests').innerText = window.appState.completedQuestsCount || 0;
+            document.getElementById('stat-total-workouts').innerText = window.appState.history.length;
+
+            const totalVol = window.appState.history.reduce((acc, curr) => acc + (curr.volume || 0), 0);
+            document.getElementById('stat-total-volume').innerText = totalVol.toLocaleString();
+
+            renderWeeklyCalendar(); // Populate Calendar Row
+
+            const container = document.getElementById('workout-history-list');
+            container.innerHTML = '';
+            if (window.appState.history.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">No saved dungeon records.</div>`;
+                return;
+            }
+
+            window.appState.history.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-system-950 border border-system-border/60 rounded-xl p-3 text-xs font-mono space-y-1.5";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-white">${item.title}</span>
+                        <span class="text-[10px] text-slate-400">${item.date}</span>
+                    </div>
+                    <div class="flex space-x-4 text-slate-400 text-[11px]">
+                        <span><strong class="text-system-neon">${item.completedSets}</strong> sets</span>
+                        <span><strong class="text-purple-300">${item.volume}</strong> lbs</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function clearAllData() {
+            if (confirm("Reset all local player data & level progression?")) {
+                localStorage.removeItem('solo_leveling_v3_data');
+                localStorage.removeItem('solo_leveling_initialized');
+                location.reload();
+            }
+        }
+
+        // --- TIMER MODAL LOGIC ---
+        function openTimerModal() { document.getElementById('timer-modal').classList.remove('opacity-0', 'pointer-events-none'); }
+        
+        function closeTimerModal() { 
+            document.getElementById('timer-modal').classList.add('opacity-0', 'pointer-events-none'); 
+        }
+        
+        function dismissTimeoutWarning() {
+            document.getElementById('timeout-warning-overlay').classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        document.getElementById('open-timer-btn').addEventListener('click', openTimerModal);
+
+        function startRestTimer(seconds) {
+            clearInterval(timerInterval);
+            timerTotalSeconds = seconds;
+            timerRemainingSeconds = seconds;
+            isTimerRunning = true;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                if (isTimerRunning) {
+                    timerRemainingSeconds--;
+                    updateTimerDisplay();
+                    if (timerRemainingSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        onTimerComplete();
+                    }
+                }
+            }, 1000);
+        }
+
+        function toggleTimerPause() {
+            if (timerRemainingSeconds <= 0) { startRestTimer(90); return; }
+            isTimerRunning = !isTimerRunning;
+            updateTimerDisplay();
+        }
+
+        function stopRestTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerRemainingSeconds = timerTotalSeconds;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerRemainingSeconds / 60);
+            const secs = timerRemainingSeconds % 60;
+            const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            document.getElementById('timer-display').innerText = formatted;
+            document.getElementById('timer-badge').innerText = isTimerRunning ? formatted : '01:30';
+
+            const ring = document.getElementById('timer-ring');
+            const progress = timerRemainingSeconds / timerTotalSeconds;
+            const strokeDashoffset = CIRCLE_CIRCUMFERENCE - (progress * CIRCLE_CIRCUMFERENCE);
+            ring.style.strokeDashoffset = isNaN(strokeDashoffset) ? 0 : strokeDashoffset;
+        }
+
+        function onTimerComplete() {
+            // Hide standard modal and show full-screen flashing overlay
+            closeTimerModal();
+            document.getElementById('timeout-warning-overlay').classList.remove('opacity-0', 'pointer-events-none');
+            
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, ctx.currentTime);
+                osc.frequency.setValueAtTime(880, ctx.currentTime + 0.2);
+                osc.frequency.setValueAtTime(440, ctx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 1.2);
+            } catch(e){}
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
