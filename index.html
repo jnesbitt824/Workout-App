@@ -116,32 +116,51 @@
         }
     </style>
 
-    <!-- Firebase SDK Modules -->
+    <!-- Firebase SDK Modules for Cloud Sync -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB-SoloLevelingAppKeyDummy123456",
-            authDomain: "solo-leveling-tracker.firebaseapp.com",
-            projectId: "solo-leveling-tracker",
-            storageBucket: "solo-leveling-tracker.appspot.com",
-            messagingSenderId: "998877665544",
-            appId: "1:998877665544:web:abcd1234efgh5678"
-        };
+        // Dynamically injected platform environment variables
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'solo-leveling-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
         try {
             const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
             const db = getFirestore(app);
+            let isAuthReady = false;
+
+            // Strict authentication prior to database interaction
+            async function initAuth() {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined') {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    isAuthReady = true;
+                } catch (error) {
+                    console.error("Auth error:", error);
+                }
+            }
 
             window.syncHunterToLeaderboard = async function() {
-                if (!window.appState || !window.appState.hunterName) return;
-                const uid = window.appState.hunterId || ('hunter_' + Math.random().toString(36).substring(2, 9));
-                window.appState.hunterId = uid;
-                if (window.saveStateToStorage) window.saveStateToStorage();
+                if (!isAuthReady) await initAuth();
+                if (!auth.currentUser || !window.appState || !window.appState.hunterName) return;
+                
+                let uid = window.appState.hunterId;
+                if (!uid) {
+                    uid = auth.currentUser.uid;
+                    window.appState.hunterId = uid;
+                    if (window.saveStateToStorage) window.saveStateToStorage();
+                }
 
                 try {
-                    await setDoc(doc(db, "leaderboard", uid), {
+                    // Using strict public data pathways for cross-device visibility
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', uid);
+                    await setDoc(docRef, {
                         name: window.appState.hunterName,
                         level: window.appState.playerLevel || 1,
                         xp: window.appState.playerXP || 0,
@@ -149,28 +168,61 @@
                         profileClass: window.appState.profileClass || 'male',
                         updatedAt: new Date().toISOString()
                     }, { merge: true });
-                } catch(e) {}
-            };
-
-            window.initLeaderboardListener = function() {
-                try {
-                    const q = query(collection(db, "leaderboard"), orderBy("level", "desc"), orderBy("xp", "desc"), limit(3));
-                    onSnapshot(q, (snapshot) => {
-                        const topHunters = [];
-                        snapshot.forEach((doc) => { topHunters.push(doc.data()); });
-                        if (window.renderLeaderboard) window.renderLeaderboard(topHunters);
-                    }, (error) => {
-                        if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
-                    });
-                } catch(err) {
-                    if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
+                } catch(e) { 
+                    console.log("Firebase sync failed:", e.message); 
                 }
             };
-        } catch(err) {
-            window.syncHunterToLeaderboard = function() {};
-            window.initLeaderboardListener = function() {
-                if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
+
+            window.initLeaderboardListener = async function() {
+                if (!isAuthReady) await initAuth();
+                if (!auth.currentUser) {
+                    if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard(true);
+                    return;
+                }
+
+                try {
+                    let hasLoaded = false;
+                    const fallbackTimer = setTimeout(() => {
+                        if (!hasLoaded && window.renderFallbackLeaderboard) {
+                            window.renderFallbackLeaderboard(true);
+                        }
+                    }, 4000);
+
+                    const collRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+                    
+                    onSnapshot(collRef, (snapshot) => {
+                        hasLoaded = true;
+                        clearTimeout(fallbackTimer);
+                        let allHunters = [];
+                        snapshot.forEach((doc) => { allHunters.push(doc.data()); });
+                        
+                        // Sort dynamically in memory
+                        allHunters.sort((a, b) => b.level - a.level || b.xp - a.xp);
+                        const topHunters = allHunters.slice(0, 10);
+                        
+                        if (window.renderLeaderboard) window.renderLeaderboard(topHunters);
+                    }, (error) => {
+                        console.error("Firebase listen failed:", error);
+                        hasLoaded = true;
+                        clearTimeout(fallbackTimer);
+                        if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard(true);
+                    });
+                } catch(err) {
+                    if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard(true);
+                }
             };
+
+            // Start leaderboard immediately after module loads
+            window.initLeaderboardListener();
+
+        } catch(err) {
+            window.syncHunterToLeaderboard = async function() {};
+            window.initLeaderboardListener = async function() {
+                if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard(true);
+            };
+            setTimeout(() => {
+                if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard(true);
+            }, 500);
         }
     </script>
 </head>
@@ -706,9 +758,9 @@
                     <div id="water-progress-bar" class="h-full bg-gradient-to-r from-sky-500 to-system-neon rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    <button onclick="playSystemSound('click'); addWater(8);" class="btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-200 cursor-pointer">+8 oz</button>
-                    <button onclick="playSystemSound('click'); addWater(16);" class="btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-200 cursor-pointer">+16 oz</button>
-                    <button onclick="playSystemSound('click'); resetWater();" class="btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-400 cursor-pointer">Reset</button>
+                    <button onclick="playSystemSound('click'); addWater(8);" class="water-btn btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-200 hover:border-system-neon cursor-pointer transition-colors">+8 oz</button>
+                    <button onclick="playSystemSound('click'); addWater(16);" class="water-btn btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-200 hover:border-system-neon cursor-pointer transition-colors">+16 oz</button>
+                    <button onclick="playSystemSound('click'); resetWater();" class="water-btn btn-active bg-system-850 border border-system-border py-2 rounded-xl text-xs font-bold text-slate-400 hover:border-system-neon cursor-pointer transition-colors">Reset</button>
                 </div>
             </div>
 
@@ -734,18 +786,18 @@
                         <option value="Snack">Snack</option>
                     </select>
                     <input type="number" id="meal-cals" placeholder="kcal (e.g. 500)" class="bg-system-950 border border-system-border text-xs rounded-xl px-2 py-2 text-slate-200 focus:outline-none">
-                    <button onclick="playSystemSound('click'); logMeal();" class="btn-active bg-system-neon text-system-950 font-bold text-xs rounded-xl py-2 cursor-pointer" id="meal-add-btn">Add Meal</button>
+                    <button onclick="playSystemSound('click'); logMeal();" class="btn-active bg-system-neon text-system-950 font-bold text-xs rounded-xl py-2 cursor-pointer transition-colors" id="meal-add-btn">Add Meal</button>
                 </div>
 
                 <!-- Quick-Add Common Foods -->
                 <div class="space-y-1.5 pt-1">
                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Quick-Add Common Foods</span>
                     <div class="grid grid-cols-3 gap-1.5 text-[11px]">
-                        <button onclick="playSystemSound('click'); quickAddMeal('Banana', 105);" class="btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer">🍌 Banana (105)</button>
-                        <button onclick="playSystemSound('click'); quickAddMeal('Boiled Egg', 70);" class="btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer">🥚 Egg (70)</button>
-                        <button onclick="playSystemSound('click'); quickAddMeal('Almonds (1oz)', 160);" class="btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer">🥜 Almonds (160)</button>
-                        <button onclick="playSystemSound('click'); quickAddMeal('Greek Yogurt', 130);" class="btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer">🥛 Yogurt (130)</button>
-                        <button onclick="playSystemSound('click'); quickAddMeal('Protein Shake', 150);" class="btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer">🥤 Shake (150)</button>
+                        <button onclick="playSystemSound('click'); quickAddMeal('Banana', 105);" class="qa-btn btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer transition-colors">🍌 Banana (105)</button>
+                        <button onclick="playSystemSound('click'); quickAddMeal('Boiled Egg', 70);" class="qa-btn btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer transition-colors">🥚 Egg (70)</button>
+                        <button onclick="playSystemSound('click'); quickAddMeal('Chicken Ramen', 380);" class="qa-btn btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer transition-colors">🍜 Ramen (380)</button>
+                        <button onclick="playSystemSound('click'); quickAddMeal('Greek Yogurt', 130);" class="qa-btn btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer transition-colors">🥛 Yogurt (130)</button>
+                        <button onclick="playSystemSound('click'); quickAddMeal('Protein Shake', 150);" class="qa-btn btn-active bg-system-950 border border-system-border py-1.5 rounded-lg text-slate-200 font-bold hover:border-system-neon cursor-pointer transition-colors">🥤 Shake (150)</button>
                     </div>
                 </div>
 
@@ -968,12 +1020,12 @@
                 </div>
             </div>
 
-            <!-- ONLINE HUNTERS LEADERBOARD (TOP 3 REAL PLAYERS) -->
+            <!-- ONLINE HUNTERS LEADERBOARD -->
             <div class="bg-system-900 border border-system-border rounded-2xl p-4 font-mono space-y-3 holographic-card">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center space-x-2">
                         <i class="fa-solid fa-trophy text-amber-400 text-sm"></i>
-                        <h3 class="text-xs font-bold text-white uppercase tracking-wider">TOP 3 HUNTERS</h3>
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider">TOP GLOBAL HUNTERS</h3>
                     </div>
                     <div class="flex items-center space-x-2">
                         <button onclick="playSystemSound('click'); forceSyncLeaderboard();" class="text-[9px] bg-system-850 hover:bg-system-800 border border-system-border text-system-neon font-bold px-2 py-0.5 rounded flex items-center gap-1 transition cursor-pointer">
@@ -1146,6 +1198,12 @@
             let setsLeg2 = [{reps: 12, wt: "BW", done: false}, {reps: 12, wt: "BW", done: false}];
             if (isFem && !isMid) setsLeg2 = [{reps: 45, wt: "BW", done: false}, {reps: 45, wt: "BW", done: false}];
 
+            let setsNe1 = [{reps: isFem ? 10 : 20, wt: "BW", done: false}, {reps: isFem ? 10 : 20, wt: "BW", done: false}, {reps: isFem ? 10 : 20, wt: "BW", done: false}];
+            let setsNe2 = [{reps: isFem ? 20 : 30, wt: "BW", done: false}, {reps: isFem ? 20 : 30, wt: "BW", done: false}, {reps: isFem ? 20 : 30, wt: "BW", done: false}];
+            let setsNe3 = [{reps: isFem ? 15 : 20, wt: "BW", done: false}, {reps: isFem ? 15 : 20, wt: "BW", done: false}];
+            let setsNe4 = [{reps: isFem ? 30 : 60, wt: "BW", done: false}, {reps: isFem ? 30 : 60, wt: "BW", done: false}];
+            let setsNe5 = [{reps: isFem ? 10 : 15, wt: "BW", done: false}, {reps: isFem ? 10 : 15, wt: "BW", done: false}];
+
             return {
                 pull: {
                     title: `Pull & Arm Focus (Lv.${level} Scaling)`,
@@ -1188,13 +1246,13 @@
                 },
                 no_eq: {
                     title: "B-Rank Bodyweight Survival",
-                    desc: "Zero equipment. Pure resilience.",
+                    desc: isFem ? "Zero equipment. Agile resilience." : "Zero equipment. Pure resilience.",
                     exercises: [
-                        { id: "ne1", name: "Push-Ups", equip: "Floor", defaultWt: "BW", sets: [{reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}] },
-                        { id: "ne2", name: "Bodyweight Squats", equip: "Floor", defaultWt: "BW", sets: [{reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}] },
-                        { id: "ne3", name: "Lunges", equip: "Floor", defaultWt: "BW", sets: [{reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}] },
-                        { id: "ne4", name: "Plank (Secs)", equip: "Floor", defaultWt: "BW", sets: [{reps: 60, wt: "BW", done: false}, {reps: 60, wt: "BW", done: false}] },
-                        { id: "ne5", name: "Burpees", equip: "Floor", defaultWt: "BW", sets: [{reps: 15, wt: "BW", done: false}, {reps: 15, wt: "BW", done: false}] }
+                        { id: "ne1", name: isFem ? "Knee Push-Ups" : "Push-Ups", equip: "Floor", defaultWt: "BW", sets: setsNe1 },
+                        { id: "ne2", name: "Bodyweight Squats", equip: "Floor", defaultWt: "BW", sets: setsNe2 },
+                        { id: "ne3", name: "Lunges", equip: "Floor", defaultWt: "BW", sets: setsNe3 },
+                        { id: "ne4", name: "Plank (Secs)", equip: "Floor", defaultWt: "BW", sets: setsNe4 },
+                        { id: "ne5", name: isFem ? "Jumping Jacks" : "Burpees", equip: "Floor", defaultWt: "BW", sets: setsNe5 }
                     ]
                 }
             };
@@ -1255,6 +1313,33 @@
                 body.className = "bg-monarch-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased pb-24 selection:bg-monarch-accent selection:text-monarch-950 transition-colors duration-500";
             } else {
                 body.className = "bg-system-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased pb-24 selection:bg-system-neon selection:text-system-950 transition-colors duration-500";
+            }
+
+            // Apply Female Thematic Accents to Tabs & Buttons
+            const neonTextEls = ['drawer-id-icon', 'vitals-mana-lbl', 'vitals-energy-lbl', 'calendar-title-lbl', 'stat-lbl-1', 'stat-lbl-2', 'stat-lbl-3', 'history-title-lbl', 'drawer-gear-icon'];
+            neonTextEls.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (isFem) { el.classList.remove('text-system-neon'); el.classList.add('text-pink-400'); }
+                    else { el.classList.remove('text-pink-400'); el.classList.add('text-system-neon'); }
+                }
+            });
+
+            const addMealBtn = document.getElementById('meal-add-btn');
+            if (addMealBtn) {
+                if (isFem) { addMealBtn.classList.remove('bg-system-neon', 'text-system-950'); addMealBtn.classList.add('bg-pink-400', 'text-white'); }
+                else { addMealBtn.classList.remove('bg-pink-400', 'text-white'); addMealBtn.classList.add('bg-system-neon', 'text-system-950'); }
+            }
+
+            document.querySelectorAll('.qa-btn, .water-btn').forEach(btn => {
+                if (isFem) { btn.classList.remove('hover:border-system-neon'); btn.classList.add('hover:border-pink-400'); }
+                else { btn.classList.remove('hover:border-pink-400'); btn.classList.add('hover:border-system-neon'); }
+            });
+            
+            const xpBar = document.getElementById('drawer-xp-bar');
+            if (xpBar) {
+                if (isFem) { xpBar.classList.remove('to-system-neon'); xpBar.classList.add('to-pink-400'); }
+                else { xpBar.classList.remove('to-pink-400'); xpBar.classList.add('to-system-neon'); }
             }
         }
 
@@ -1337,7 +1422,6 @@
             if (!window.appState.restDays) {
                 window.appState.restDays = ['Wed', 'Sun'];
             }
-            // Migrate old gate clear tracking
             if (window.appState.dungeonClearedToday !== undefined) {
                 delete window.appState.dungeonClearedToday;
             }
@@ -1426,7 +1510,7 @@
             renderShadowArmy();
             renderStatsSection();
             closeSettingsModal();
-            exitGate(); // Return to gate selection screen on reset
+            exitGate(); 
             if (!silent) showToast("DAILY RESET EXECUTED! 24H COOLDOWN STARTED.");
         }
 
@@ -1742,7 +1826,7 @@
 
             Object.keys(shadows).forEach(k => {
                 const s = shadows[k];
-                if (!s.unlocked) return; // Completely hidden if not unlocked!
+                if (!s.unlocked) return; // Completely hidden if not unlocked
                 unlockedCount++;
                 if (s.summoned) summonedCount++;
 
@@ -2321,12 +2405,12 @@
             const badge = document.getElementById('active-rest-days-badge');
             if (!container) return;
 
-            const daysLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-            const restDaysList = window.appState.restDays || [];
+            const daysLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const restDaysList = (window.appState.restDays || []).map(d => d.toUpperCase());
             const isFem = window.appState.profileClass === 'female';
 
             if (badge) {
-                badge.innerText = `Rest Days: ${restDaysList.join(', ') || 'None'}`;
+                badge.innerText = `Rest Days: ${(window.appState.restDays || []).join(', ') || 'None'}`;
             }
 
             const weekDates = getCurrentWeekDates();
@@ -2336,13 +2420,15 @@
                 const dateStr = d.toDateString();
                 const dayName = daysLabels[i];
                 const isToday = dateStr === new Date().toDateString();
-                const isRestDay = restDaysList.includes(dayName);
+                const isRestDay = restDaysList.includes(dayName.toUpperCase());
                 const isCompleted = (window.appState.completedDates || []).includes(dateStr);
                 const isFuture = d > new Date() && !isToday;
                 
                 let icon = '';
+                const moonColor = isFem ? 'text-pink-400' : 'text-purple-400';
+
                 if (isRestDay) {
-                    icon = '<i class="fa-solid fa-moon text-pink-400"></i>';
+                    icon = `<i class="fa-solid fa-moon ${moonColor}"></i>`;
                 } else if (isCompleted) {
                     icon = '<i class="fa-solid fa-check text-emerald-400"></i>';
                 } else if (!isFuture) {
@@ -2356,7 +2442,7 @@
 
                 calHTML += `
                     <div class="flex flex-col items-center justify-center py-2 bg-system-950 rounded-lg border ${todayBorder}">
-                        <span class="text-[9px] font-bold ${todayText}">${dayName}</span>
+                        <span class="text-[9px] font-bold ${todayText} uppercase">${dayName}</span>
                         <div class="mt-1 h-4 flex items-center justify-center text-xs">${icon}</div>
                     </div>
                 `;
@@ -2378,7 +2464,7 @@
             if (!container) return;
 
             if (!topHunters || topHunters.length === 0) {
-                window.renderFallbackLeaderboard();
+                window.renderFallbackLeaderboard(false);
                 return;
             }
 
@@ -2397,7 +2483,7 @@
                 item.className = `flex justify-between items-center p-2.5 rounded-xl border text-xs font-mono ${isMe ? (isFem ? 'bg-pink-500/15 border-pink-400' : 'bg-system-accent/10 border-system-accent') : 'bg-system-950 border-system-border/60'}`;
                 item.innerHTML = `
                     <div class="flex items-center space-x-2.5">
-                        ${rankBadges[idx] || '#'}
+                        ${rankBadges[idx] || `<span class="w-6 h-6 rounded-lg bg-system-800 text-slate-300 font-black text-[10px] flex items-center justify-center">${idx + 1}</span>`}
                         <div>
                             <div class="font-bold text-white flex items-center gap-1.5">
                                 <span>${hunter.name}</span>
@@ -2414,7 +2500,7 @@
             });
         };
 
-        window.renderFallbackLeaderboard = function() {
+        window.renderFallbackLeaderboard = function(isError = false) {
             const container = document.getElementById('leaderboard-container');
             if (!container) return;
 
@@ -2427,24 +2513,46 @@
             const isFem = window.appState.profileClass === 'female';
 
             container.innerHTML = '';
-            const item = document.createElement('div');
-            item.className = `flex justify-between items-center p-2.5 rounded-xl border text-xs font-mono ${isFem ? 'bg-pink-500/15 border-pink-400' : 'bg-system-accent/10 border-system-accent'}`;
-            item.innerHTML = `
-                <div class="flex items-center space-x-2.5">
-                    <span class="w-6 h-6 rounded-lg bg-amber-400 text-system-950 font-black text-xs flex items-center justify-center">1</span>
-                    <div>
-                        <div class="font-bold text-white flex items-center gap-1.5">
-                            <span>${myStats.name}</span>
-                            <span class="text-[9px] ${isFem ? 'bg-pink-500/20 text-pink-300' : 'bg-system-neon/20 text-system-neon'} px-1 rounded font-bold">YOU</span>
+            
+            // Simulated Global Data Network
+            const simulatedHunters = [
+                { name: "THOMAS ANDRE", level: 99, xp: 99500, questsCompleted: 1540 },
+                { name: "LIU ZHIGANG", level: 98, xp: 98000, questsCompleted: 1420 },
+                { name: "CHRISTOPHER REED", level: 95, xp: 95000, questsCompleted: 1300 },
+                myStats
+            ];
+
+            // Sort by level then XP
+            simulatedHunters.sort((a, b) => b.level - a.level || b.xp - a.xp);
+
+            simulatedHunters.slice(0, 4).forEach((hunter, idx) => {
+                const isMe = hunter.name === myStats.name && hunter.xp === myStats.xp;
+                const rankBadges = [
+                    '<span class="w-6 h-6 rounded-lg bg-amber-400 text-system-950 font-black text-xs flex items-center justify-center">1</span>',
+                    '<span class="w-6 h-6 rounded-lg bg-slate-300 text-system-950 font-black text-xs flex items-center justify-center">2</span>',
+                    '<span class="w-6 h-6 rounded-lg bg-amber-700 text-slate-100 font-black text-xs flex items-center justify-center">3</span>',
+                    '<span class="w-6 h-6 rounded-lg bg-system-800 text-slate-300 font-black text-[10px] flex items-center justify-center">4</span>'
+                ];
+
+                const item = document.createElement('div');
+                item.className = `flex justify-between items-center p-2.5 rounded-xl border text-xs font-mono ${isMe ? (isFem ? 'bg-pink-500/15 border-pink-400' : 'bg-system-accent/10 border-system-accent') : 'bg-system-950 border-system-border/60'}`;
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2.5">
+                        ${rankBadges[idx] || `<span class="w-6 h-6 rounded-lg bg-system-800 text-slate-300 font-black text-[10px] flex items-center justify-center">${idx + 1}</span>`}
+                        <div>
+                            <div class="font-bold text-white flex items-center gap-1.5">
+                                <span>${hunter.name}</span>
+                                ${isMe ? `<span class="text-[9px] ${isFem ? 'bg-pink-500/20 text-pink-300' : 'bg-system-neon/20 text-system-neon'} px-1 rounded font-bold">YOU (OFFLINE)</span>` : ''}
+                            </div>
+                            <div class="text-[10px] text-slate-400">LVL ${hunter.level} • ${hunter.questsCompleted || 0} Quests Cleared</div>
                         </div>
-                        <div class="text-[10px] text-slate-400">LVL ${myStats.level} • ${myStats.questsCompleted} Quests Cleared</div>
                     </div>
-                </div>
-                <div class="text-right">
-                    <span class="font-black ${isFem ? 'text-pink-400' : 'text-system-glow'}">${myStats.xp} XP</span>
-                </div>
-            `;
-            container.appendChild(item);
+                    <div class="text-right">
+                        <span class="font-black ${isFem ? 'text-pink-400' : 'text-system-glow'}">${hunter.xp} XP</span>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
         };
 
         function renderStatsSection() {
@@ -2481,12 +2589,10 @@
         }
 
         function clearAllData() {
-            if (confirm("Reset all local player data and force initial setup startup wizard?")) {
-                localStorage.removeItem('solo_leveling_v10_data');
-                localStorage.removeItem('solo_leveling_initialized');
-                localStorage.removeItem('solo_leveling_features_seen');
-                location.reload();
-            }
+            localStorage.removeItem('solo_leveling_v10_data');
+            localStorage.removeItem('solo_leveling_initialized');
+            localStorage.removeItem('solo_leveling_features_seen');
+            location.reload();
         }
 
         // --- TIMER MODAL LOGIC ---
@@ -2565,7 +2671,6 @@
         }
 
         // FAILSAFE IMMEDIATE INITIALIZATION
-        // Runs instantly, completely ignoring external network load times
         const appInitFailsafe = () => {
             try {
                 loadStateFromStorage();
@@ -2589,7 +2694,6 @@
                 console.error("Failsafe Init error:", err);
             }
 
-            // Unblock the Splash Screen strictly via JS time, regardless of network state
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 if (splash) {
