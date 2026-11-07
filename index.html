@@ -1,101 +1,1620 @@
-<<<<
-            <!-- Daily Midnight Force Trigger -->
-            <div class="pt-2 border-t border-system-border/60 space-y-2">
-                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block" id="settings-reset-lbl">Daily Reset Engine (24h Cooldown)</label>
-                <button onclick="playSystemSound('click'); forceMidnightReset();" class="btn-active w-full py-2.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
-                    <i class="fa-solid fa-rotate text-xs"></i>
-                    <span>FORCE MIDNIGHT RESET NOW</span>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Anti-Cache Meta Tags to ensure immediate updates from GitHub -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>System Awake - Solo Leveling Tracker</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'system': ['"Share Tech Mono"', 'monospace'],
+                        'title': ['"Cinzel"', 'serif'],
+                    },
+                    colors: {
+                        system: {
+                            900: '#05070a', // Deep void
+                            850: '#090d16', // Slightly lighter panel
+                            800: '#111827',
+                            border: '#1e3a5f',
+                            neon: '#00f0ff', // Standard Cyan
+                            pink: '#ff00ff', // Female Profile Pink
+                            amber: '#fbbf24', // Loot / No Eq
+                            rose: '#f43f5e', // Break / Boss
+                            orange: '#f97316' // Penalty Desert
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px #00f0ff20' },
+                            '100%': { boxShadow: '0 0 20px #00f0ff60' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #05070a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Hide scrollbar for clean UI */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        .btn-active:active { transform: scale(0.95); transition: transform 0.1s; }
+        
+        .theme-cyan { --sys-color: #00f0ff; --sys-color-rgb: 0, 240, 255; }
+        .theme-pink { --sys-color: #ff00ff; --sys-color-rgb: 255, 0, 255; }
+        
+        .sys-text-glow {
+            text-shadow: 0 0 8px var(--sys-color);
+            color: var(--sys-color);
+        }
+        .sys-border-glow {
+            border-color: var(--sys-color);
+            box-shadow: 0 0 10px rgba(var(--sys-color-rgb), 0.3);
+        }
+        .sys-bg-glow {
+            background-color: rgba(var(--sys-color-rgb), 0.15);
+            border: 1px solid rgba(var(--sys-color-rgb), 0.4);
+        }
+
+        /* Ambient Theme Shifts */
+        .bg-theme-no-eq { background-color: #1a160b !important; }
+        .bg-theme-penalty { background-color: #1c0e05 !important; }
+
+        /* Timer SVG */
+        .timer-ring {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        /* Modal Overlays */
+        #settings-modal, #ap-modal, #inventory-modal, #title-modal, #all-workouts-modal {
+            z-index: 100;
+        }
+        #drawer-overlay { z-index: 50; }
+        #side-drawer { z-index: 51; }
+    </style>
+</head>
+<body class="font-system h-screen flex flex-col theme-cyan transition-colors duration-500 relative" id="body-container">
+
+    <!-- AUDIO SYSTEM -->
+    <audio id="audio-arise" src="https://actions.google.com/sounds/v1/science_fiction/sci_fi_hover_craft.ogg"></audio>
+    <audio id="audio-victory" src="https://actions.google.com/sounds/v1/alarms/spaceship_alarm.ogg"></audio>
+    <audio id="audio-click" src="https://actions.google.com/sounds/v1/ui/button_click.ogg"></audio>
+    <audio id="audio-break" src="https://actions.google.com/sounds/v1/alarms/warning_siren.ogg"></audio>
+    <audio id="audio-loot" src="https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg"></audio>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen" class="fixed inset-0 bg-system-900 z-[200] flex flex-col items-center justify-center transition-opacity duration-1000">
+        <div class="text-center animate-pulse-slow">
+            <h1 class="font-title text-4xl font-bold text-white tracking-widest mb-2">SYSTEM</h1>
+            <p class="text-sys-text-glow tracking-[0.3em] text-sm">AWAKENING SEQUENCE</p>
+        </div>
+        <div class="absolute bottom-10 text-[10px] text-gray-600 tracking-widest">
+            DEVELOPED BY OMIGHTY AI
+        </div>
+    </div>
+
+    <!-- INITIAL SETUP OVERLAY -->
+    <div id="setup-screen" class="fixed inset-0 bg-system-900 z-[150] hidden flex-col items-center justify-center px-6">
+        <div class="max-w-md w-full space-y-6">
+            <div class="text-center space-y-2">
+                <i class="fa-solid fa-fingerprint text-4xl sys-text-glow mb-2"></i>
+                <h2 class="text-2xl font-bold text-white uppercase tracking-wider">Player Registration</h2>
+                <p class="text-xs text-gray-400">Initialize your Hunter attributes.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] text-gray-400 uppercase tracking-wider">Hunter Alias (Permanent)</label>
+                    <input type="text" id="setup-name" class="w-full bg-system-850 border border-system-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-system-neon font-system mt-1" placeholder="Enter name...">
+                </div>
+
+                <div>
+                    <label class="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block">Select Class</label>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button onclick="selectClass('male')" id="btn-class-male" class="btn-active text-left p-3 rounded-lg border border-system-neon bg-system-neon/10 transition-colors">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-white">Shadow Monarch</span>
+                                <i class="fa-solid fa-mars text-system-neon"></i>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-1">Balanced combat & strength. High physical demands.</p>
+                        </button>
+                        <button onclick="selectClass('female')" id="btn-class-female" class="btn-active text-left p-3 rounded-lg border border-system-border bg-system-850 transition-colors">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-white">Shadow Assassin</span>
+                                <i class="fa-solid fa-venus text-system-pink"></i>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-1">Agility & core focused. Lean muscle optimization.</p>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="completeSetup()" class="w-full py-4 bg-white text-black font-bold rounded-lg uppercase tracking-widest mt-6 btn-active">
+                    Awaken
                 </button>
             </div>
-====
-            <!-- Data Management (Export / Import Backup) -->
-            <div class="pt-2 border-t border-system-border/60 space-y-1.5">
-                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Data Backup & Restore</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="playSystemSound('click'); exportSaveData();" class="btn-active w-full py-2 bg-system-850 hover:bg-system-800 border border-system-border text-system-glow font-bold text-[10px] rounded-xl flex items-center justify-center space-x-1.5 cursor-pointer">
-                        <i class="fa-solid fa-download"></i>
-                        <span>BACKUP</span>
-                    </button>
-                    <button onclick="playSystemSound('click'); document.getElementById('import-file-input').click();" class="btn-active w-full py-2 bg-system-850 hover:bg-system-800 border border-system-border text-emerald-400 font-bold text-[10px] rounded-xl flex items-center justify-center space-x-1.5 cursor-pointer">
-                        <i class="fa-solid fa-upload"></i>
-                        <span>RESTORE</span>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[300] hidden">
+        <div id="toast-message" class="bg-black/90 border border-system-neon text-system-neon px-6 py-3 rounded-full shadow-[0_0_15px_rgba(0,240,255,0.5)] text-sm font-bold text-center">
+            System Message
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="main-app" class="hidden flex-col h-full relative">
+        
+        <!-- HEADER -->
+        <header class="h-16 border-b border-system-border/50 bg-system-900/90 backdrop-blur-md flex items-center justify-between px-4 sticky top-0 z-40">
+            <!-- Profile / AP Badge -->
+            <button onclick="openSideDrawer()" class="flex items-center space-x-3 btn-active relative">
+                <div id="ap-badge" class="hidden absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#22d3ee] z-10"></div>
+                <div class="w-10 h-10 rounded-full border-2 sys-border-glow overflow-hidden bg-system-850 flex items-center justify-center">
+                    <i class="fa-solid fa-user-ninja text-gray-300 text-lg"></i>
+                </div>
+                <div class="text-left">
+                    <div class="text-xs font-bold text-white uppercase" id="header-hunter-name">Hunter</div>
+                    <div class="text-[10px] sys-text-glow" id="header-hunter-title">Lv. <span id="header-level">1</span></div>
+                </div>
+            </button>
+
+            <!-- Inventory / Setup -->
+            <div class="flex items-center space-x-4">
+                <button onclick="openInventoryModal()" class="text-gray-400 hover:text-white transition-colors relative btn-active">
+                    <div id="loot-badge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse shadow-[0_0_8px_#fbbf24]"></div>
+                    <i class="fa-solid fa-briefcase text-lg"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- DUNGEON BREAK WARNING BANNER -->
+        <div id="dungeon-break-banner" class="hidden bg-rose-600 text-white p-2 text-center animate-pulse cursor-pointer" onclick="openDungeonBreakWorkout()">
+            <div class="font-bold text-sm flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>DUNGEON BREAK DETECTED - <span id="db-timer">02:00:00</span></span>
+            </div>
+            <div class="text-[10px] mt-0.5">Emergency Subjugation Required. 3x XP.</div>
+        </div>
+
+        <!-- CONTENT VIEWS -->
+        <main class="flex-1 overflow-y-auto pb-20 relative">
+            
+            <!-- DASHBOARD TAB -->
+            <div id="tab-dashboard" class="p-4 space-y-6">
+                <!-- Daily Quest Status -->
+                <div class="sys-bg-glow rounded-xl p-5 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-10">
+                        <i class="fa-solid fa-scroll text-8xl -mr-4 -mt-4"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-white mb-1 relative z-10"><i class="fa-solid fa-list-check mr-2 sys-text-glow"></i>Daily Quest</h2>
+                    <p class="text-xs text-gray-300 mb-4 relative z-10" id="quest-flavor-text">Complete training to avoid penalty.</p>
+                    
+                    <div id="quest-list" class="space-y-3 relative z-10">
+                        <!-- Quests injected via JS -->
+                    </div>
+                    
+                    <button id="btn-claim-quest" onclick="claimDailyQuest()" class="mt-5 w-full py-3 bg-gray-800 text-gray-500 font-bold rounded-lg text-sm uppercase tracking-widest cursor-not-allowed transition-all">
+                        Claim Reward
                     </button>
                 </div>
-                <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importSaveData(event)">
-                <p class="text-[9px] text-slate-400 leading-tight mt-1">Export your hunter data to safely transfer devices or backup progress.</p>
+
+                <!-- Progress & XP -->
+                <div class="bg-system-850 border border-system-border/50 rounded-xl p-5">
+                    <div class="flex justify-between items-end mb-2">
+                        <h3 class="text-sm font-bold text-white">Experience</h3>
+                        <span class="text-[10px] text-gray-400" id="xp-text">0 / 1000 XP</span>
+                    </div>
+                    <div class="w-full bg-system-900 rounded-full h-2.5 border border-system-border/50">
+                        <div id="xp-bar" class="h-2.5 rounded-full bg-system-neon shadow-[0_0_10px_#00f0ff] transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Daily Midnight Force Trigger -->
-            <div class="pt-2 border-t border-system-border/60 space-y-2">
-                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block" id="settings-reset-lbl">Daily Reset Engine (24h Cooldown)</label>
-                <button onclick="playSystemSound('click'); forceMidnightReset();" class="btn-active w-full py-2.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
-                    <i class="fa-solid fa-rotate text-xs"></i>
-                    <span>FORCE MIDNIGHT RESET NOW</span>
+            <!-- DUNGEONS TAB -->
+            <div id="tab-dungeons" class="hidden p-4 space-y-4">
+                <div class="text-center mb-6">
+                    <h2 class="font-title text-2xl font-bold text-white">GATE SELECTION</h2>
+                    <p class="text-xs text-gray-400">Clear dungeons to level up.</p>
+                </div>
+                
+                <div id="dungeon-list" class="space-y-4">
+                    <!-- Dungeons injected via JS -->
+                </div>
+            </div>
+
+            <!-- VITALS TAB -->
+            <div id="tab-vitals" class="hidden p-4 space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Hydration -->
+                    <div class="bg-system-850 border border-system-border/50 rounded-xl p-4 text-center">
+                        <i class="fa-solid fa-droplet text-blue-400 text-2xl mb-2"></i>
+                        <h3 class="text-xs font-bold text-gray-300 uppercase">Mana (Water)</h3>
+                        <div class="text-xl font-bold text-white my-1"><span id="water-current">0</span> <span class="text-xs text-gray-500">/ <span id="water-target">100</span> oz</span></div>
+                        <div class="w-full bg-system-900 rounded-full h-1.5 mb-3">
+                            <div id="water-bar" class="h-1.5 rounded-full bg-blue-400 transition-all" style="width: 0%"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="addWater(8)" class="btn-active bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] py-1.5 rounded">+8 oz</button>
+                            <button onclick="addWater(16)" class="btn-active bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] py-1.5 rounded">+16 oz</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Nutrition -->
+                    <div class="bg-system-850 border border-system-border/50 rounded-xl p-4 text-center">
+                        <i class="fa-solid fa-bolt text-yellow-400 text-2xl mb-2"></i>
+                        <h3 class="text-xs font-bold text-gray-300 uppercase">Energy (Kcal)</h3>
+                        <div class="text-xl font-bold text-white my-1"><span id="kcal-current">0</span> <span class="text-xs text-gray-500">/ <span id="kcal-target">2000</span></span></div>
+                        <div class="w-full bg-system-900 rounded-full h-1.5 mb-3">
+                            <div id="kcal-bar" class="h-1.5 rounded-full bg-yellow-400 transition-all" style="width: 0%"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="addKcal(300)" class="btn-active bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-[10px] py-1.5 rounded">+300</button>
+                            <button onclick="addKcal(600)" class="btn-active bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-[10px] py-1.5 rounded">+Ramen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATUS & LEADERBOARD TAB -->
+            <div id="tab-status" class="hidden p-4 space-y-6">
+                <!-- Weekly Calendar -->
+                <div class="bg-system-850 border border-system-border/50 rounded-xl p-4">
+                    <h3 class="text-sm font-bold text-white mb-3 flex items-center"><i class="fa-regular fa-calendar-check mr-2 sys-text-glow"></i>Activity Log</h3>
+                    <div class="grid grid-cols-7 gap-1 text-center" id="weekly-calendar">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+
+                <!-- Global Leaderboard -->
+                <div class="bg-system-850 border border-system-border/50 rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-white flex items-center"><i class="fa-solid fa-globe mr-2 sys-text-glow"></i>Hunter Network</h3>
+                        <span class="text-[9px] text-gray-400 bg-system-900 px-2 py-1 rounded border border-system-border">LIVE</span>
+                    </div>
+                    <div id="leaderboard-list" class="space-y-2">
+                        <!-- Loading State -->
+                        <div class="text-center text-xs text-gray-500 py-4"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Connecting to Network...</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="fixed bottom-0 w-full h-16 bg-system-900/95 backdrop-blur-lg border-t border-system-border/50 flex justify-around items-center z-40 pb-safe">
+            <button onclick="switchTab('dashboard')" class="nav-btn active flex flex-col items-center p-2 text-system-neon transition-colors" data-tab="dashboard">
+                <i class="fa-solid fa-list-check text-lg mb-1"></i>
+                <span class="text-[9px] uppercase tracking-wider font-bold">Quest</span>
+            </button>
+            <button onclick="switchTab('dungeons')" class="nav-btn flex flex-col items-center p-2 text-gray-500 hover:text-gray-300 transition-colors relative" data-tab="dungeons">
+                <div id="nav-dungeon-badge" class="hidden absolute top-1 right-2 w-2 h-2 bg-rose-500 rounded-full"></div>
+                <i class="fa-brands fa-d-and-d text-lg mb-1"></i>
+                <span class="text-[9px] uppercase tracking-wider font-bold">Gates</span>
+            </button>
+            <button onclick="switchTab('vitals')" class="nav-btn flex flex-col items-center p-2 text-gray-500 hover:text-gray-300 transition-colors" data-tab="vitals">
+                <i class="fa-solid fa-heart-pulse text-lg mb-1"></i>
+                <span class="text-[9px] uppercase tracking-wider font-bold">Vitals</span>
+            </button>
+            <button onclick="switchTab('status')" class="nav-btn flex flex-col items-center p-2 text-gray-500 hover:text-gray-300 transition-colors" data-tab="status">
+                <i class="fa-solid fa-chart-simple text-lg mb-1"></i>
+                <span class="text-[9px] uppercase tracking-wider font-bold">Status</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- SIDE DRAWER (PROFILE MENU) -->
+    <div id="drawer-overlay" class="fixed inset-0 bg-black/60 hidden transition-opacity" onclick="closeSideDrawer()"></div>
+    <div id="side-drawer" class="fixed top-0 left-0 w-64 h-full bg-system-900 border-r border-system-border/50 transform -translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-5 border-b border-system-border/50 cursor-pointer hover:bg-system-850 transition-colors" onclick="openProfileMenu()">
+            <div class="flex items-center space-x-3 mb-3">
+                <div class="w-12 h-12 rounded-full border-2 sys-border-glow overflow-hidden bg-system-850 flex items-center justify-center">
+                    <i class="fa-solid fa-user-ninja text-gray-300 text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-white uppercase" id="drawer-hunter-name">Hunter</div>
+                    <div class="text-[10px] sys-text-glow">Lv. <span id="drawer-level">1</span></div>
+                </div>
+            </div>
+            <div class="text-[10px] text-gray-400"><i class="fa-solid fa-angles-right mr-1"></i>Tap to view Profile & Stats</div>
+        </div>
+        <div class="flex-1 p-4 space-y-4 overflow-y-auto">
+            <div class="space-y-2">
+                <label class="text-[10px] text-gray-500 uppercase tracking-wider">Lifetime Stats</label>
+                <div class="bg-system-850 p-3 rounded-lg border border-system-border/30 text-xs text-gray-300 flex justify-between">
+                    <span>Total Push-ups</span>
+                    <span class="font-bold text-white" id="drawer-pushups">0</span>
+                </div>
+                <div class="bg-system-850 p-3 rounded-lg border border-system-border/30 text-xs text-gray-300 flex justify-between">
+                    <span>Total Squats</span>
+                    <span class="font-bold text-white" id="drawer-squats">0</span>
+                </div>
+                <div class="bg-system-850 p-3 rounded-lg border border-system-border/30 text-xs text-gray-300 flex justify-between">
+                    <span>Gates Cleared</span>
+                    <span class="font-bold text-white" id="drawer-gates">0</span>
+                </div>
+            </div>
+            
+            <div class="pt-4 border-t border-system-border/30">
+                <button onclick="openSettingsModal()" class="w-full text-left p-3 rounded-lg hover:bg-system-850 text-sm text-gray-300 flex items-center transition-colors">
+                    <i class="fa-solid fa-gear w-6 text-gray-500"></i> System Config
+                </button>
+                <button onclick="openAllWorkoutsModal()" class="w-full text-left p-3 rounded-lg hover:bg-system-850 text-sm text-gray-300 flex items-center transition-colors">
+                    <i class="fa-solid fa-book-open w-6 text-gray-500"></i> Workouts Library
                 </button>
             </div>
->>>>
-<<<<
-        function clearAllData() {
-            localStorage.removeItem('solo_leveling_v13_data');
-            localStorage.removeItem('solo_leveling_initialized');
-            localStorage.removeItem('solo_leveling_features_seen');
-            location.reload();
-        }
-====
-        function clearAllData() {
-            localStorage.removeItem('solo_leveling_v13_data');
-            localStorage.removeItem('solo_leveling_initialized');
-            localStorage.removeItem('solo_leveling_features_seen');
-            location.reload();
+        </div>
+    </div>
+
+    <!-- PROFILE MENU MODAL (AP & Titles) -->
+    <div id="profile-menu-modal" class="fixed inset-0 bg-black/80 hidden flex-col items-center justify-center z-[100] px-4">
+        <div class="bg-system-900 border border-system-border rounded-xl w-full max-w-sm overflow-hidden">
+            <div class="p-4 border-b border-system-border/50 flex justify-between items-center bg-system-850">
+                <h3 class="font-bold text-white uppercase"><i class="fa-solid fa-id-card mr-2 sys-text-glow"></i>Hunter Profile</h3>
+                <button onclick="closeModal('profile-menu-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 space-y-3">
+                <button onclick="closeModal('profile-menu-modal'); openApModal();" class="w-full py-4 bg-system-850 border border-system-border rounded-lg flex items-center justify-between px-4 hover:bg-system-800 transition-colors btn-active">
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-dna text-cyan-400 text-xl w-8"></i>
+                        <div class="text-left">
+                            <div class="text-sm font-bold text-white uppercase">Ability Points (AP)</div>
+                            <div class="text-[10px] text-gray-400">Distribute stats to grow stronger</div>
+                        </div>
+                    </div>
+                    <span class="text-xs bg-cyan-900/50 text-cyan-400 px-2 py-1 rounded border border-cyan-700 font-bold" id="profile-ap-count">0 AP</span>
+                </button>
+                <button onclick="closeModal('profile-menu-modal'); openTitleModal();" class="w-full py-4 bg-system-850 border border-system-border rounded-lg flex items-center justify-between px-4 hover:bg-system-800 transition-colors btn-active">
+                    <div class="flex items-center">
+                        <i class="fa-solid fa-award text-amber-400 text-xl w-8"></i>
+                        <div class="text-left">
+                            <div class="text-sm font-bold text-white uppercase">Equip Titles</div>
+                            <div class="text-[10px] text-gray-400">Showcase your achievements</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-500"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABILITY POINTS (AP) MODAL -->
+    <div id="ap-modal" class="fixed inset-0 bg-black/80 hidden flex-col items-center justify-center px-4">
+        <div class="bg-system-900 border border-system-border rounded-xl w-full max-w-sm overflow-hidden shadow-[0_0_20px_rgba(0,240,255,0.1)]">
+            <div class="p-4 border-b border-system-border/50 flex justify-between items-center bg-system-850">
+                <h3 class="font-bold text-white uppercase"><i class="fa-solid fa-dna mr-2 sys-text-glow"></i>Stat Allocation</h3>
+                <button onclick="closeModal('ap-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4">
+                <div class="text-center mb-4">
+                    <div class="text-sm text-gray-400 uppercase tracking-wider">Unspent Points</div>
+                    <div class="text-3xl font-bold sys-text-glow font-title" id="ap-unspent">0</div>
+                </div>
+                <div class="space-y-3" id="stat-allocation-list">
+                    <!-- JS injected -->
+                </div>
+                <p class="text-[9px] text-gray-500 mt-4 text-center">Stats provide permanent passive buffs to your Hunter.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TITLE EQUIP MODAL -->
+    <div id="title-modal" class="fixed inset-0 bg-black/80 hidden flex-col items-center justify-center px-4">
+        <div class="bg-system-900 border border-system-border rounded-xl w-full max-w-sm overflow-hidden">
+            <div class="p-4 border-b border-system-border/50 flex justify-between items-center bg-system-850">
+                <h3 class="font-bold text-white uppercase"><i class="fa-solid fa-award mr-2 text-amber-400"></i>Titles</h3>
+                <button onclick="closeModal('title-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 space-y-3 max-h-[60vh] overflow-y-auto" id="titles-list">
+                <!-- JS injected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- INVENTORY MODAL -->
+    <div id="inventory-modal" class="fixed inset-0 bg-black/80 hidden flex-col items-center justify-center px-4">
+        <div class="bg-system-900 border border-system-border rounded-xl w-full max-w-sm overflow-hidden">
+            <div class="p-4 border-b border-system-border/50 flex justify-between items-center bg-system-850">
+                <h3 class="font-bold text-white uppercase"><i class="fa-solid fa-briefcase mr-2 text-amber-400"></i>Inventory</h3>
+                <button onclick="closeModal('inventory-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 grid grid-cols-3 gap-3" id="inventory-grid">
+                <!-- JS injected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 hidden flex-col items-center justify-center px-4">
+        <div class="bg-system-900 border border-system-border rounded-xl w-full max-w-sm overflow-hidden">
+            <div class="p-4 border-b border-system-border/50 flex justify-between items-center bg-system-850">
+                <h3 class="font-bold text-white uppercase"><i class="fa-solid fa-gear mr-2"></i>System Config</h3>
+                <button onclick="closeModal('settings-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 space-y-5">
+                
+                <!-- No Equipment Toggle -->
+                <div class="flex items-center justify-between bg-system-850 p-3 rounded-lg border border-system-border/50">
+                    <div>
+                        <div class="text-xs font-bold text-white">No Equipment Mode</div>
+                        <div class="text-[9px] text-gray-400 leading-tight mt-1">Converts all gates to bodyweight survival.<br>2-hour cooldown if toggled.</div>
+                    </div>
+                    <button id="toggle-no-eq" onclick="toggleNoEquipment()" class="w-12 h-6 rounded-full bg-gray-700 relative transition-colors duration-300 btn-active">
+                        <div id="toggle-no-eq-knob" class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300"></div>
+                    </button>
+                </div>
+
+                <!-- Backup & Restore -->
+                <div class="pt-2 border-t border-system-border/60 space-y-1.5">
+                    <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Data Backup & Restore</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="playSystemSound('click'); exportSaveData();" class="btn-active w-full py-2 bg-system-850 hover:bg-system-800 border border-system-border text-sys-text-glow font-bold text-[10px] rounded-xl flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-download"></i>
+                            <span>BACKUP</span>
+                        </button>
+                        <button onclick="playSystemSound('click'); document.getElementById('import-file-input').click();" class="btn-active w-full py-2 bg-system-850 hover:bg-system-800 border border-system-border text-emerald-400 font-bold text-[10px] rounded-xl flex items-center justify-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-upload"></i>
+                            <span>RESTORE</span>
+                        </button>
+                    </div>
+                    <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importSaveData(event)">
+                    <p class="text-[9px] text-slate-400 leading-tight mt-1">Export your hunter data to safely transfer devices or backup progress.</p>
+                </div>
+
+                <!-- Force Reset -->
+                <div class="pt-2 border-t border-system-border/60 space-y-2">
+                    <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Daily Reset Engine</label>
+                    <button onclick="playSystemSound('click'); forceMidnightReset();" class="btn-active w-full py-2.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-rotate text-xs"></i>
+                        <span>FORCE MIDNIGHT RESET NOW</span>
+                    </button>
+                </div>
+
+                <div class="pt-4 border-t border-system-border/60">
+                    <button onclick="clearAllData()" class="w-full py-2 bg-red-900/50 text-red-200 text-xs rounded-lg border border-red-900 font-bold btn-active">
+                        WIPE ALL SYSTEM DATA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVE WORKOUT MODAL -->
+    <div id="workout-modal" class="fixed inset-0 bg-system-900 z-[120] hidden flex-col">
+        <div class="h-16 border-b border-system-border flex items-center px-4 justify-between bg-system-850">
+            <button onclick="closeWorkoutModal()" class="text-gray-400 hover:text-white btn-active p-2 -ml-2"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+            <h2 id="workout-title" class="text-sm font-bold text-white uppercase tracking-wider sys-text-glow">Gate Subjugation</h2>
+            <div class="w-8"></div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-6" id="workout-exercises-list">
+            <!-- Injected via JS -->
+        </div>
+        <div class="p-4 border-t border-system-border bg-system-850">
+            <button id="btn-complete-workout" onclick="completeWorkout()" class="w-full py-4 bg-sys-text-glow text-black font-bold rounded-lg uppercase tracking-widest btn-active">
+                Clear Gate
+            </button>
+        </div>
+    </div>
+
+    <!-- REST TIMER OVERLAY -->
+    <div id="timer-overlay" class="fixed inset-0 bg-system-900/95 backdrop-blur-sm z-[130] hidden flex-col items-center justify-center">
+        <h2 class="text-xl font-title text-white mb-8 tracking-widest">RECOVERY PHASE</h2>
+        
+        <div class="relative w-64 h-64 flex items-center justify-center mb-8">
+            <svg class="absolute inset-0 w-full h-full timer-ring">
+                <circle cx="128" cy="128" r="120" fill="none" stroke="#1e3a5f" stroke-width="8"></circle>
+                <circle id="timer-circle-progress" cx="128" cy="128" r="120" fill="none" stroke="var(--sys-color)" stroke-width="8" stroke-linecap="round" stroke-dasharray="753.9" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="text-center z-10">
+                <div id="timer-display" class="text-6xl font-bold text-white font-system">00:60</div>
+                <div class="text-xs text-sys-text-glow uppercase tracking-wider mt-2">Time Remaining</div>
+            </div>
+        </div>
+
+        <div class="flex space-x-4">
+            <button onclick="addTimerTime(30)" class="px-4 py-2 border border-system-border rounded-lg text-sm text-gray-300 hover:bg-system-850 btn-active">+30s</button>
+            <button onclick="stopTimer()" class="px-6 py-2 bg-white text-black font-bold rounded-lg uppercase text-sm btn-active">Skip Rest</button>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. INITIALIZATION & STATE
+           ========================================================================== */
+        
+        // Base Configurations
+        const CLASS_QUEST_CONFIGS = {
+            'male': { pushups: 100, pullups: 100, squats: 100, run: 10 },
+            'female': { pushups: 50, pullups: 30, squats: 120, run: 12 },
+            'child': { pushups: 30, pullups: 10, squats: 50, run: 5 }
+        };
+
+        const TITLES_DB = [
+            { id: 'novice', name: 'Novice Hunter', condition: 'Auto-unlocked', unlocked: true },
+            { id: 'wolf_slayer', name: 'Wolf Slayer', condition: 'Clear 5 Gates', reqType: 'gates', reqVal: 5 },
+            { id: 'adversity', name: 'The One Who Overcame Adversity', condition: 'Escape Penalty Zone', reqType: 'penalty_cleared', reqVal: 1 },
+            { id: 'demon_hunter', name: 'Demon Hunter', condition: 'Clear 30 Quests', reqType: 'quests', reqVal: 30 },
+            { id: 'shadow_monarch', name: 'Shadow Monarch', condition: 'Reach Level 35', reqType: 'level', reqVal: 35 }
+        ];
+
+        // Core App State
+        let appState = {
+            hunterName: "",
+            classProfile: "male",
+            level: 1,
+            xp: 0,
+            baseDailyTargets: { pushups: 100, pullups: 100, squats: 100, run: 10 },
+            currentDailyTargets: { pushups: 100, pullups: 100, squats: 100, run: 10 },
+            dailyProgress: { pushups: 0, pullups: 0, squats: 0, run: 0 },
+            lifetimeStats: { pushups: 0, pullups: 0, squats: 0, run: 0, gates: 0, quests: 0, penaltyCleared: 0 },
+            lastResetDate: "",
+            questClaimed: false,
+            restDays: [], // e.g. [0, 6] for Sun/Sat
+            dungeonsCleared: [], // IDs of cleared dungeons today
+            vitals: { water: 0, kcal: 0 },
+            history: {}, // Format: "YYYY-MM-DD": { questClaimed: true/false, isRestDay: true/false }
+            noEquipmentMode: false,
+            noEquipmentCooldown: 0,
+            penaltyActive: false, // Desert Zone penalty
+            stats: { unspentAP: 0, str: 10, agi: 10, int: 10, vit: 10 },
+            inventory: { pot_recover: 0, scroll_reset: 0, rune_xp: 0 },
+            equippedTitle: 'novice',
+            unlockedTitles: ['novice'],
+            dungeonBreakActive: false,
+            dungeonBreakExpiry: 0
+        };
+
+        // DOM Loaded Init
+        document.addEventListener("DOMContentLoaded", () => {
+            if (localStorage.getItem('solo_leveling_initialized')) {
+                loadData();
+                checkTimeEvents();
+                initApp();
+            } else {
+                setTimeout(() => {
+                    document.getElementById('splash-screen').classList.add('opacity-0');
+                    setTimeout(() => {
+                        document.getElementById('splash-screen').classList.add('hidden');
+                        document.getElementById('setup-screen').classList.remove('hidden');
+                        document.getElementById('setup-screen').classList.add('flex');
+                    }, 1000);
+                }, 2000);
+            }
+        });
+
+        /* ==========================================================================
+           2. SETUP & DATA MANAGEMENT
+           ========================================================================== */
+
+        let tempClass = 'male';
+        function selectClass(c) {
+            tempClass = c;
+            playSystemSound('click');
+            document.getElementById('btn-class-male').classList.remove('border-system-neon', 'bg-system-neon/10', 'border-system-border', 'bg-system-850');
+            document.getElementById('btn-class-female').classList.remove('border-system-pink', 'bg-system-pink/10', 'border-system-border', 'bg-system-850');
+            
+            if (c === 'male') {
+                document.getElementById('btn-class-male').classList.add('border-system-neon', 'bg-system-neon/10');
+                document.getElementById('btn-class-female').classList.add('border-system-border', 'bg-system-850');
+            } else {
+                document.getElementById('btn-class-female').classList.add('border-system-pink', 'bg-system-pink/10');
+                document.getElementById('btn-class-male').classList.add('border-system-border', 'bg-system-850');
+            }
         }
 
-        // --- DATA MANAGEMENT (EXPORT / IMPORT) ---
-        function exportSaveData() {
-            const dataStr = localStorage.getItem('solo_leveling_v13_data');
-            if (!dataStr) {
-                showToast("No save data found to export!");
+        function completeSetup() {
+            const nameInput = document.getElementById('setup-name').value.trim();
+            if (!nameInput) {
+                showToast("Hunter Alias is required.");
                 return;
             }
+            playSystemSound('victory');
             
-            const hName = window.appState.hunterName ? window.appState.hunterName.replace(/\s+/g, '_').toLowerCase() : 'hunter';
-            const dateStr = new Date().toISOString().split('T')[0];
-            const fileName = `sololeveling_${hName}_backup_${dateStr}.json`;
+            appState.hunterName = nameInput;
+            appState.classProfile = tempClass;
+            appState.baseDailyTargets = CLASS_QUEST_CONFIGS[tempClass];
+            appState.currentDailyTargets = randomizeDailyTargets(appState.baseDailyTargets);
+            appState.lastResetDate = new Date().toISOString().split('T')[0];
+            
+            saveData();
+            localStorage.setItem('solo_leveling_initialized', 'true');
+            
+            document.getElementById('setup-screen').classList.add('hidden');
+            initApp();
+        }
 
+        function loadData() {
+            const data = localStorage.getItem('solo_leveling_v13_data');
+            if (data) {
+                // Merge to ensure new object properties exist in old saves
+                appState = { ...appState, ...JSON.parse(data) };
+                
+                // Ensure new nested objects exist if migrating from old save
+                if (!appState.stats) appState.stats = { unspentAP: 0, str: 10, agi: 10, int: 10, vit: 10 };
+                if (!appState.inventory) appState.inventory = { pot_recover: 0, scroll_reset: 0, rune_xp: 0 };
+                if (!appState.unlockedTitles) appState.unlockedTitles = ['novice'];
+                if (!appState.currentDailyTargets) appState.currentDailyTargets = appState.baseDailyTargets;
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('solo_leveling_v13_data', JSON.stringify(appState));
+        }
+
+        // Export/Import Backup
+        function exportSaveData() {
+            const dataStr = localStorage.getItem('solo_leveling_v13_data');
+            if (!dataStr) { showToast("No save data found!"); return; }
+            
+            const fileName = `sololeveling_${appState.hunterName.replace(/\s+/g, '_').toLowerCase()}_backup.json`;
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showToast("Backup exported successfully!");
+            a.href = url; a.download = fileName;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            showToast("Backup exported!");
         }
 
         function importSaveData(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (importedData && typeof importedData === 'object' && importedData.playerLevel) {
-                        localStorage.setItem('solo_leveling_v13_data', JSON.stringify(importedData));
-                        showToast("Data restored successfully! Rebooting system...");
+                    const imported = JSON.parse(e.target.result);
+                    if (imported && imported.level) {
+                        localStorage.setItem('solo_leveling_v13_data', JSON.stringify(imported));
+                        showToast("Data restored! Rebooting...");
                         setTimeout(() => location.reload(), 1500);
-                    } else {
-                        showToast("Error: Invalid or corrupted backup file.");
-                    }
-                } catch (err) {
-                    showToast("Error: Could not read backup file.");
-                }
+                    } else { showToast("Invalid backup file."); }
+                } catch (err) { showToast("Error reading file."); }
             };
             reader.readAsText(file);
-            
-            // Reset input so the same file can be selected again if needed
             event.target.value = '';
         }
->>>>
+
+        function clearAllData() {
+            localStorage.removeItem('solo_leveling_v13_data');
+            localStorage.removeItem('solo_leveling_initialized');
+            location.reload();
+        }
+
+        /* ==========================================================================
+           3. CORE ENGINE & UI RENDERING
+           ========================================================================== */
+
+        function initApp() {
+            document.getElementById('splash-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('flex');
+            
+            applyTheme();
+            renderHeader();
+            renderDashboard();
+            renderDungeons();
+            renderVitals();
+            updateBadges();
+            checkTitleUnlocks();
+        }
+
+        function applyTheme() {
+            const body = document.getElementById('body-container');
+            body.classList.remove('theme-cyan', 'theme-pink', 'bg-theme-no-eq', 'bg-theme-penalty');
+            
+            if (appState.penaltyActive) {
+                body.classList.add('bg-theme-penalty', 'theme-cyan');
+            } else if (appState.noEquipmentMode) {
+                body.classList.add('bg-theme-no-eq', 'theme-cyan'); // No Eq overrides base theme
+            } else if (appState.classProfile === 'female') {
+                body.classList.add('theme-pink');
+            } else {
+                body.classList.add('theme-cyan');
+            }
+        }
+
+        function renderHeader() {
+            document.getElementById('header-hunter-name').innerText = appState.hunterName;
+            document.getElementById('header-level').innerText = appState.level;
+            
+            const titleObj = TITLES_DB.find(t => t.id === appState.equippedTitle);
+            if (titleObj) {
+                document.getElementById('header-hunter-title').innerHTML = `Lv. <span id="header-level">${appState.level}</span> - ${titleObj.name}`;
+            }
+            
+            document.getElementById('drawer-hunter-name').innerText = appState.hunterName;
+            document.getElementById('drawer-level').innerText = appState.level;
+            
+            document.getElementById('drawer-pushups').innerText = appState.lifetimeStats.pushups;
+            document.getElementById('drawer-squats').innerText = appState.lifetimeStats.squats;
+            document.getElementById('drawer-gates').innerText = appState.lifetimeStats.gates;
+        }
+
+        function updateBadges() {
+            // AP Badge
+            const apBadge = document.getElementById('ap-badge');
+            if (appState.stats.unspentAP > 0) apBadge.classList.remove('hidden');
+            else apBadge.classList.add('hidden');
+
+            // Inventory Badge (Simple check if total items > 0)
+            const lootBadge = document.getElementById('loot-badge');
+            const hasLoot = (appState.inventory.pot_recover + appState.inventory.scroll_reset + appState.inventory.rune_xp) > 0;
+            if (hasLoot) lootBadge.classList.remove('hidden');
+            else lootBadge.classList.add('hidden');
+        }
+
+        // TABS
+        function switchTab(tabId) {
+            playSystemSound('click');
+            ['dashboard', 'dungeons', 'vitals', 'status'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.querySelector(`.nav-btn[data-tab="${t}"]`).classList.remove('active', 'text-system-neon', 'text-system-pink');
+                document.querySelector(`.nav-btn[data-tab="${t}"]`).classList.add('text-gray-500');
+            });
+            
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+            activeBtn.classList.remove('text-gray-500');
+            
+            const themeColor = appState.classProfile === 'female' && !appState.noEquipmentMode && !appState.penaltyActive ? 'text-system-pink' : 'text-system-neon';
+            activeBtn.classList.add('active', themeColor);
+
+            if (tabId === 'status') {
+                renderWeeklyCalendar();
+                renderSimulatedLeaderboard();
+            }
+        }
+
+        /* ==========================================================================
+           4. DAILY QUESTS & TIME EVENTS
+           ========================================================================== */
+
+        function randomizeDailyTargets(base) {
+            const randomized = {};
+            for (const [key, val] of Object.entries(base)) {
+                if (val === 0) { randomized[key] = 0; continue; }
+                const variance = Math.floor(val * 0.2); // 20%
+                const change = Math.floor(Math.random() * (variance * 2 + 1)) - variance;
+                randomized[key] = val + change;
+            }
+            return randomized;
+        }
+
+        function checkTimeEvents() {
+            const today = new Date().toISOString().split('T')[0];
+            const now = Date.now();
+            
+            // Check midnight reset
+            if (appState.lastResetDate !== today) {
+                // If yesterday wasn't claimed, and wasn't a rest day -> Penalty!
+                const yesterday = new Date(Date.now() - 86400000);
+                const yDate = yesterday.toISOString().split('T')[0];
+                const yDayOfWeek = yesterday.getDay();
+                
+                if (!appState.questClaimed && !appState.restDays.includes(yDayOfWeek) && appState.lastResetDate) {
+                    // Try to evade via VIT stat
+                    const evasionChance = (appState.stats.vit - 10) * 0.05; // 5% per point above 10
+                    if (Math.random() > evasionChance) {
+                        appState.penaltyActive = true;
+                    } else {
+                        showToast("VIT Stat allowed you to evade the Penalty Zone!");
+                    }
+                }
+
+                // Execute Reset
+                appState.history[appState.lastResetDate] = { claimed: appState.questClaimed };
+                appState.dailyProgress = { pushups: 0, pullups: 0, squats: 0, run: 0 };
+                appState.vitals = { water: 0, kcal: 0 };
+                appState.questClaimed = false;
+                appState.dungeonsCleared = [];
+                appState.lastResetDate = today;
+                
+                // Set No Eq mode base targets or Standard
+                if (appState.noEquipmentMode) {
+                    appState.baseDailyTargets = { pushups: 100, pullups: 0, squats: 0, run: 0 };
+                } else {
+                    appState.baseDailyTargets = CLASS_QUEST_CONFIGS[appState.classProfile];
+                }
+                appState.currentDailyTargets = randomizeDailyTargets(appState.baseDailyTargets);
+
+                // Dungeon Break check (15% chance on new day)
+                if (Math.random() < 0.15) {
+                    appState.dungeonBreakActive = true;
+                    appState.dungeonBreakExpiry = now + (2 * 60 * 60 * 1000); // 2 hours
+                }
+                saveData();
+            }
+
+            // Check if Dungeon break expired
+            if (appState.dungeonBreakActive && now > appState.dungeonBreakExpiry) {
+                appState.dungeonBreakActive = false;
+                appState.xp = Math.max(0, appState.xp - 200); // Penalty
+                showToast("Dungeon Break Failed. 200 XP lost.");
+                saveData();
+            }
+        }
+
+        function forceMidnightReset() {
+            appState.lastResetDate = "2000-01-01"; // Trick the engine
+            checkTimeEvents();
+            saveData();
+            location.reload();
+        }
+
+        function renderDashboard() {
+            // Update XP Bar
+            const xpReq = appState.level * 1000;
+            document.getElementById('xp-text').innerText = `${appState.xp} / ${xpReq} XP`;
+            document.getElementById('xp-bar').style.width = `${Math.min(100, (appState.xp / xpReq) * 100)}%`;
+
+            // Dungeon Break Banner
+            const dbBanner = document.getElementById('dungeon-break-banner');
+            const navBadge = document.getElementById('nav-dungeon-badge');
+            if (appState.dungeonBreakActive) {
+                dbBanner.classList.remove('hidden');
+                navBadge.classList.remove('hidden');
+                updateDungeonBreakTimer();
+            } else {
+                dbBanner.classList.add('hidden');
+                navBadge.classList.add('hidden');
+            }
+
+            // Quests
+            const questList = document.getElementById('quest-list');
+            questList.innerHTML = '';
+            
+            const todayDay = new Date().getDay();
+            const isRestDay = appState.restDays.includes(todayDay);
+            const btnClaim = document.getElementById('btn-claim-quest');
+
+            if (appState.penaltyActive) {
+                document.getElementById('quest-flavor-text').innerText = "PENALTY ZONE ACTIVE. Clear Subjugation Gate.";
+                document.getElementById('quest-flavor-text').classList.add('text-orange-400');
+                btnClaim.innerText = "LOCKED";
+                btnClaim.className = "mt-5 w-full py-3 bg-red-900/20 text-red-500 border border-red-900 font-bold rounded-lg text-sm uppercase tracking-widest cursor-not-allowed";
+                return; // Hide normal quests
+            }
+
+            let allComplete = true;
+
+            if (isRestDay) {
+                document.getElementById('quest-flavor-text').innerText = "Recovery phase initiated.";
+                const restQuests = [
+                    { name: 'Physical Rest', done: true },
+                    { name: 'Hydration Protocol', done: appState.vitals.water >= getManaTarget() },
+                    { name: 'Mental Recovery', done: true }
+                ];
+                restQuests.forEach(q => {
+                    if (!q.done) allComplete = false;
+                    questList.innerHTML += createQuestHTML(q.name, q.done ? 1 : 0, 1);
+                });
+            } else {
+                document.getElementById('quest-flavor-text').innerText = "Complete training to avoid penalty.";
+                const qMap = {
+                    pushups: { label: 'Push-ups', icon: 'fa-hand-fist' },
+                    pullups: { label: 'Pull-ups', icon: 'fa-arrow-up-from-bracket' },
+                    squats: { label: 'Squats', icon: 'fa-person-arrow-up-from-line' },
+                    run: { label: 'Run (km)', icon: 'fa-person-running' }
+                };
+
+                for (const [key, target] of Object.entries(appState.currentDailyTargets)) {
+                    if (target <= 0) continue; // Hide zero-target quests
+                    const prog = appState.dailyProgress[key] || 0;
+                    if (prog < target) allComplete = false;
+                    questList.innerHTML += createQuestHTML(`${qMap[key].label}`, prog, target, qMap[key].icon);
+                }
+            }
+
+            if (appState.questClaimed) {
+                btnClaim.innerText = "Reward Claimed";
+                btnClaim.className = "mt-5 w-full py-3 bg-green-900/20 text-green-500 border border-green-900 font-bold rounded-lg text-sm uppercase tracking-widest cursor-not-allowed";
+                btnClaim.disabled = true;
+            } else if (allComplete) {
+                btnClaim.innerText = "Claim Reward";
+                btnClaim.className = "mt-5 w-full py-3 bg-sys-text-glow text-black font-bold rounded-lg text-sm uppercase tracking-widest btn-active animate-pulse";
+                btnClaim.disabled = false;
+            } else {
+                btnClaim.innerText = "Incomplete";
+                btnClaim.className = "mt-5 w-full py-3 bg-gray-800 text-gray-500 font-bold rounded-lg text-sm uppercase tracking-widest cursor-not-allowed";
+                btnClaim.disabled = true;
+            }
+        }
+
+        function createQuestHTML(name, progress, target, icon = "fa-check") {
+            const isDone = progress >= target;
+            const pct = Math.min(100, (progress / target) * 100);
+            return `
+                <div class="bg-system-900/50 p-3 rounded-lg border border-system-border/30">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-6 h-6 rounded-full bg-system-850 flex items-center justify-center ${isDone ? 'text-system-neon sys-border-glow border' : 'text-gray-500 border border-gray-700'}">
+                                <i class="fa-solid ${icon} text-[10px]"></i>
+                            </div>
+                            <span class="text-sm ${isDone ? 'text-white' : 'text-gray-400'}">${name}</span>
+                        </div>
+                        <span class="text-xs font-bold ${isDone ? 'sys-text-glow' : 'text-gray-500'}">${progress} / ${target}</span>
+                    </div>
+                    <div class="w-full bg-system-850 rounded-full h-1">
+                        <div class="h-1 rounded-full ${isDone ? 'bg-system-neon shadow-[0_0_8px_#00f0ff]' : 'bg-gray-700'}" style="width: ${pct}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function claimDailyQuest() {
+            if (appState.questClaimed) return;
+            playSystemSound('arise');
+            appState.questClaimed = true;
+            addXP(300);
+            appState.lifetimeStats.quests++;
+            saveData();
+            renderDashboard();
+            checkTitleUnlocks();
+        }
+
+        let dbInterval;
+        function updateDungeonBreakTimer() {
+            clearInterval(dbInterval);
+            const el = document.getElementById('db-timer');
+            dbInterval = setInterval(() => {
+                const diff = appState.dungeonBreakExpiry - Date.now();
+                if (diff <= 0) {
+                    clearInterval(dbInterval);
+                    checkTimeEvents();
+                    renderDashboard();
+                } else {
+                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    el.innerText = `${h}:${m}:${s}`;
+                }
+            }, 1000);
+        }
+
+        /* ==========================================================================
+           5. DUNGEONS & WORKOUTS
+           ========================================================================== */
+
+        const DUNGEON_DEFS = [
+            { id: 'push', name: 'Push & Chest', rank: 'C', icon: 'fa-hand-fist' },
+            { id: 'pull', name: 'Pull & Back', rank: 'C', icon: 'fa-arrow-up-from-bracket' },
+            { id: 'calisthenics', name: 'Legs & Core', rank: 'C', icon: 'fa-person-walking' },
+            { id: 'cardio', name: 'Agility & Stamina', rank: 'D', icon: 'fa-person-running' }
+        ];
+
+        function getDungeonRoutine(id) {
+            const isFemale = appState.classProfile === 'female';
+            const lvl = appState.level;
+            
+            // Standardizing sets based on rank/level
+            const baseSets = lvl < 10 ? 3 : 4;
+            
+            if (id === 'penalty') {
+                return [
+                    { name: 'Penalty Push-ups', reps: 100, sets: 1, type: 'pushups' },
+                    { name: 'Penalty Squats', reps: 100, sets: 1, type: 'squats' },
+                    { name: 'Penalty Run', reps: '2 mi', sets: 1, type: 'run' }
+                ];
+            }
+            if (id === 'break') {
+                return [
+                    { name: 'Emergency Burpees', reps: 20, sets: 4, type: 'pushups' },
+                    { name: 'Jump Squats', reps: 20, sets: 4, type: 'squats' },
+                    { name: 'Mountain Climbers', reps: 40, sets: 4, type: 'run' }
+                ];
+            }
+            if (id === 'no_eq') {
+                return [
+                    { name: isFemale ? 'Knee Push-ups' : 'Standard Push-ups', reps: 15, sets: baseSets, type: 'pushups' },
+                    { name: 'Air Squats', reps: 20, sets: baseSets, type: 'squats' },
+                    { name: isFemale ? 'Bicycle Crunches' : 'Lunges', reps: 20, sets: baseSets, type: 'squats' },
+                    { name: isFemale ? 'Plank Jacks' : 'Burpees', reps: 10, sets: baseSets, type: 'run' }
+                ];
+            }
+            
+            if (id === 'push') {
+                return [
+                    { name: 'Standard Push-ups', reps: 15, sets: baseSets, type: 'pushups' },
+                    { name: 'Diamond Push-ups', reps: 10, sets: baseSets, type: 'pushups' },
+                    { name: 'Pike Push-ups', reps: 10, sets: baseSets, type: 'pushups' }
+                ];
+            }
+            if (id === 'pull') {
+                return [
+                    { name: 'Pull-ups', reps: 8, sets: baseSets, type: 'pullups' },
+                    { name: 'Chin-ups', reps: 8, sets: baseSets, type: 'pullups' },
+                    { name: 'Bodyweight Rows', reps: 12, sets: baseSets, type: 'pullups' }
+                ];
+            }
+            if (id === 'calisthenics') {
+                return [
+                    { name: 'Squats', reps: 20, sets: baseSets, type: 'squats' },
+                    { name: isFemale ? 'Ab Crunches' : 'Lunges', reps: 20, sets: baseSets, type: 'squats' },
+                    { name: isFemale ? 'V-Ups' : 'Calf Raises', reps: 15, sets: baseSets, type: 'squats' }
+                ];
+            }
+            if (id === 'cardio') {
+                return [
+                    { name: 'High Knees', reps: '60s', sets: 3, type: 'run' },
+                    { name: 'Jump Rope', reps: '100', sets: 3, type: 'run' },
+                    { name: 'Sprints', reps: '30s', sets: 4, type: 'run' }
+                ];
+            }
+            return [];
+        }
+
+        function renderDungeons() {
+            const list = document.getElementById('dungeon-list');
+            list.innerHTML = '';
+
+            // 1. Penalty Gate Override
+            if (appState.penaltyActive) {
+                list.innerHTML = `
+                    <button onclick="openWorkout('penalty')" class="w-full relative overflow-hidden rounded-xl border-2 border-orange-500/50 bg-orange-900/20 p-4 text-left transition-all btn-active group block">
+                        <div class="absolute right-0 top-0 opacity-10 transition-transform group-hover:scale-110"><i class="fa-solid fa-skull text-8xl -mr-4 -mt-4 text-orange-500"></i></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[10px] font-bold text-orange-400 bg-orange-950 px-2 py-0.5 rounded border border-orange-500/30 uppercase">S-Rank Penalty</span>
+                                <i class="fa-solid fa-skull text-orange-500"></i>
+                            </div>
+                            <h3 class="text-xl font-title font-bold text-white mb-1 uppercase tracking-wider">Desert Subjugation</h3>
+                            <p class="text-xs text-orange-200">Survive to restore system access.</p>
+                        </div>
+                    </button>`;
+                return;
+            }
+
+            // 2. No Equipment Mode Override
+            if (appState.noEquipmentMode) {
+                const cleared = appState.dungeonsCleared.includes('no_eq');
+                list.innerHTML = `
+                    <button onclick="openWorkout('no_eq')" class="w-full relative overflow-hidden rounded-xl border border-amber-500/50 bg-amber-900/20 p-4 text-left transition-all btn-active group block ${cleared ? 'opacity-50 grayscale pointer-events-none' : ''}">
+                        <div class="absolute right-0 top-0 opacity-10 transition-transform group-hover:scale-110"><i class="fa-solid fa-person-running text-8xl -mr-4 -mt-4 text-amber-500"></i></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[10px] font-bold text-amber-400 bg-amber-950 px-2 py-0.5 rounded border border-amber-500/30 uppercase">B-Rank</span>
+                                <i class="fa-solid ${cleared ? 'fa-lock' : 'fa-play'} text-amber-500"></i>
+                            </div>
+                            <h3 class="text-xl font-title font-bold text-white mb-1 uppercase tracking-wider">Bodyweight Survival</h3>
+                            <p class="text-xs text-amber-200">No equipment required.</p>
+                        </div>
+                    </button>`;
+                return;
+            }
+
+            // 3. Standard Gates
+            DUNGEON_DEFS.forEach(d => {
+                const cleared = appState.dungeonsCleared.includes(d.id);
+                list.innerHTML += `
+                    <button onclick="openWorkout('${d.id}')" class="w-full relative overflow-hidden rounded-xl border ${cleared ? 'border-gray-700 bg-gray-800 opacity-50 grayscale pointer-events-none' : 'sys-bg-glow'} p-4 text-left transition-all btn-active group block">
+                        <div class="absolute right-0 top-0 opacity-10 transition-transform group-hover:scale-110"><i class="fa-solid ${d.icon} text-8xl -mr-4 -mt-4"></i></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[10px] font-bold ${cleared ? 'text-gray-500 bg-gray-900' : 'sys-text-glow bg-system-900'} px-2 py-0.5 rounded border border-current uppercase">${d.rank}-Rank</span>
+                                <i class="fa-solid ${cleared ? 'fa-lock text-gray-500' : 'fa-play text-system-neon'}"></i>
+                            </div>
+                            <h3 class="text-lg font-title font-bold text-white uppercase tracking-wider">${d.name}</h3>
+                        </div>
+                    </button>
+                `;
+            });
+        }
+
+        let activeWorkoutId = null;
+        let activeRoutine = [];
+
+        function openWorkout(id) {
+            activeWorkoutId = id;
+            activeRoutine = getDungeonRoutine(id);
+            
+            document.getElementById('workout-title').innerText = id === 'penalty' ? 'Penalty Subjugation' : id === 'break' ? 'Emergency Gate' : 'Gate Subjugation';
+            
+            const list = document.getElementById('workout-exercises-list');
+            list.innerHTML = '';
+            
+            activeRoutine.forEach((ex, idx) => {
+                let setsHtml = '';
+                for(let i=0; i<ex.sets; i++) {
+                    setsHtml += `<button onclick="toggleSet(this, '${ex.type}', ${ex.reps})" class="w-8 h-8 rounded-full border border-system-border bg-system-900 flex items-center justify-center text-xs font-bold text-gray-500 transition-colors btn-active" data-done="false">${ex.reps}</button>`;
+                }
+
+                list.innerHTML += `
+                    <div class="bg-system-850 p-4 rounded-xl border border-system-border/50">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-white text-sm">${ex.name}</h3>
+                            <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(ex.name + ' exercise form')}" target="_blank" class="text-[10px] text-system-neon hover:underline"><i class="fa-brands fa-youtube mr-1"></i>Form</a>
+                        </div>
+                        <div class="flex space-x-2 overflow-x-auto pb-1">${setsHtml}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('workout-modal').classList.remove('hidden');
+            document.getElementById('workout-modal').classList.add('flex');
+        }
+
+        function closeWorkoutModal() {
+            document.getElementById('workout-modal').classList.add('hidden');
+            document.getElementById('workout-modal').classList.remove('flex');
+            activeWorkoutId = null;
+        }
+
+        function toggleSet(btn, type, reps) {
+            playSystemSound('click');
+            const isDone = btn.getAttribute('data-done') === 'true';
+            
+            if (isDone) {
+                btn.setAttribute('data-done', 'false');
+                btn.className = "w-8 h-8 rounded-full border border-system-border bg-system-900 flex items-center justify-center text-xs font-bold text-gray-500 transition-colors btn-active";
+                if (typeof reps === 'number') {
+                    appState.dailyProgress[type] -= reps;
+                    appState.lifetimeStats[type] -= reps;
+                }
+            } else {
+                btn.setAttribute('data-done', 'true');
+                btn.className = "w-8 h-8 rounded-full border border-transparent bg-system-neon shadow-[0_0_10px_#00f0ff] flex items-center justify-center text-xs font-bold text-black transition-colors btn-active";
+                if (typeof reps === 'number') {
+                    appState.dailyProgress[type] += reps;
+                    appState.lifetimeStats[type] += reps;
+                }
+                startRestTimer();
+            }
+            saveData();
+            renderDashboard();
+            renderHeader();
+        }
+
+        function completeWorkout() {
+            if (activeWorkoutId === 'penalty') {
+                appState.penaltyActive = false;
+                appState.lifetimeStats.penaltyCleared++;
+                showToast("Penalty Zone Escaped!");
+                applyTheme();
+            } else if (activeWorkoutId === 'break') {
+                appState.dungeonBreakActive = false;
+                addXP(500); // Massive XP
+                showToast("Emergency Subjugation Complete! 500 XP");
+            } else {
+                appState.dungeonsCleared.push(activeWorkoutId);
+                addXP(150);
+                
+                // Loot Roll (30%)
+                if (Math.random() < 0.3) {
+                    const roll = Math.random();
+                    if (roll < 0.5) appState.inventory.pot_recover++;
+                    else if (roll < 0.8) appState.inventory.scroll_reset++;
+                    else appState.inventory.rune_xp++;
+                    playSystemSound('loot');
+                    showToast("Loot Drop Acquired!");
+                    updateBadges();
+                }
+            }
+
+            playSystemSound('victory');
+            saveData();
+            closeWorkoutModal();
+            renderDungeons();
+            renderDashboard();
+            checkTitleUnlocks();
+        }
+
+        function openDungeonBreakWorkout() {
+            switchTab('dungeons');
+            openWorkout('break');
+        }
+
+        /* ==========================================================================
+           6. REST TIMER
+           ========================================================================== */
+
+        let timerInterval;
+        let timeLeft = 0;
+        let totalTime = 60;
+
+        function startRestTimer() {
+            // Apply AGI stat reduction (2s per point over 10)
+            const agiReduction = Math.max(0, (appState.stats.agi - 10) * 2);
+            totalTime = Math.max(10, 60 - agiReduction); 
+            timeLeft = totalTime;
+            
+            document.getElementById('timer-overlay').classList.remove('hidden');
+            document.getElementById('timer-overlay').classList.add('flex');
+            updateTimerUI();
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    stopTimer();
+                    playSystemSound('break');
+                }
+            }, 1000);
+        }
+
+        function addTimerTime(secs) {
+            timeLeft += secs;
+            totalTime += secs;
+            updateTimerUI();
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer-overlay').classList.add('hidden');
+            document.getElementById('timer-overlay').classList.remove('flex');
+        }
+
+        function updateTimerUI() {
+            const display = document.getElementById('timer-display');
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            display.innerText = `${m}:${s}`;
+
+            const circle = document.getElementById('timer-circle-progress');
+            const circumference = 753.9; // 2 * pi * 120
+            const offset = circumference - (timeLeft / totalTime) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        /* ==========================================================================
+           7. VITALS & RPG STATS
+           ========================================================================== */
+
+        function getManaTarget() { return Math.max(40, 100 - (appState.stats.int - 10) * 2); }
+        function getKcalTarget() { return Math.max(1200, 2000 - (appState.stats.int - 10) * 20); }
+
+        function renderVitals() {
+            const wTarget = getManaTarget();
+            const kTarget = getKcalTarget();
+            
+            document.getElementById('water-target').innerText = wTarget;
+            document.getElementById('kcal-target').innerText = kTarget;
+            
+            document.getElementById('water-current').innerText = appState.vitals.water;
+            document.getElementById('kcal-current').innerText = appState.vitals.kcal;
+
+            document.getElementById('water-bar').style.width = `${Math.min(100, (appState.vitals.water / wTarget) * 100)}%`;
+            document.getElementById('kcal-bar').style.width = `${Math.min(100, (appState.vitals.kcal / kTarget) * 100)}%`;
+        }
+
+        function addWater(oz) {
+            appState.vitals.water += oz;
+            saveData(); renderVitals(); renderDashboard();
+        }
+
+        function addKcal(kcal) {
+            appState.vitals.kcal += kcal;
+            saveData(); renderVitals();
+        }
+
+        // STATS (AP)
+        function openApModal() {
+            document.getElementById('ap-modal').classList.remove('hidden');
+            document.getElementById('ap-modal').classList.add('flex');
+            renderApStats();
+        }
+
+        function renderApStats() {
+            document.getElementById('ap-unspent').innerText = appState.stats.unspentAP;
+            const list = document.getElementById('stat-allocation-list');
+            
+            const statsDef = [
+                { id: 'str', name: 'Strength (STR)', desc: '+5% XP multiplier per point', val: appState.stats.str, color: 'text-red-400' },
+                { id: 'agi', name: 'Agility (AGI)', desc: '-2s rest timer per point', val: appState.stats.agi, color: 'text-green-400' },
+                { id: 'int', name: 'Intelligence (INT)', desc: '-2% vitals target per point', val: appState.stats.int, color: 'text-blue-400' },
+                { id: 'vit', name: 'Vitality (VIT)', desc: '+5% Penalty evade chance', val: appState.stats.vit, color: 'text-orange-400' }
+            ];
+
+            list.innerHTML = statsDef.map(s => `
+                <div class="bg-system-850 p-3 rounded-lg border border-system-border flex justify-between items-center">
+                    <div>
+                        <div class="text-sm font-bold ${s.color}">${s.name}</div>
+                        <div class="text-[9px] text-gray-500">${s.desc}</div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-bold text-white w-6 text-center">${s.val}</span>
+                        <button onclick="allocateStat('${s.id}')" class="w-8 h-8 rounded bg-system-900 border border-system-border text-white btn-active ${appState.stats.unspentAP > 0 ? 'hover:border-system-neon hover:text-system-neon' : 'opacity-50'}" ${appState.stats.unspentAP <= 0 ? 'disabled' : ''}>
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateBadges();
+        }
+
+        function allocateStat(statId) {
+            if (appState.stats.unspentAP > 0) {
+                playSystemSound('click');
+                appState.stats.unspentAP--;
+                appState.stats[statId]++;
+                saveData();
+                renderApStats();
+                renderVitals(); // INT might have changed
+            }
+        }
+
+        /* ==========================================================================
+           8. LEVELING, TITLES, & INVENTORY
+           ========================================================================== */
+
+        function addXP(amount) {
+            // Apply STR buff multiplier
+            const mult = 1 + ((appState.stats.str - 10) * 0.05);
+            appState.xp += Math.floor(amount * mult);
+            
+            let leveledUp = false;
+            let xpReq = appState.level * 1000;
+            
+            while (appState.xp >= xpReq) {
+                appState.xp -= xpReq;
+                appState.level++;
+                appState.stats.unspentAP += 5; // 5 AP per level
+                leveledUp = true;
+                xpReq = appState.level * 1000;
+            }
+            
+            if (leveledUp) {
+                showToast(`LEVEL UP! You are now Level ${appState.level}. +5 AP`);
+                playSystemSound('victory');
+            }
+            
+            saveData();
+            renderHeader();
+            updateBadges();
+        }
+
+        function checkTitleUnlocks() {
+            TITLES_DB.forEach(t => {
+                if (!appState.unlockedTitles.includes(t.id) && t.reqType) {
+                    if (t.reqType === 'level' && appState.level >= t.reqVal) unlockTitle(t.id);
+                    if (t.reqType === 'gates' && appState.lifetimeStats.gates >= t.reqVal) unlockTitle(t.id);
+                    if (t.reqType === 'quests' && appState.lifetimeStats.quests >= t.reqVal) unlockTitle(t.id);
+                    if (t.reqType === 'penalty_cleared' && appState.lifetimeStats.penaltyCleared >= t.reqVal) unlockTitle(t.id);
+                }
+            });
+        }
+
+        function unlockTitle(id) {
+            appState.unlockedTitles.push(id);
+            saveData();
+            showToast(`Title Unlocked: ${TITLES_DB.find(t=>t.id===id).name}`);
+        }
+
+        function openTitleModal() {
+            document.getElementById('title-modal').classList.remove('hidden');
+            document.getElementById('title-modal').classList.add('flex');
+            
+            const list = document.getElementById('titles-list');
+            list.innerHTML = TITLES_DB.map(t => {
+                const unlocked = appState.unlockedTitles.includes(t.id);
+                const equipped = appState.equippedTitle === t.id;
+                return `
+                    <button onclick="${unlocked ? `equipTitle('${t.id}')` : ''}" class="w-full text-left p-3 rounded-lg border ${equipped ? 'border-amber-400 bg-amber-900/20' : unlocked ? 'border-system-border bg-system-850 hover:border-amber-400/50' : 'border-gray-800 bg-gray-900 opacity-50'} transition-colors btn-active">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold ${unlocked ? 'text-white' : 'text-gray-500'}">${t.name}</span>
+                            ${equipped ? '<i class="fa-solid fa-check text-amber-400"></i>' : unlocked ? '' : '<i class="fa-solid fa-lock text-gray-600"></i>'}
+                        </div>
+                        <div class="text-[10px] ${unlocked ? 'text-gray-400' : 'text-gray-600'} mt-1">${t.condition}</div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function equipTitle(id) {
+            playSystemSound('click');
+            appState.equippedTitle = id;
+            saveData();
+            renderHeader();
+            openTitleModal(); // refresh UI
+        }
+
+        // INVENTORY
+        function openInventoryModal() {
+            document.getElementById('inventory-modal').classList.remove('hidden');
+            document.getElementById('inventory-modal').classList.add('flex');
+            
+            const list = document.getElementById('inventory-grid');
+            const items = [
+                { id: 'pot_recover', name: 'Recovery Potion', icon: 'fa-flask', color: 'text-rose-400', count: appState.inventory.pot_recover },
+                { id: 'scroll_reset', name: 'Job Change Scroll', icon: 'fa-scroll', color: 'text-amber-400', count: appState.inventory.scroll_reset },
+                { id: 'rune_xp', name: 'Shadow Runestone', icon: 'fa-gem', color: 'text-purple-400', count: appState.inventory.rune_xp }
+            ];
+
+            list.innerHTML = items.map(item => `
+                <button onclick="useItem('${item.id}')" class="bg-system-850 border border-system-border rounded-lg p-3 text-center btn-active relative group ${item.count <= 0 ? 'opacity-50' : 'hover:border-system-neon'}" ${item.count <= 0 ? 'disabled' : ''}>
+                    <span class="absolute -top-2 -right-2 bg-system-900 border border-system-border text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-white">${item.count}</span>
+                    <i class="fa-solid ${item.icon} ${item.color} text-2xl mb-2 group-hover:scale-110 transition-transform"></i>
+                    <div class="text-[9px] font-bold text-gray-300 leading-tight">${item.name}</div>
+                </button>
+            `).join('');
+            
+            updateBadges();
+        }
+
+        function useItem(id) {
+            if (appState.inventory[id] <= 0) return;
+            
+            playSystemSound('loot');
+            appState.inventory[id]--;
+            
+            if (id === 'pot_recover') {
+                appState.vitals.water = getManaTarget();
+                appState.vitals.kcal = getKcalTarget();
+                showToast("Vitals fully restored.");
+                renderVitals();
+            } else if (id === 'scroll_reset') {
+                appState.dungeonsCleared = [];
+                showToast("Gate cooldowns reset!");
+                renderDungeons();
+            } else if (id === 'rune_xp') {
+                addXP(500);
+                showToast("Absorbed +500 XP");
+            }
+            
+            saveData();
+            openInventoryModal(); // refresh
+        }
+
+        /* ==========================================================================
+           9. MODALS, CALENDAR & LEADERBOARD
+           ========================================================================== */
+
+        function openSideDrawer() {
+            document.getElementById('drawer-overlay').classList.remove('hidden');
+            setTimeout(() => document.getElementById('side-drawer').classList.remove('-translate-x-full'), 10);
+            renderHeader();
+        }
+        function closeSideDrawer() {
+            document.getElementById('side-drawer').classList.add('-translate-x-full');
+            setTimeout(() => document.getElementById('drawer-overlay').classList.add('hidden'), 300);
+        }
+        
+        function openProfileMenu() {
+            closeSideDrawer();
+            document.getElementById('profile-ap-count').innerText = `${appState.stats.unspentAP} AP`;
+            document.getElementById('profile-menu-modal').classList.remove('hidden');
+            document.getElementById('profile-menu-modal').classList.add('flex');
+        }
+
+        function openSettingsModal() {
+            closeSideDrawer();
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('settings-modal').classList.add('flex');
+            updateNoEqToggleUI();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+
+        function toggleNoEquipment() {
+            const now = Date.now();
+            if (now < appState.noEquipmentCooldown) {
+                showToast("Cannot toggle. 2-hour cooldown active.");
+                return;
+            }
+            
+            appState.noEquipmentMode = !appState.noEquipmentMode;
+            appState.noEquipmentCooldown = now + (2 * 60 * 60 * 1000); // 2 hr cooldown
+            
+            saveData();
+            updateNoEqToggleUI();
+            applyTheme();
+            forceMidnightReset(); // Forces quests to recalculate
+        }
+
+        function updateNoEqToggleUI() {
+            const btn = document.getElementById('toggle-no-eq');
+            const knob = document.getElementById('toggle-no-eq-knob');
+            if (appState.noEquipmentMode) {
+                btn.classList.replace('bg-gray-700', 'bg-amber-500');
+                knob.classList.add('translate-x-7');
+            } else {
+                btn.classList.replace('bg-amber-500', 'bg-gray-700');
+                knob.classList.remove('translate-x-7');
+            }
+        }
+
+        function renderWeeklyCalendar() {
+            const cal = document.getElementById('weekly-calendar');
+            cal.innerHTML = '';
+            
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = new Date();
+            
+            for (let i=0; i<7; i++) {
+                const isRest = appState.restDays.includes(i);
+                // Simple logic: Highlight current day
+                const isToday = i === today.getDay();
+                
+                cal.innerHTML += `
+                    <div class="flex flex-col items-center">
+                        <div class="text-[9px] text-gray-500 mb-1 uppercase">${days[i]}</div>
+                        <div class="w-8 h-8 rounded bg-system-900 border ${isToday ? 'sys-border-glow' : 'border-system-border'} flex items-center justify-center">
+                            ${isRest ? '<i class="fa-solid fa-moon text-indigo-400 text-xs"></i>' : (isToday && appState.questClaimed ? '<i class="fa-solid fa-check sys-text-glow"></i>' : '')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // SIMULATED LEADERBOARD (Fallback since real Firebase keys aren't provided in snippet)
+        function renderSimulatedLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            const titleObj = TITLES_DB.find(t => t.id === appState.equippedTitle);
+            
+            const hunters = [
+                { name: 'Thomas Andre', level: 99, title: 'Goliath' },
+                { name: 'Liu Zhigang', level: 98, title: 'Hero of China' },
+                { name: 'Sung Jin-Woo', level: 95, title: 'Shadow Monarch' },
+                { name: appState.hunterName, level: appState.level, title: titleObj ? titleObj.name : 'Hunter', isPlayer: true },
+                { name: 'Christopher Reed', level: 90, title: 'National Level' }
+            ];
+            
+            hunters.sort((a,b) => b.level - a.level);
+            
+            list.innerHTML = hunters.map((h, i) => `
+                <div class="flex items-center justify-between p-3 rounded-lg ${h.isPlayer ? 'bg-system-neon/10 border border-system-neon' : 'bg-system-900 border border-system-border/50'}">
+                    <div class="flex items-center space-x-3">
+                        <div class="text-sm font-bold ${i===0 ? 'text-yellow-400' : i===1 ? 'text-gray-300' : i===2 ? 'text-orange-400' : 'text-gray-500'} w-4 text-center">${i+1}</div>
+                        <div>
+                            <div class="text-xs font-bold text-white uppercase">${h.name}</div>
+                            <div class="text-[9px] ${h.isPlayer ? 'sys-text-glow' : 'text-gray-400'}">${h.title}</div>
+                        </div>
+                    </div>
+                    <div class="text-sm font-bold sys-text-glow font-title">Lv.${h.level}</div>
+                </div>
+            `).join('');
+        }
+
+        /* ==========================================================================
+           10. UTILS & AUDIO
+           ========================================================================== */
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-container');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function playSystemSound(type) {
+            try {
+                const aud = document.getElementById(`audio-${type}`);
+                if (aud) {
+                    aud.currentTime = 0;
+                    aud.play().catch(e => console.log("Audio play blocked by browser"));
+                }
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>
