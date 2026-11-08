@@ -13,16 +13,16 @@
                 extend: {
                     colors: {
                         system: {
-                            950: '#1a212d', // Soft Blueish Grey
-                            900: '#212936', // Primary Card Surface
-                            850: '#273142', // Elevated Element
-                            800: '#313d52', // Hover / Secondary Accent
-                            border: '#3b4961', // Crisp Slate Edge
-                            accent: '#a78bfa', // Glow Purple
-                            neon: '#38bdf8',   // Neon Cyan Glow
+                            950: '#1a212d', 
+                            900: '#212936', 
+                            850: '#273142', 
+                            800: '#313d52', 
+                            border: '#3b4961', 
+                            accent: '#a78bfa', 
+                            neon: '#38bdf8',   
                             glow: '#00f0ff',
-                            orange: '#f97316', // Penalty Desert
-                            boss: '#e11d48'    // Boss Red
+                            orange: '#f97316', 
+                            boss: '#e11d48'    
                         }
                     },
                     fontFamily: {
@@ -99,28 +99,98 @@
         .nav-btn-active i { transform: translateY(-4px) scale(1.15); filter: drop-shadow(0 0 8px currentColor); }
         .nav-btn-active span { transform: translateY(2px); opacity: 0.8; }
         
-        /* Female Profile Theme Overrides */
-        .theme-female .text-system-neon { color: #f472b6 !important; }
-        .theme-female .border-system-neon { border-color: #f472b6 !important; }
-        .theme-female .bg-system-neon { background-color: #f472b6 !important; }
-        .theme-female .to-system-neon { --tw-gradient-to: #f472b6 !important; }
-        .theme-female .from-system-neon { --tw-gradient-from: #f472b6 !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
-        .theme-female .via-system-accent { --tw-gradient-stops: var(--tw-gradient-from), #d946ef, var(--tw-gradient-to) !important; }
-        .theme-female .text-system-glow { color: #fbcfe8 !important; text-shadow: 0 0 8px #f472b6 !important; }
-        .theme-female .text-sky-400 { color: #d946ef !important; } 
-        .theme-female .text-sky-300 { color: #f0abfc !important; }
-        .theme-female .bg-sky-500 { background-color: #d946ef !important; }
-        .theme-female .border-sky-500\/50 { border-color: rgba(217, 70, 239, 0.5) !important; }
-        .theme-female .hover\:border-sky-400:hover { border-color: #e879f9 !important; }
-        .theme-female .text-cyan-400 { color: #e879f9 !important; } 
-        .theme-female .text-cyan-300 { color: #f0abfc !important; }
-        .theme-female .bg-cyan-900\/50 { background-color: rgba(134, 25, 143, 0.5) !important; }
-        .theme-female .border-cyan-700\/50 { border-color: rgba(192, 38, 211, 0.5) !important; }
-        .theme-female .border-cyan-200\/40 { border-color: rgba(244, 114, 182, 0.4) !important; }
-        .theme-female .shadow-\[0_0_8px_\#38bdf8\] { box-shadow: 0 0 8px #f472b6 !important; }
-        .theme-female .shadow-\[0_0_20px_rgba\(56\,189\,248\,0\.15\)\] { box-shadow: 0 0 20px rgba(244, 114, 182, 0.15) !important; }
-        .theme-female .shadow-\[0_0_30px_rgba\(56\,189\,248\,0\.3\)\] { box-shadow: 0 0 30px rgba(244, 114, 182, 0.3) !important; }
-        .theme-female .selection\:bg-system-neon *::selection { background-color: #f472b6 !important; }
+        /* Dynamic Aura Color Overrides */
+        /* PINK AURA */
+        .aura-pink .text-system-neon { color: #f472b6 !important; }
+        .aura-pink .border-system-neon { border-color: #f472b6 !important; }
+        .aura-pink .bg-system-neon { background-color: #f472b6 !important; }
+        .aura-pink .to-system-neon { --tw-gradient-to: #f472b6 !important; }
+        .aura-pink .from-system-neon { --tw-gradient-from: #f472b6 !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .aura-pink .via-system-accent { --tw-gradient-stops: var(--tw-gradient-from), #d946ef, var(--tw-gradient-to) !important; }
+        .aura-pink .text-system-glow { color: #fbcfe8 !important; text-shadow: 0 0 8px #f472b6 !important; }
+        .aura-pink .text-sky-400 { color: #d946ef !important; } 
+        .aura-pink .text-sky-300 { color: #f0abfc !important; }
+        .aura-pink .bg-sky-500 { background-color: #d946ef !important; }
+        .aura-pink .border-sky-500\/50 { border-color: rgba(217, 70, 239, 0.5) !important; }
+        .aura-pink .hover\:border-sky-400:hover { border-color: #e879f9 !important; }
+        .aura-pink .text-cyan-400 { color: #e879f9 !important; } 
+        .aura-pink .text-cyan-300 { color: #f0abfc !important; }
+        .aura-pink .bg-cyan-900\/50 { background-color: rgba(134, 25, 143, 0.5) !important; }
+        .aura-pink .border-cyan-700\/50 { border-color: rgba(192, 38, 211, 0.5) !important; }
+        .aura-pink .border-cyan-200\/40 { border-color: rgba(244, 114, 182, 0.4) !important; }
+        .aura-pink .shadow-\[0_0_8px_\#38bdf8\] { box-shadow: 0 0 8px #f472b6 !important; }
+        .aura-pink .shadow-\[0_0_20px_rgba\(56\,189\,248\,0\.15\)\] { box-shadow: 0 0 20px rgba(244, 114, 182, 0.15) !important; }
+        .aura-pink .shadow-\[0_0_30px_rgba\(56\,189\,248\,0\.3\)\] { box-shadow: 0 0 30px rgba(244, 114, 182, 0.3) !important; }
+        .aura-pink .selection\:bg-system-neon *::selection { background-color: #f472b6 !important; }
+
+        /* RED AURA */
+        .aura-red .text-system-neon { color: #f43f5e !important; }
+        .aura-red .border-system-neon { border-color: #f43f5e !important; }
+        .aura-red .bg-system-neon { background-color: #f43f5e !important; }
+        .aura-red .to-system-neon { --tw-gradient-to: #f43f5e !important; }
+        .aura-red .from-system-neon { --tw-gradient-from: #f43f5e !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .aura-red .via-system-accent { --tw-gradient-stops: var(--tw-gradient-from), #e11d48, var(--tw-gradient-to) !important; }
+        .aura-red .text-system-glow { color: #fecdd3 !important; text-shadow: 0 0 8px #f43f5e !important; }
+        .aura-red .text-sky-400 { color: #e11d48 !important; } 
+        .aura-red .text-sky-300 { color: #fda4af !important; }
+        .aura-red .bg-sky-500 { background-color: #e11d48 !important; }
+        .aura-red .border-sky-500\/50 { border-color: rgba(225, 29, 72, 0.5) !important; }
+        .aura-red .hover\:border-sky-400:hover { border-color: #f43f5e !important; }
+        .aura-red .text-cyan-400 { color: #fb7185 !important; } 
+        .aura-red .text-cyan-300 { color: #fda4af !important; }
+        .aura-red .bg-cyan-900\/50 { background-color: rgba(159, 18, 57, 0.5) !important; }
+        .aura-red .border-cyan-700\/50 { border-color: rgba(190, 18, 60, 0.5) !important; }
+        .aura-red .border-cyan-200\/40 { border-color: rgba(244, 63, 94, 0.4) !important; }
+        .aura-red .shadow-\[0_0_8px_\#38bdf8\] { box-shadow: 0 0 8px #f43f5e !important; }
+        .aura-red .shadow-\[0_0_20px_rgba\(56\,189\,248\,0\.15\)\] { box-shadow: 0 0 20px rgba(244, 63, 94, 0.15) !important; }
+        .aura-red .shadow-\[0_0_30px_rgba\(56\,189\,248\,0\.3\)\] { box-shadow: 0 0 30px rgba(244, 63, 94, 0.3) !important; }
+        .aura-red .selection\:bg-system-neon *::selection { background-color: #f43f5e !important; }
+        
+        /* PURPLE AURA */
+        .aura-purple .text-system-neon { color: #c084fc !important; }
+        .aura-purple .border-system-neon { border-color: #c084fc !important; }
+        .aura-purple .bg-system-neon { background-color: #c084fc !important; }
+        .aura-purple .to-system-neon { --tw-gradient-to: #c084fc !important; }
+        .aura-purple .from-system-neon { --tw-gradient-from: #c084fc !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .aura-purple .via-system-accent { --tw-gradient-stops: var(--tw-gradient-from), #a855f7, var(--tw-gradient-to) !important; }
+        .aura-purple .text-system-glow { color: #f3e8ff !important; text-shadow: 0 0 8px #c084fc !important; }
+        .aura-purple .text-sky-400 { color: #a855f7 !important; } 
+        .aura-purple .text-sky-300 { color: #d8b4fe !important; }
+        .aura-purple .bg-sky-500 { background-color: #a855f7 !important; }
+        .aura-purple .border-sky-500\/50 { border-color: rgba(168, 85, 247, 0.5) !important; }
+        .aura-purple .hover\:border-sky-400:hover { border-color: #c084fc !important; }
+        .aura-purple .text-cyan-400 { color: #d8b4fe !important; } 
+        .aura-purple .text-cyan-300 { color: #e9d5ff !important; }
+        .aura-purple .bg-cyan-900\/50 { background-color: rgba(88, 28, 135, 0.5) !important; }
+        .aura-purple .border-cyan-700\/50 { border-color: rgba(126, 34, 206, 0.5) !important; }
+        .aura-purple .border-cyan-200\/40 { border-color: rgba(192, 132, 252, 0.4) !important; }
+        .aura-purple .shadow-\[0_0_8px_\#38bdf8\] { box-shadow: 0 0 8px #c084fc !important; }
+        .aura-purple .shadow-\[0_0_20px_rgba\(56\,189\,248\,0\.15\)\] { box-shadow: 0 0 20px rgba(192, 132, 252, 0.15) !important; }
+        .aura-purple .shadow-\[0_0_30px_rgba\(56\,189\,248\,0\.3\)\] { box-shadow: 0 0 30px rgba(192, 132, 252, 0.3) !important; }
+        .aura-purple .selection\:bg-system-neon *::selection { background-color: #c084fc !important; }
+
+        /* GOLD AURA */
+        .aura-gold .text-system-neon { color: #fbbf24 !important; }
+        .aura-gold .border-system-neon { border-color: #fbbf24 !important; }
+        .aura-gold .bg-system-neon { background-color: #fbbf24 !important; }
+        .aura-gold .to-system-neon { --tw-gradient-to: #fbbf24 !important; }
+        .aura-gold .from-system-neon { --tw-gradient-from: #fbbf24 !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .aura-gold .via-system-accent { --tw-gradient-stops: var(--tw-gradient-from), #d97706, var(--tw-gradient-to) !important; }
+        .aura-gold .text-system-glow { color: #fef3c7 !important; text-shadow: 0 0 8px #fbbf24 !important; }
+        .aura-gold .text-sky-400 { color: #d97706 !important; } 
+        .aura-gold .text-sky-300 { color: #fcd34d !important; }
+        .aura-gold .bg-sky-500 { background-color: #d97706 !important; }
+        .aura-gold .border-sky-500\/50 { border-color: rgba(217, 119, 6, 0.5) !important; }
+        .aura-gold .hover\:border-sky-400:hover { border-color: #fbbf24 !important; }
+        .aura-gold .text-cyan-400 { color: #fcd34d !important; } 
+        .aura-gold .text-cyan-300 { color: #fde68a !important; }
+        .aura-gold .bg-cyan-900\/50 { background-color: rgba(146, 64, 14, 0.5) !important; }
+        .aura-gold .border-cyan-700\/50 { border-color: rgba(180, 83, 9, 0.5) !important; }
+        .aura-gold .border-cyan-200\/40 { border-color: rgba(251, 191, 36, 0.4) !important; }
+        .aura-gold .shadow-\[0_0_8px_\#38bdf8\] { box-shadow: 0 0 8px #fbbf24 !important; }
+        .aura-gold .shadow-\[0_0_20px_rgba\(56\,189\,248\,0\.15\)\] { box-shadow: 0 0 20px rgba(251, 191, 36, 0.15) !important; }
+        .aura-gold .shadow-\[0_0_30px_rgba\(56\,189\,248\,0\.3\)\] { box-shadow: 0 0 30px rgba(251, 191, 36, 0.3) !important; }
+        .aura-gold .selection\:bg-system-neon *::selection { background-color: #fbbf24 !important; }
     </style>
 
     <script type="module">
@@ -232,7 +302,7 @@
         <div class="space-y-2">
             <span class="text-[11px] text-system-neon uppercase font-bold tracking-widest">[ SYSTEM BOOT SEQUENCE ]</span>
             <h1 class="text-2xl font-black text-white system-title">SOLO LEVELING</h1>
-            <p class="text-xs text-slate-400 max-w-xs mx-auto">Global Link Protocol v8.0</p>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto">Global Link Protocol v8.1</p>
         </div>
         
         <div class="w-full max-w-[160px] space-y-2 mt-4">
@@ -275,16 +345,16 @@
             </div>
             <div class="flex-1 overflow-y-auto space-y-2.5 text-left text-xs text-slate-300 pr-1">
                 <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
-                    <span class="font-bold text-system-neon">🌍 Global Boss Raids & Push Alerts</span>
-                    <p class="text-[11px] text-slate-400">Collaborate with hunters worldwide to defeat massive world bosses, and enable push notifications so you never miss a dungeon break!</p>
+                    <span class="font-bold text-system-neon">🌟 Dynamic Auras & Shadow Buffs</span>
+                    <p class="text-[11px] text-slate-400">Unlock custom UI Auras (Red, Purple, Gold) and equip extracted Shadows in the Necromancy tab for mechanical buffs (+XP, nullify penalties)!</p>
                 </div>
                 <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
-                    <span class="font-bold text-rose-500">⚔️ Dungeon Breaks & Keys</span>
-                    <p class="text-[11px] text-slate-400">Normal gates lock upon completion. Find Blue Keys to re-enter, or Red Keys to unlock the S-Rank Boss Room!</p>
+                    <span class="font-bold text-rose-500">⚔️ Dynamic Boss Encounters</span>
+                    <p class="text-[11px] text-slate-400">The S-Rank Boss Gate now dynamically rotates (Lycan, Golem, Kasaka) depending on the day of the week!</p>
                 </div>
                 <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
-                    <span class="font-bold text-purple-400">👥 Rewards Summary Screen</span>
-                    <p class="text-[11px] text-slate-400">Receive an immersive post-completion report displaying all XP gained, titles unlocked, and items looted from your endeavors.</p>
+                    <span class="font-bold text-purple-400">🌍 Global Raids & Loot</span>
+                    <p class="text-[11px] text-slate-400">Collaborate with hunters worldwide to defeat World Bosses and collect Keys and Potions from your endeavors.</p>
                 </div>
             </div>
 
@@ -488,6 +558,14 @@
             </div>
             
             <div class="space-y-3">
+                <!-- Aura Selection -->
+                <div class="bg-system-950 border border-system-border/60 rounded-xl p-3">
+                    <div class="text-[9px] text-system-neon uppercase font-bold tracking-wider mb-2">System Aura Resonance</div>
+                    <div id="hub-aura-container" class="grid grid-cols-4 gap-1.5">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
                 <button onclick="closeHunterHubModal(); openApModal();" class="w-full py-3 bg-system-950 border border-system-border rounded-xl flex items-center justify-between px-4 hover:border-system-neon transition-colors btn-active cursor-pointer">
                     <div class="flex items-center">
                         <i class="fa-solid fa-dna text-system-neon text-lg w-7"></i>
@@ -920,13 +998,14 @@
         <!-- TAB 4: SHADOW ARMY -->
         <section id="tab-shadows" class="space-y-4 hidden">
             <div class="bg-system-900 border border-system-border rounded-2xl p-4 font-mono space-y-3">
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center border-b border-purple-500/30 pb-3">
                     <div>
                         <span class="text-[10px] text-purple-400 uppercase font-bold tracking-widest">[ NECROMANCY ]</span>
                         <h2 class="text-lg font-black text-white uppercase tracking-wider system-title mt-0.5">SHADOW ARMY</h2>
                     </div>
                     <i class="fa-solid fa-ghost text-2xl text-purple-500/30"></i>
                 </div>
+                <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold text-center">Tap a Shadow to equip it and receive its systemic buffs.</p>
                 <div id="shadow-army-grid" class="grid grid-cols-2 gap-3 pt-2"></div>
             </div>
         </section>
@@ -1085,11 +1164,11 @@
         ];
 
         const SHADOWS_DB = [
-            { id: 'infantry', name: 'Shadow Infantry', reqLevel: 5, buff: 'D-Rank Minion', desc: 'Basic foot soldier extracted from a low-level gate.', icon: 'fa-skull' },
-            { id: 'igris', name: 'Igris', reqLevel: 10, buff: 'Blood-Red Commander', desc: 'A fiercely loyal knight of the highest caliber.', icon: 'fa-khanda' },
-            { id: 'tank', name: 'Tank', reqLevel: 15, buff: 'Ice Bear Leader', desc: 'A massive armored beast that shatters defenses.', icon: 'fa-shield-halved' },
-            { id: 'iron', name: 'Iron', reqLevel: 20, buff: 'A-Rank Tank', desc: 'A heavy-hitting armored giant with a taunt skill.', icon: 'fa-hammer' },
-            { id: 'beru', name: 'Beru', reqLevel: 30, buff: 'Ant King', desc: 'The apex predator of Jeju Island.', icon: 'fa-bug' }
+            { id: 'infantry', name: 'Shadow Infantry', reqLevel: 5, buff: 'Minion (No Buff)', desc: 'Basic foot soldier extracted from a low-level gate.', icon: 'fa-skull' },
+            { id: 'igris', name: 'Igris', reqLevel: 10, buff: '+5% EXP Gained', desc: 'A fiercely loyal knight of the highest caliber.', icon: 'fa-khanda' },
+            { id: 'tank', name: 'Tank', reqLevel: 15, buff: '+5% Blue Key Drop', desc: 'A massive armored beast that shatters defenses.', icon: 'fa-shield-halved' },
+            { id: 'iron', name: 'Iron', reqLevel: 20, buff: 'Nullify Vitals Penalty', desc: 'A heavy-hitting armored giant with a taunt skill.', icon: 'fa-hammer' },
+            { id: 'beru', name: 'Beru', reqLevel: 30, buff: '+10% XP & +5% Red Key', desc: 'The apex predator of Jeju Island.', icon: 'fa-bug' }
         ];
 
         const CLASS_QUEST_CONFIGS = {
@@ -1153,6 +1232,38 @@
             let setsLeg2 = [{reps: 12, wt: "BW", done: false}, {reps: 12, wt: "BW", done: false}];
             if (isFem && !isMid) setsLeg2 = [{reps: 45, wt: "BW", done: false}, {reps: 45, wt: "BW", done: false}];
 
+            let dDay = new Date().getDay();
+            let bTitle, bDesc, bEx;
+            if (dDay === 1 || dDay === 4) { 
+                bTitle = "Lycan Boss (S-Rank Challenge)"; bDesc = "High speed and cardio focus. Evade the beast's strikes.";
+                bEx = [
+                    { id: "b1", name: "High Knees", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 60, wt: "BW", done: false}, {reps: 60, wt: "BW", done: false}] },
+                    { id: "b2", name: "Mountain Climbers", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 50, wt: "BW", done: false}, {reps: 50, wt: "BW", done: false}] },
+                    { id: "b3", name: "Jump Squats", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}] }
+                ];
+            } else if (dDay === 2 || dDay === 5) { 
+                bTitle = "Golem Boss (S-Rank Challenge)"; bDesc = "Heavy static holds and strength. Break its armor.";
+                bEx = [
+                    { id: "b1", name: "Plank Hold (Secs)", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 90, wt: "BW", done: false}, {reps: 90, wt: "BW", done: false}] },
+                    { id: "b2", name: "Wall Sits (Secs)", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 60, wt: "BW", done: false}, {reps: 60, wt: "BW", done: false}] },
+                    { id: "b3", name: "Slow Push-up Negatives", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 15, wt: "BW", done: false}, {reps: 15, wt: "BW", done: false}] }
+                ];
+            } else if (dDay === 3 || dDay === 6) { 
+                bTitle = "Kasaka Boss (S-Rank Challenge)"; bDesc = "Endurance focus. Outlast the venomous serpent.";
+                bEx = [
+                    { id: "b1", name: "Burpees", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}] },
+                    { id: "b2", name: "Lunges (Total)", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 40, wt: "BW", done: false}, {reps: 40, wt: "BW", done: false}] },
+                    { id: "b3", name: "Bicycle Crunches", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 50, wt: "BW", done: false}, {reps: 50, wt: "BW", done: false}] }
+                ];
+            } else { 
+                bTitle = "Blood-Red Commander (S-Rank)"; bDesc = "Brutal full-body combat. Show your ultimate strength.";
+                bEx = [
+                    { id: "b1", name: "Burpees", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}] },
+                    { id: "b2", name: "Pull-ups / Dead Hangs", equip: "Bar", defaultWt: "BW", sets: [{reps: 15, wt: "BW", done: false}, {reps: 15, wt: "BW", done: false}] },
+                    { id: "b3", name: "Pistol / Jump Squats", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}] }
+                ];
+            }
+
             return {
                 pull: { title: `Pull & Arm Focus (Lv.${level} Scaling)`, desc: isFem ? "Back & Grip Focus with Jump Rope Conditioning." : "Progressive Overload based on Hunter Level.",
                     exercises: [
@@ -1189,13 +1300,7 @@
                         { id: "sv3", name: "Plank to Push-up Transitions", equip: "Floor", defaultWt: "BW", sets: [{reps: 15, wt: "BW", done: false}, {reps: 15, wt: "BW", done: false}] }
                     ]
                 },
-                boss: { title: `Boss Challenge (S-Rank Gate)`, desc: `The Dungeon Boss has appeared. Prepare for a brutal full-body encounter.`,
-                    exercises: [
-                        { id: "b1", name: "Burpees", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 15, wt: "BW", done: false}, {reps: 15, wt: "BW", done: false}] },
-                        { id: "b2", name: "Jump Squats", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}] },
-                        { id: "b3", name: "Mountain Climbers", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 40, wt: "BW", done: false}, {reps: 40, wt: "BW", done: false}] }
-                    ]
-                },
+                boss: { title: bTitle, desc: bDesc, exercises: bEx },
                 break: { title: `Emergency Clearance (Dungeon Break)`, desc: `A Red Gate has opened! Massive XP reward. Time is running out.`,
                     exercises: [
                         { id: "brk1", name: "Burpees", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}] },
@@ -1222,7 +1327,7 @@
             history: [], stats: { unspentAP: 0, str: 10, agi: 10, int: 10, vit: 10 }, inventory: { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 },
             equippedTitle: 'novice', unlockedTitles: ['novice'], penaltyActive: false, dungeonBreak: { active: false, expiresAt: 0 },
             lifetimeStats: { penaltyCleared: 0, gatesCleared: 0 }, notifications: { daily: false, vitals: false, raid: false, permission: 'default' },
-            workoutStartedToday: 0
+            workoutStartedToday: 0, activeAura: 'default', equippedShadow: null
         };
 
         let timerInterval = null; let timerTotalSeconds = 90; let timerRemainingSeconds = 90; let isTimerRunning = false; let breakInterval = null;
@@ -1286,6 +1391,8 @@
             if (!window.appState.dungeonBreak) window.appState.dungeonBreak = { active: false, expiresAt: 0 };
             if (!window.appState.notifications) window.appState.notifications = { daily: false, vitals: false, raid: false, permission: 'default' };
             if (window.appState.workoutStartedToday === undefined) window.appState.workoutStartedToday = 0;
+            if (!window.appState.activeAura) window.appState.activeAura = 'default';
+            if (window.appState.equippedShadow === undefined) window.appState.equippedShadow = null;
             
             if (!window.appState.dailyQuestState.targets) window.appState.dailyQuestState.targets = generateDailyTargets(window.appState.profileClass);
             if (!window.appState.activeRoutineData || !window.appState.activeRoutineData.title) {
@@ -1389,7 +1496,13 @@
         
         function awardXP(amount) {
             if (amount <= 0) return { xpGained: 0, leveledUp: false, newLevel: window.appState.playerLevel, apGained: 0 };
-            const multiplier = 1 + (Math.max(0, window.appState.stats.str - 10) * 0.05); const finalAmount = Math.floor(amount * multiplier);
+            let multiplier = 1 + (Math.max(0, window.appState.stats.str - 10) * 0.05); 
+            
+            // Shadow Army Buffs
+            if (window.appState.equippedShadow === 'igris') multiplier += 0.05;
+            if (window.appState.equippedShadow === 'beru') multiplier += 0.10;
+
+            const finalAmount = Math.floor(amount * multiplier);
             window.appState.playerXP += finalAmount; const nextXP = window.appState.playerLevel * 200; 
             
             let leveledUp = false; let apGained = 0;
@@ -1524,8 +1637,12 @@
                 const calsPct = curCals / dynamicCals;
                 
                 if (window.appState.lastResetTimestamp > 0 && (waterPct + calsPct) / 2 < 0.5) {
-                    window.appState.playerXP = Math.max(0, window.appState.playerXP - 50);
-                    setTimeout(() => showToast("VITALS < 50%: -50 XP PENALTY APPLIED"), 2000);
+                    if (window.appState.equippedShadow === 'iron') {
+                        setTimeout(() => showToast("IRON SHADOW: Nullified Vitals Penalty"), 2000);
+                    } else {
+                        window.appState.playerXP = Math.max(0, window.appState.playerXP - 50);
+                        setTimeout(() => showToast("VITALS < 50%: -50 XP PENALTY APPLIED"), 2000);
+                    }
                 }
 
                 forceMidnightReset(true);
@@ -1559,9 +1676,14 @@
         }
 
         function applyTheme() {
-            const body = document.getElementById('body-container'); body.classList.remove('bg-theme-penalty', 'bg-theme-survival', 'theme-female');
-            if (window.appState.penaltyActive) body.classList.add('bg-theme-penalty'); else if (window.appState.noEquipmentMode) body.classList.add('bg-theme-survival');
-            if (window.appState.profileClass === 'female') body.classList.add('theme-female');
+            const body = document.getElementById('body-container'); 
+            body.classList.remove('bg-theme-penalty', 'bg-theme-survival', 'aura-pink', 'aura-red', 'aura-purple', 'aura-gold');
+            
+            if (window.appState.penaltyActive) body.classList.add('bg-theme-penalty'); 
+            else if (window.appState.noEquipmentMode) body.classList.add('bg-theme-survival');
+            
+            const aura = window.appState.activeAura || 'default';
+            if (aura !== 'default') body.classList.add(`aura-${aura}`);
         }
 
         function forceMidnightReset(silent = false) {
@@ -1614,6 +1736,7 @@
         function selectProfileClass(cls) {
             const initInput = document.getElementById('init-username-input'); if (initInput && initInput.value.trim()) window.appState.hunterName = initInput.value.trim();
             window.appState.profileClass = cls; window.appState.restDays = [...tempInitRestDays]; window.appState.dailyQuestState.targets = generateDailyTargets(cls);
+            window.appState.activeAura = (cls === 'female') ? 'pink' : 'default';
             localStorage.setItem('solo_leveling_initialized', 'true'); document.getElementById('init-modal').classList.add('hidden');
             if (!localStorage.getItem('solo_leveling_features_seen')) document.getElementById('features-modal').classList.remove('hidden');
             applyTheme(); checkRestDayAutoCompletion(); resetCurrentRoutine(); saveStateToStorage(); renderDailyQuests(); renderNutritionSection(); renderPlayerHUD();
@@ -1622,6 +1745,7 @@
 
         function setProfileClass(cls) {
             window.appState.profileClass = cls; window.appState.dailyQuestState.targets = generateDailyTargets(cls);
+            if (cls === 'female' && window.appState.activeAura === 'default') window.appState.activeAura = 'pink';
             applyTheme(); resetCurrentRoutine(); saveStateToStorage(); renderDailyQuests(); renderGateSelection(); renderNutritionSection(); renderPlayerHUD();
             if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard(); showToast(`PROFILE UPDATED: ${CLASS_QUEST_CONFIGS[cls].title.toUpperCase()}`);
         }
@@ -1661,11 +1785,37 @@
         }
         function closeSettingsModal() { document.getElementById('settings-modal').classList.add('opacity-0', 'pointer-events-none'); }
 
+        window.setAura = function(aura) {
+            window.appState.activeAura = aura;
+            saveStateToStorage(); applyTheme(); openHunterHubModal();
+            showToast("SYSTEM AURA UPDATED");
+        }
+
         function openHunterHubModal() {
             closeProfileDrawer(); const content = document.getElementById('hub-dynamic-content'); const titleObj = TITLES_DB.find(t => t.id === window.appState.equippedTitle); const titleName = titleObj ? titleObj.name : 'NOVICE HUNTER';
             const stats = window.appState.stats; const hName = window.appState.hunterName || 'SUNG JIN-WOO'; const maxStat = Math.max(stats.str, stats.agi, stats.int, stats.vit, 15); 
             const renderBar = (label, val, color) => { const pct = Math.min(100, Math.round((val / maxStat) * 100)); return `<div class="flex items-center text-[9px] font-bold"><span class="w-8 text-slate-400">${label}</span><div class="flex-1 h-1.5 bg-system-900 rounded-full mx-2 overflow-hidden border border-system-border/40"><div class="h-full ${color} rounded-full" style="width: ${pct}%"></div></div><span class="w-4 text-right text-white">${val}</span></div>`; };
             content.innerHTML = `<div class="text-center mb-3"><div class="text-xl font-black text-white system-title uppercase tracking-widest">${hName.toUpperCase()}</div></div><div class="bg-system-950 border border-system-border/60 rounded-xl p-3 space-y-2 relative overflow-hidden"><div class="absolute -right-4 -bottom-4 opacity-5"><i class="fa-solid fa-chart-radar text-6xl text-system-neon"></i></div><div class="text-[10px] text-system-neon font-black uppercase tracking-wider mb-2">Status Matrix</div>${renderBar('STR', stats.str, 'bg-rose-400')} ${renderBar('AGI', stats.agi, 'bg-emerald-400')} ${renderBar('INT', stats.int, 'bg-sky-400')} ${renderBar('VIT', stats.vit, 'bg-amber-400')}</div><div class="bg-system-950 border border-system-border/60 rounded-xl p-3 flex justify-between items-center relative overflow-hidden mt-3"><div class="relative z-10"><div class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Current Title</div><div class="text-xs font-black text-amber-400 uppercase mt-0.5">${titleName}</div></div><i class="fa-solid fa-crown text-amber-500/20 text-3xl absolute -right-1 -bottom-1"></i></div>`;
+            
+            // Render Auras
+            const auraGrid = document.getElementById('hub-aura-container');
+            const auras = [
+                { id: 'default', name: 'Default', unlocked: true, hex: '#38bdf8' },
+                { id: 'pink', name: 'Pink', unlocked: true, hex: '#f472b6' },
+                { id: 'red', name: 'Red', unlocked: window.appState.unlockedTitles.includes('wolf_slayer'), hex: '#f43f5e' },
+                { id: 'purple', name: 'Purple', unlocked: window.appState.playerLevel >= 30, hex: '#c084fc' },
+                { id: 'gold', name: 'Gold', unlocked: window.appState.completedQuestsCount >= 50, hex: '#fbbf24' }
+            ];
+            auraGrid.innerHTML = auras.map(a => {
+                const isSelected = window.appState.activeAura === a.id;
+                return `
+                    <button onclick="${a.unlocked ? `setAura('${a.id}')` : ''}" class="flex flex-col items-center justify-center p-2 rounded-xl border ${isSelected ? `border-[${a.hex}] bg-[${a.hex}]/20 shadow-[0_0_8px_${a.hex}]` : a.unlocked ? 'border-system-border hover:bg-system-850 cursor-pointer btn-active' : 'border-system-border/30 opacity-40 cursor-not-allowed'} transition-all">
+                        <div class="w-4 h-4 rounded-full mb-1" style="background-color: ${a.hex};"></div>
+                        <span class="text-[8px] font-bold text-white uppercase">${a.unlocked ? a.name : 'LOCKED'}</span>
+                    </button>
+                `;
+            }).join('');
+
             document.getElementById('hub-ap-count').innerText = `${stats.unspentAP} AP`; document.getElementById('hunter-hub-modal').classList.remove('opacity-0', 'pointer-events-none');
         }
         function closeHunterHubModal() { document.getElementById('hunter-hub-modal').classList.add('opacity-0', 'pointer-events-none'); }
@@ -1693,6 +1843,14 @@
         function closeTitleModal() { document.getElementById('title-modal').classList.add('opacity-0', 'pointer-events-none'); }
 
         function equipTitle(id) { window.appState.equippedTitle = id; saveStateToStorage(); renderPlayerHUD(); openTitleModal(); if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard(); }
+
+        window.equipShadow = function(id) {
+            const shadow = SHADOWS_DB.find(s => s.id === id);
+            if (window.appState.playerLevel < shadow.reqLevel) return;
+            window.appState.equippedShadow = id;
+            saveStateToStorage(); renderShadows();
+            showToast(`SHADOW EQUIPPED: ${shadow.name}`);
+        }
 
         function claimDailyQuestReward() {
             if (isTodayRestDay() || window.appState.penaltyActive) return;
@@ -1881,7 +2039,17 @@
             const grid = document.getElementById('shadow-army-grid'); if (!grid) return;
             const unlockedShadows = SHADOWS_DB.filter(s => window.appState.playerLevel >= s.reqLevel);
             if (unlockedShadows.length === 0) { grid.innerHTML = `<div class="col-span-2 bg-system-950 border border-purple-500/30 rounded-xl p-6 text-center space-y-3"><i class="fa-solid fa-ghost text-4xl text-purple-500/20"></i><h4 class="font-black text-purple-400 text-sm tracking-widest uppercase">The Void is Empty</h4><p class="text-[10px] text-slate-400 leading-relaxed">No shadows have been extracted yet. Defeat powerful enemies and grow your strength to absolute levels. Your first extraction becomes available at Lv. 5.</p></div>`; return; }
-            grid.innerHTML = unlockedShadows.map(s => `<div class="bg-system-950 border border-purple-500/50 rounded-xl p-3 flex flex-col items-center text-center relative overflow-hidden transition-all shadow-[0_0_10px_rgba(168,85,247,0.1)]"><div class="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent"></div><i class="fa-solid ${s.icon} text-2xl text-purple-400 drop-shadow-[0_0_8px_#c084fc] mb-2 relative z-10"></i><h4 class="font-black text-white text-xs relative z-10">${s.name}</h4><span class="text-[9px] font-bold text-system-neon relative z-10">${s.buff}</span></div>`).join('');
+            grid.innerHTML = unlockedShadows.map(s => {
+                const isEquipped = window.appState.equippedShadow === s.id;
+                return `
+                <button onclick="equipShadow('${s.id}')" class="bg-system-950 border ${isEquipped ? 'border-system-neon shadow-[0_0_15px_#38bdf8]' : 'border-purple-500/50 hover:border-purple-400'} rounded-xl p-3 flex flex-col items-center text-center relative overflow-hidden transition-all shadow-[0_0_10px_rgba(168,85,247,0.1)] btn-active cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-t ${isEquipped ? 'from-system-neon/20' : 'from-purple-900/20'} to-transparent"></div>
+                    ${isEquipped ? '<div class="absolute top-1 right-1 text-[8px] font-black text-system-950 bg-system-neon px-1.5 rounded uppercase tracking-wider z-20">EQUIPPED</div>' : ''}
+                    <i class="fa-solid ${s.icon} text-2xl ${isEquipped ? 'text-system-neon drop-shadow-[0_0_8px_#38bdf8]' : 'text-purple-400 drop-shadow-[0_0_8px_#c084fc]'} mb-2 relative z-10"></i>
+                    <h4 class="font-black text-white text-xs relative z-10">${s.name}</h4>
+                    <span class="text-[9px] font-bold ${isEquipped ? 'text-system-neon' : 'text-purple-300'} relative z-10">${s.buff}</span>
+                </button>`;
+            }).join('');
         }
 
         function renderPlayerHUD() {
@@ -1973,8 +2141,11 @@
                 const bossStatusText = bossCleared ? 'CLEARED' : bossAvailable ? 'UNLOCKED' : (hasRedKey ? 'LOCKED' : 'NEEDS RED KEY');
                 const bossStatusIcon = bossCleared ? 'fa-check-double text-emerald-400' : bossAvailable ? 'fa-skull text-system-boss' : (hasRedKey ? 'fa-lock text-slate-500' : 'fa-key text-rose-500');
                 const bossStatusColor = bossCleared ? 'text-emerald-400' : bossAvailable ? 'text-system-boss' : (hasRedKey ? 'text-slate-500' : 'text-rose-500');
+                
+                // Get dynamic boss name based on day
+                const currentBossName = getPresetRoutines(1, 'male').boss.title.split(' (')[0].toUpperCase();
 
-                html += `<div class="pt-3 border-t border-system-border/50 mt-3"><div onclick="${bossAvailable ? `switchRoutine('boss')` : ''}" class="bg-system-900 border ${bossAvailable ? 'border-system-boss boss-glow cursor-pointer btn-active' : bossCleared ? 'border-emerald-500/50' : 'border-system-border/40 opacity-50 grayscale cursor-not-allowed'} rounded-2xl p-5 flex flex-col justify-between transition-colors relative overflow-hidden gap-3">${bossAvailable ? '<div class="absolute inset-0 bg-gradient-to-r from-rose-950/20 to-transparent"></div>' : ''}<div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border ${bossAvailable ? 'border-system-boss' : 'border-system-border/80'} shadow-inner"><i class="fa-solid fa-skull ${bossAvailable ? 'text-system-boss' : bossCleared ? 'text-emerald-400' : 'text-slate-500'} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">BOSS ROOM</h3><span class="text-[10px] ${bossAvailable ? 'text-system-boss' : bossCleared ? 'text-emerald-400' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Challenge</span></div></div><div class="text-right"><i class="fa-solid ${bossStatusIcon}"></i><div class="text-[9px] ${bossStatusColor} mt-1 font-bold">${bossStatusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${bossCleared ? 'text-emerald-400' : ''}">${bossProgress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${bossCleared ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-slate-700'} transition-all duration-500" style="width: ${bossProgress}%"></div></div></div></div><p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate requires a Red Key (Drops from normal gates).</p></div>`;
+                html += `<div class="pt-3 border-t border-system-border/50 mt-3"><div onclick="${bossAvailable ? `switchRoutine('boss')` : ''}" class="bg-system-900 border ${bossAvailable ? 'border-system-boss boss-glow cursor-pointer btn-active' : bossCleared ? 'border-emerald-500/50' : 'border-system-border/40 opacity-50 grayscale cursor-not-allowed'} rounded-2xl p-5 flex flex-col justify-between transition-colors relative overflow-hidden gap-3">${bossAvailable ? '<div class="absolute inset-0 bg-gradient-to-r from-rose-950/20 to-transparent"></div>' : ''}<div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border ${bossAvailable ? 'border-system-boss' : 'border-system-border/80'} shadow-inner"><i class="fa-solid fa-skull ${bossAvailable ? 'text-system-boss' : bossCleared ? 'text-emerald-400' : 'text-slate-500'} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${currentBossName}</h3><span class="text-[10px] ${bossAvailable ? 'text-system-boss' : bossCleared ? 'text-emerald-400' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Boss Room</span></div></div><div class="text-right"><i class="fa-solid ${bossStatusIcon}"></i><div class="text-[9px] ${bossStatusColor} mt-1 font-bold">${bossStatusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${bossCleared ? 'text-emerald-400' : ''}">${bossProgress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${bossCleared ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-slate-700'} transition-all duration-500" style="width: ${bossProgress}%"></div></div></div></div><p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate requires a Red Key (Drops from normal gates).</p></div>`;
             }
             grid.innerHTML = html;
         }
@@ -2144,9 +2315,20 @@
             if (totalCompletedSets === 0) { showToast("COMPLETE AT LEAST 1 SET FIRST!"); return; }
 
             if (window.appState.penaltyActive) {
-                window.appState.penaltyActive = false; if(window.appState.lifetimeStats) window.appState.lifetimeStats.penaltyCleared++;
-                applyTheme(); resetCurrentRoutine(); const newTitles = checkTitleUnlocks();
-                saveStateToStorage(); renderDailyQuests();
+                window.appState.penaltyActive = false; 
+                if(window.appState.lifetimeStats) window.appState.lifetimeStats.penaltyCleared++;
+                
+                applyTheme(); 
+                resetCurrentRoutine(); 
+                const newTitles = checkTitleUnlocks();
+                saveStateToStorage(); 
+                renderDailyQuests();
+                
+                // Force UI back to gate selection smoothly
+                document.getElementById('active-dungeon-screen').classList.add('hidden');
+                renderGateSelection();
+                document.getElementById('gate-selection-screen').classList.remove('hidden');
+                
                 showRewardSummary({ type: 'PENALTY ZONE', xpResult: null, loot: [], newTitles, customMsg: 'System Access Fully Restored.' });
                 return;
             }
@@ -2194,12 +2376,15 @@
             }
             
             let loot = [];
+            // Shadow Army Loot Buff
+            let blueKeyBuff = window.appState.equippedShadow === 'tank' ? 0.05 : 0;
+            
             if (isBoss) {
-                if (Math.random() < 0.98 * completionPct) { window.appState.inventory.blue_key++; loot.push({ name: 'Blue Key', icon: 'fa-key', color: 'text-cyan-400' }); }
+                if (Math.random() < (0.98 + blueKeyBuff) * completionPct) { window.appState.inventory.blue_key++; loot.push({ name: 'Blue Key', icon: 'fa-key', color: 'text-cyan-400' }); }
             } else if (!isBreak) {
                 if (!window.appState.redKeyObtainedToday && !window.appState.noEquipmentMode) { 
                     window.appState.redKeyObtainedToday = true; window.appState.inventory.red_key++; loot.push({ name: 'Red Key', icon: 'fa-key', color: 'text-rose-500' });
-                } else if (Math.random() < 0.20 * completionPct) { 
+                } else if (Math.random() < (0.20 + blueKeyBuff) * completionPct) { 
                     window.appState.inventory.blue_key++; loot.push({ name: 'Blue Key', icon: 'fa-key', color: 'text-cyan-400' }); 
                 }
             }
