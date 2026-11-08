@@ -53,7 +53,7 @@
             background-color: #1c0e05 !important;
         }
         .bg-theme-survival {
-            background-color: #0f171e !important;
+            background-color: #2b0909 !important; /* Dark Crimson Red for No Equipment */
         }
         .system-font { font-family: 'Share Tech Mono', monospace; }
         .system-title { font-family: 'Cinzel', serif; }
@@ -87,73 +87,118 @@
             50% { width: 70%; }
             100% { width: 100%; }
         }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        /* Female Profile Theme Overrides (Hot Pink / Fuchsia) */
+        .theme-female .text-system-neon { color: #f472b6 !important; }
+        .theme-female .border-system-neon { border-color: #f472b6 !important; }
+        .theme-female .bg-system-neon { background-color: #f472b6 !important; }
+        .theme-female .to-system-neon { --tw-gradient-to: #f472b6 !important; }
+        .theme-female .from-system-neon { --tw-gradient-from: #f472b6 !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+        .theme-female .via-system-accent { --tw-gradient-stops: var(--tw-gradient-from), #d946ef, var(--tw-gradient-to) !important; }
+        .theme-female .text-system-glow { color: #fbcfe8 !important; text-shadow: 0 0 8px #f472b6 !important; }
+        .theme-female .text-sky-400 { color: #d946ef !important; } 
+        .theme-female .text-sky-300 { color: #f0abfc !important; }
+        .theme-female .bg-sky-500 { background-color: #d946ef !important; }
+        .theme-female .border-sky-500\/50 { border-color: rgba(217, 70, 239, 0.5) !important; }
+        .theme-female .hover\:border-sky-400:hover { border-color: #e879f9 !important; }
+        .theme-female .text-cyan-400 { color: #e879f9 !important; } 
+        .theme-female .text-cyan-300 { color: #f0abfc !important; }
+        .theme-female .bg-cyan-900\/50 { background-color: rgba(134, 25, 143, 0.5) !important; }
+        .theme-female .border-cyan-700\/50 { border-color: rgba(192, 38, 211, 0.5) !important; }
+        .theme-female .border-cyan-200\/40 { border-color: rgba(244, 114, 182, 0.4) !important; }
+        .theme-female .shadow-\[0_0_8px_\#38bdf8\] { box-shadow: 0 0 8px #f472b6 !important; }
+        .theme-female .shadow-\[0_0_20px_rgba\(56\,189\,248\,0\.15\)\] { box-shadow: 0 0 20px rgba(244, 114, 182, 0.15) !important; }
+        .theme-female .selection\:bg-system-neon *::selection { background-color: #f472b6 !important; }
     </style>
 
-    <!-- Firebase SDK Modules -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB-SoloLevelingAppKeyDummy123456",
-            authDomain: "solo-leveling-tracker.firebaseapp.com",
-            projectId: "solo-leveling-tracker",
-            storageBucket: "solo-leveling-tracker.appspot.com",
-            messagingSenderId: "998877665544",
-            appId: "1:998877665544:web:abcd1234efgh5678"
+        let db, auth;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        window.currentUser = null;
+
+        async function initFirebase() {
+            try {
+                const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+                
+                const app = initializeApp(config);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                window.currentUser = auth.currentUser;
+                console.log("System Network Connected. UID:", window.currentUser.uid);
+                
+                if (window.initLeaderboardListener) window.initLeaderboardListener();
+                if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard();
+            } catch(err) {
+                console.log("Firebase network error:", err);
+            }
+        }
+        
+        initFirebase();
+
+        window.syncHunterToLeaderboard = async function() {
+            if (!window.currentUser || !db || !window.appState || !window.appState.hunterName) return;
+            const uid = window.currentUser.uid;
+            
+            const titleObj = window.TITLES_DB ? window.TITLES_DB.find(t => t.id === window.appState.equippedTitle) : null;
+
+            try {
+                const path = `artifacts/${appId}/public/data/leaderboard`;
+                await setDoc(doc(db, path, uid), {
+                    name: window.appState.hunterName,
+                    level: window.appState.playerLevel || 1,
+                    xp: window.appState.playerXP || 0,
+                    questsCompleted: window.appState.completedQuestsCount || 0,
+                    profileClass: window.appState.profileClass || 'male',
+                    title: titleObj ? titleObj.name : 'Novice Hunter',
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            } catch(e) { console.log("Firebase sync state:", e.message); }
         };
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
+        window.initLeaderboardListener = function() {
+            if (!window.currentUser || !db) return;
+            
+            const path = `artifacts/${appId}/public/data/leaderboard`;
+            const colRef = collection(db, path);
 
-            window.syncHunterToLeaderboard = async function() {
-                if (!window.appState || !window.appState.hunterName) return;
-                const uid = window.appState.hunterId || ('hunter_' + Math.random().toString(36).substring(2, 9));
-                window.appState.hunterId = uid;
-                if (window.saveStateToStorage) window.saveStateToStorage();
-
-                const titleObj = window.TITLES_DB ? window.TITLES_DB.find(t => t.id === window.appState.equippedTitle) : null;
-
-                try {
-                    await setDoc(doc(db, "leaderboard", uid), {
-                        name: window.appState.hunterName,
-                        level: window.appState.playerLevel || 1,
-                        xp: window.appState.playerXP || 0,
-                        questsCompleted: window.appState.completedQuestsCount || 0,
-                        profileClass: window.appState.profileClass || 'male',
-                        title: titleObj ? titleObj.name : 'Novice Hunter',
-                        updatedAt: new Date().toISOString()
-                    }, { merge: true });
-                } catch(e) { console.log("Firebase sync state:", e.message); }
-            };
-
-            window.initLeaderboardListener = function() {
-                const q = query(collection(db, "leaderboard"), orderBy("level", "desc"), orderBy("xp", "desc"), limit(3));
-                let resolved = false;
-
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const topHunters = [];
-                    snapshot.forEach((doc) => {
-                        topHunters.push(doc.data());
-                    });
-                    resolved = true;
-                    if (window.renderLeaderboard) window.renderLeaderboard(topHunters);
-                }, (error) => {
-                    if (!resolved && window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
+            onSnapshot(colRef, (snapshot) => {
+                const hunters = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    data.uid = doc.id;
+                    hunters.push(data);
                 });
-
-                setTimeout(() => {
-                    if (!resolved && window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
-                }, 1200);
-            };
-        } catch(err) {
-            console.log("Firebase fallback mode enabled");
-            window.syncHunterToLeaderboard = function() {};
-            window.initLeaderboardListener = function() {
-                if (window.renderFallbackLeaderboard) window.renderFallbackLeaderboard();
-            };
-        }
+                
+                hunters.sort((a, b) => {
+                    if (b.level !== a.level) return b.level - a.level;
+                    return b.xp - a.xp;
+                });
+                
+                const topHunters = hunters.slice(0, 3);
+                if (window.renderLeaderboard) window.renderLeaderboard(topHunters);
+            }, (error) => {
+                console.log("Leaderboard sync error", error);
+            });
+        };
     </script>
 </head>
 <body id="body-container" class="bg-system-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased pb-20 selection:bg-system-neon selection:text-system-950">
@@ -166,7 +211,7 @@
         <div class="space-y-2">
             <span class="text-[11px] text-system-neon uppercase font-bold tracking-widest">[ SYSTEM BOOT SEQUENCE ]</span>
             <h1 class="text-2xl font-black text-white system-title">SOLO LEVELING</h1>
-            <p class="text-xs text-slate-400 max-w-xs mx-auto">Daily Quest & Dungeons Protocol v5.8</p>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto">Daily Quest & Dungeons Protocol v6.5</p>
         </div>
         
         <div class="w-full max-w-[160px] space-y-2 mt-4">
@@ -178,6 +223,19 @@
 
         <div class="absolute bottom-8 text-[10px] text-slate-500 font-bold tracking-widest uppercase">
             Developed by <span class="text-system-neon">Omighty AI</span>
+        </div>
+    </div>
+    
+    <!-- LOOT ACQUIRED POPUP -->
+    <div id="loot-popup" onclick="this.classList.add('hidden')" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden cursor-pointer">
+        <div id="loot-popup-content" class="bg-system-900 border-2 rounded-3xl p-8 text-center flex flex-col items-center gap-4 shadow-2xl transition-transform transform scale-95">
+            <div id="loot-popup-icon-container" class="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl shadow-inner border bg-system-950">
+                <i id="loot-popup-icon" class="fa-solid fa-key"></i>
+            </div>
+            <div>
+                <div class="text-[10px] text-slate-400 font-bold tracking-widest uppercase mb-1">LOOT ACQUIRED</div>
+                <h2 id="loot-popup-title" class="text-xl font-black text-white system-title uppercase">RED KEY</h2>
+            </div>
         </div>
     </div>
 
@@ -199,11 +257,11 @@
                     <p class="text-[11px] text-slate-400">Leveling up grants Ability Points (AP). Allocate STR, AGI, INT, and VIT to permanently buff your stats. Earn titles and loot!</p>
                 </div>
                 <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
-                    <span class="font-bold text-rose-500">⚔️ Dungeon Breaks & Boss Gates</span>
-                    <p class="text-[11px] text-slate-400">Clear normal gates to unlock the Boss. Watch out for timed Dungeon Breaks (Red Gates) for massive 3x XP rewards!</p>
+                    <span class="font-bold text-rose-500">⚔️ Dungeon Breaks & Keys</span>
+                    <p class="text-[11px] text-slate-400">Normal gates lock upon completion. Find Blue Keys to re-enter, or Red Keys to unlock the S-Rank Boss Room!</p>
                 </div>
                 <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
-                    <span class="font-bold text-orange-400">🏜️ Penalty Subjugation Zone</span>
+                    <span class="font-bold text-orange-400">🏜️ Penalty Zone</span>
                     <p class="text-[11px] text-slate-400">Missing a daily quest replaces normal dungeons with a grueling desert penalty gate until cleared.</p>
                 </div>
                 <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
@@ -293,7 +351,7 @@
                 </div>
                 <div>
                     <div onclick="openProfileDrawer()" class="cursor-pointer flex items-center gap-1.5 group">
-                        <span id="player-rank" onclick="event.stopPropagation(); openRankModal();" class="bg-system-accent/20 border border-system-accent/60 text-system-glow text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider group-hover:border-system-neon cursor-pointer">E-RANK</span>
+                        <span id="player-rank" class="bg-system-accent/20 border border-system-accent/60 text-system-glow text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider cursor-default group-hover:border-system-neon">E-RANK</span>
                         <h1 id="header-username" class="font-black tracking-widest text-white uppercase truncate max-w-[140px] text-xs">SUNG JIN-WOO</h1>
                     </div>
                     <p class="text-[9px] text-system-neon/90 uppercase tracking-widest font-semibold flex items-center gap-1">
@@ -343,7 +401,7 @@
                     <div id="drawer-profile-title" class="text-[10px] text-system-neon font-bold uppercase mt-0.5">NOVICE HUNTER</div>
                 </div>
                 <div class="flex justify-center items-center gap-2 pt-1">
-                    <span id="drawer-rank" onclick="event.stopPropagation(); openRankModal()" class="bg-system-accent/20 border border-system-accent/60 text-system-glow text-[10px] font-black px-2 py-0.5 rounded uppercase cursor-pointer hover:border-system-neon">E-RANK</span>
+                    <span id="drawer-rank" class="bg-system-accent/20 border border-system-accent/60 text-system-glow text-[10px] font-black px-2 py-0.5 rounded uppercase cursor-default hover:border-system-neon">E-RANK</span>
                     <span class="text-[10px] text-slate-400">LVL <strong id="drawer-level" class="text-white">1</strong></span>
                 </div>
             </div>
@@ -363,13 +421,13 @@
                     </div>
                 </div>
                 
-                <!-- Vitality Bars (HP / MP) -->
-                <div class="space-y-2 px-1">
+                <!-- Vitality Bars (HP / MP) inside a card wrapper -->
+                <div class="bg-system-950 p-3 rounded-xl border border-system-border/40 space-y-2">
                     <div class="flex items-center justify-between text-[10px] font-bold">
                         <span class="text-rose-400 uppercase tracking-widest"><i class="fa-solid fa-heart mr-1"></i> HP (Energy)</span>
                         <span id="drawer-hp-text" class="text-rose-300">0 / 2450</span>
                     </div>
-                    <div class="w-full h-1.5 bg-system-950 rounded-full overflow-hidden border border-system-border/40">
+                    <div class="w-full h-1.5 bg-system-900 rounded-full overflow-hidden border border-system-border/40">
                         <div id="drawer-hp-bar" class="h-full bg-rose-500 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                     
@@ -377,32 +435,19 @@
                         <span class="text-sky-400 uppercase tracking-widest"><i class="fa-solid fa-droplet mr-1"></i> MP (Mana)</span>
                         <span id="drawer-mp-text" class="text-sky-300">0 / 105</span>
                     </div>
-                    <div class="w-full h-1.5 bg-system-950 rounded-full overflow-hidden border border-system-border/40">
+                    <div class="w-full h-1.5 bg-system-900 rounded-full overflow-hidden border border-system-border/40">
                         <div id="drawer-mp-bar" class="h-full bg-sky-500 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Hunter Metrics Grid -->
+            <!-- Hunter Metrics Grid (WEEKLY REPS) -->
             <div class="space-y-2">
-                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">HUNTER RECORDS</span>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 text-center">
-                        <div class="text-[9px] text-slate-400 uppercase">Quests</div>
-                        <div id="drawer-quests-count" class="font-black text-system-glow text-base mt-0.5">0</div>
-                    </div>
-                    <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 text-center">
-                        <div class="text-[9px] text-slate-400 uppercase">Gates</div>
-                        <div id="drawer-gates-count" class="font-black text-cyan-400 text-base mt-0.5">0</div>
-                    </div>
-                    <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 text-center">
-                        <div class="text-[9px] text-slate-400 uppercase">Shadows</div>
-                        <div id="drawer-shadows-count" class="font-black text-purple-400 text-base mt-0.5">0</div>
-                    </div>
-                    <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 text-center">
-                        <div class="text-[9px] text-slate-400 uppercase">Pull-ups</div>
-                        <div id="drawer-pullups-count" class="font-black text-emerald-400 text-base mt-0.5">0</div>
-                    </div>
+                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">WEEKLY TRAINING RECORDS</span>
+                <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 grid grid-cols-3 text-center gap-1">
+                    <div><div class="text-[9px] text-slate-400 uppercase">Push-ups</div><div id="drawer-week-push" class="font-black text-rose-400">0</div></div>
+                    <div><div class="text-[9px] text-slate-400 uppercase" id="drawer-week-pull-label">Pull-ups</div><div id="drawer-week-pull" class="font-black text-emerald-400">0</div></div>
+                    <div><div class="text-[9px] text-slate-400 uppercase">Squats</div><div id="drawer-week-squat" class="font-black text-sky-400">0</div></div>
                 </div>
             </div>
         </div>
@@ -424,23 +469,26 @@
                 <h3 class="text-sm font-black text-white uppercase tracking-wider">HUNTER HUB</h3>
             </div>
             
+            <!-- Dynamic Graph and Title Area -->
+            <div id="hub-dynamic-content" class="space-y-3 pb-3 border-b border-system-border/50">
+                <!-- Injected via JS -->
+            </div>
+            
             <div class="space-y-3">
-                <button onclick="closeHunterHubModal(); openApModal();" class="w-full py-4 bg-system-950 border border-system-border rounded-xl flex items-center justify-between px-4 hover:border-system-neon transition-colors btn-active cursor-pointer">
+                <button onclick="closeHunterHubModal(); openApModal();" class="w-full py-3 bg-system-950 border border-system-border rounded-xl flex items-center justify-between px-4 hover:border-system-neon transition-colors btn-active cursor-pointer">
                     <div class="flex items-center">
-                        <i class="fa-solid fa-dna text-system-neon text-xl w-8"></i>
+                        <i class="fa-solid fa-dna text-system-neon text-lg w-7"></i>
                         <div class="text-left">
-                            <div class="text-sm font-black text-white uppercase">Ability Points (AP)</div>
-                            <div class="text-[10px] text-slate-400">Distribute stats to grow stronger</div>
+                            <div class="text-xs font-black text-white uppercase">Allocate AP</div>
                         </div>
                     </div>
-                    <span class="text-xs bg-cyan-900/50 text-system-neon px-2 py-1 rounded border border-cyan-700/50 font-bold" id="hub-ap-count">0 AP</span>
+                    <span class="text-[10px] bg-cyan-900/50 text-system-neon px-2 py-0.5 rounded border border-cyan-700/50 font-bold" id="hub-ap-count">0 AP</span>
                 </button>
-                <button onclick="closeHunterHubModal(); openTitleModal();" class="w-full py-4 bg-system-950 border border-system-border rounded-xl flex items-center justify-between px-4 hover:border-amber-400 transition-colors btn-active cursor-pointer">
+                <button onclick="closeHunterHubModal(); openTitleModal();" class="w-full py-3 bg-system-950 border border-system-border rounded-xl flex items-center justify-between px-4 hover:border-amber-400 transition-colors btn-active cursor-pointer">
                     <div class="flex items-center">
-                        <i class="fa-solid fa-award text-amber-400 text-xl w-8"></i>
+                        <i class="fa-solid fa-award text-amber-400 text-lg w-7"></i>
                         <div class="text-left">
-                            <div class="text-sm font-black text-white uppercase">Equip Titles</div>
-                            <div class="text-[10px] text-slate-400">Showcase your achievements</div>
+                            <div class="text-xs font-black text-white uppercase">Equip Titles</div>
                         </div>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-500"></i>
@@ -548,7 +596,7 @@
                     <div class="w-9 h-9 rounded-xl bg-pink-600/30 text-pink-300 flex items-center justify-center text-base"><i class="fa-solid fa-venus"></i></div>
                     <div>
                         <div class="text-xs font-black text-white">SHADOW ASSASSIN (FEMALE)</div>
-                        <div class="text-[10px] text-slate-400">29yo • 115 lbs • Balanced Daily Quests</div>
+                        <div class="text-[10px] text-slate-400">29yo • 115 lbs • Grip & Core Specific Target</div>
                     </div>
                 </button>
                 <button onclick="selectProfileClass('child')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
@@ -627,11 +675,29 @@
 
             <!-- Daily Midnight Force Trigger -->
             <div class="pt-2 border-t border-system-border/60 space-y-2">
-                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Daily Reset Engine (24h Cooldown)</label>
-                <button onclick="forceMidnightReset()" class="btn-active w-full py-2.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
+                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Force Daily Reset (Vitals & Quests)</label>
+                <button onclick="forceMidnightReset(false)" class="btn-active w-full py-2.5 bg-rose-500/20 border border-rose-500/50 text-rose-300 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
                     <i class="fa-solid fa-rotate text-xs"></i>
-                    <span>FORCE MIDNIGHT RESET NOW</span>
+                    <span>RESET DAILY QUESTS</span>
                 </button>
+                <p class="text-[9px] text-slate-400 leading-tight">This will safely reset your daily quests and vitals for re-rolling, but will <strong class="text-white">not</strong> reset your cleared dungeon gates.</p>
+            </div>
+
+            <!-- Data Backup & Restore -->
+            <div class="pt-2 border-t border-system-border/60 space-y-2">
+                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Data Management</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="exportData()" class="btn-active w-full py-2 bg-system-850 hover:bg-system-800 border border-system-border text-system-neon font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer transition">
+                        <i class="fa-solid fa-download"></i>
+                        <span>BACKUP</span>
+                    </button>
+                    <label class="btn-active w-full py-2 bg-system-850 hover:bg-system-800 border border-system-border text-amber-400 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer transition">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>RESTORE</span>
+                        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+                    </label>
+                </div>
+                <p class="text-[9px] text-slate-400 leading-tight">Export your Hunter Data as a .json file to safely sync or transfer across different devices and accounts.</p>
             </div>
 
             <!-- Restored Full Reset All Data -->
@@ -760,14 +826,14 @@
         <!-- TAB 3: DUNGEONS SELECTION & ACTIVE ROOM -->
         <section id="tab-workout" class="space-y-4 hidden">
             
-            <!-- Penalty Subjugation Zone Header (Hidden by default) -->
+            <!-- Penalty Zone Header (Hidden by default) -->
             <div id="dungeon-penalty-banner" class="hidden bg-orange-950/80 border border-orange-500 rounded-2xl p-5 text-center font-mono relative overflow-hidden">
                 <div class="absolute inset-0 opacity-10 flex items-center justify-center">
                     <i class="fa-solid fa-skull text-8xl text-orange-500"></i>
                 </div>
                 <div class="relative z-10 space-y-2">
                     <span class="text-[10px] font-black text-orange-300 bg-orange-950 px-2 py-1 rounded uppercase tracking-widest border border-orange-500/50">PENALTY ZONE ACTIVE</span>
-                    <h2 class="text-xl font-black text-white system-title uppercase">DESERT SUBJUGATION</h2>
+                    <h2 class="text-xl font-black text-white system-title uppercase">DESERT CLEARANCE</h2>
                     <p class="text-xs text-orange-200 font-bold">You missed a daily quest. Survive to restore system access.</p>
                 </div>
             </div>
@@ -782,9 +848,19 @@
                 </div>
 
                 <!-- Timed Event: Dungeon Break Banner -->
-                <div id="dungeon-break-banner" onclick="startDungeonBreak()" class="hidden bg-rose-950/80 border border-rose-500 rounded-2xl p-4 text-center font-mono relative overflow-hidden cursor-pointer animate-pulse boss-glow">
-                    <h3 class="text-rose-400 font-black uppercase text-sm tracking-widest"><i class="fa-solid fa-triangle-exclamation"></i> DUNGEON BREAK DETECTED</h3>
-                    <p class="text-[11px] text-rose-200 mt-1.5 font-bold">A Red Gate has appeared. Subjugate for massive 3x XP rewards! Time remaining: <span id="break-timer-display" class="text-white bg-rose-600 px-1 rounded ml-1">--:--</span></p>
+                <div id="dungeon-break-banner" onclick="startDungeonBreak()" class="hidden bg-rose-950/90 border border-rose-500 rounded-xl p-3 font-mono relative overflow-hidden cursor-pointer animate-pulse boss-glow btn-active group">
+                    <div class="flex items-center justify-between relative z-10">
+                        <div class="flex-1 pr-3">
+                            <h3 class="text-rose-400 font-black uppercase text-xs tracking-widest flex items-center gap-1.5">
+                                <i class="fa-solid fa-triangle-exclamation animate-bounce"></i> DUNGEON BREAK DETECTED
+                            </h3>
+                            <p class="text-[10px] text-rose-200 mt-1 font-bold leading-tight">Clear for massive 3x XP! Time left: <span id="break-timer-display" class="text-white bg-rose-600 px-1 rounded ml-1 shadow-sm">--:--</span></p>
+                        </div>
+                        <div class="flex flex-col items-center justify-center pl-3 border-l border-rose-500/50 shrink-0">
+                            <span class="text-[8px] text-rose-300 font-black uppercase tracking-widest mb-0.5">TAP TO</span>
+                            <span class="text-[11px] text-rose-400 font-black uppercase tracking-widest group-hover:text-white transition-colors">ENTER <i class="fa-solid fa-chevron-right text-xs ml-0.5 group-hover:translate-x-1 transition-transform"></i></span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div id="gate-selection-grid" class="space-y-3">
@@ -839,7 +915,6 @@
                     </div>
                     <i class="fa-solid fa-ghost text-2xl text-purple-500/30"></i>
                 </div>
-                <p class="text-[10px] text-slate-400">Extract shadows from defeated gates as you level up. Shadows pledge absolute loyalty to the Monarch.</p>
                 
                 <div id="shadow-army-grid" class="grid grid-cols-2 gap-3 pt-2">
                     <!-- JavaScript Injected -->
@@ -1022,17 +1097,17 @@
         const CLASS_QUEST_CONFIGS = {
             male: {
                 title: "Shadow Monarch (Male)",
-                quests: { pushups: 25, pullups: 25, squats: 25, runMiles: 0, jumprope: 2000 },
+                quests: { pushups: 25, pullups: 25, squats: 25, runMiles: 0, jumprope: 500 },
                 targets: { water: 105, cals: 2450 }
             },
             female: {
                 title: "Shadow Assassin (Female)",
-                quests: { pushups: 10, pullups: 3, squats: 15, runMiles: 0.5, jumprope: 500 },
+                quests: { pushups: 10, pullups: 60, squats: 15, runMiles: 0.5, jumprope: 300 }, // pullups used as Dead Hangs (secs) for Female class
                 targets: { water: 69, cals: 1600 }
             },
             child: {
                 title: "Shadow Apprentice (Child)",
-                quests: { pushups: 15, pullups: 10, squats: 15, runMiles: 0, jumprope: 1000 },
+                quests: { pushups: 15, pullups: 10, squats: 15, runMiles: 0, jumprope: 300 },
                 targets: { water: 70, cals: 1800 }
             }
         };
@@ -1043,7 +1118,7 @@
             const isFem = pClass === 'female';
 
             let pullEx1 = isHigh ? "L-Sit Pull-Ups" : (isMid ? "Archer Pull-Ups" : "Pull-Ups (Wide or Neutral)");
-            if (isFem) pullEx1 = isHigh ? "Pull-Up Negatives" : (isMid ? "Single Pull-Ups (1 Rep Max)" : "Dead Hangs (Secs)");
+            if (isFem) pullEx1 = isHigh ? "Pull-Up Negatives" : (isMid ? "Inverted Rows / Australian Pull-Ups" : "Dead Hangs (Secs)");
 
             let pullEx2 = isHigh ? "Heavy Single-Arm DB Rows" : (isMid ? "DB Renegade Rows" : "Single-Arm DB Row");
             let pullEx3 = isHigh ? "Muscle-Up Transitions" : (isMid ? "Explosive Pull-Ups" : "Eccentric Pull-Up Negatives");
@@ -1067,7 +1142,7 @@
             // --- FEMALE CORE PRIORITY OVERRIDE ---
             if (isFem) {
                 legEx1 = isHigh ? "V-Ups" : (isMid ? "Bicycle Crunches" : "Ab Crunches");
-                legEx2 = isHigh ? "Hanging Knee Tucks" : (isMid ? "Lying Leg Raises" : "Flutter Kicks (Secs)");
+                legEx2 = isHigh ? "Hollow Body Holds (Secs)" : (isMid ? "Lying Leg Raises" : "Flutter Kicks (Secs)");
                 legEx3 = isHigh ? "Plank Jacks" : (isMid ? "Russian Twists" : "Mountain Climbers");
             }
 
@@ -1078,8 +1153,11 @@
             const wtDbLight = "10 lbs";
 
             let setsPull1 = [{reps: 6, wt: "BW", done: false}, {reps: 5, wt: "BW", done: false}, {reps: 5, wt: "BW", done: false}];
-            if (isFem && !isMid) setsPull1 = [{reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}];
-            else if (isFem && isMid && !isHigh) setsPull1 = [{reps: 1, wt: "BW", done: false}, {reps: 1, wt: "BW", done: false}, {reps: 1, wt: "BW", done: false}];
+            if (isFem) {
+                if (!isMid) setsPull1 = [{reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}];
+                else if (!isHigh) setsPull1 = [{reps: 10, wt: "BW", done: false}, {reps: 10, wt: "BW", done: false}, {reps: 10, wt: "BW", done: false}];
+                else setsPull1 = [{reps: 5, wt: "BW", done: false}, {reps: 5, wt: "BW", done: false}, {reps: 5, wt: "BW", done: false}];
+            }
 
             let setsPull3 = [{reps: 4, wt: "BW", done: false}, {reps: 4, wt: "BW", done: false}];
             if (isFem) setsPull3 = [{reps: 50, wt: "BW", done: false}, {reps: 50, wt: "BW", done: false}, {reps: 50, wt: "BW", done: false}];
@@ -1098,7 +1176,7 @@
                     title: `Pull & Arm Focus (Lv.${level} Scaling)`,
                     desc: isFem ? "Back & Grip Focus with Jump Rope Conditioning." : "Progressive Overload based on Hunter Level.",
                     exercises: [
-                        { id: "p1", name: pullEx1, equip: eqPull, defaultWt: "BW", sets: setsPull1 },
+                        { id: "p1", name: pullEx1, equip: isFem && isMid && !isHigh ? "Low Bar / Table" : eqPull, defaultWt: "BW", sets: setsPull1 },
                         { id: "p2", name: pullEx2, equip: eqDb, defaultWt: wtDb, sets: [{reps: 12, wt: wtDb, done: false}, {reps: 12, wt: wtDb, done: false}, {reps: 12, wt: wtDb, done: false}] },
                         { id: "p3", name: pullEx3, equip: eqCardio, defaultWt: "BW", sets: setsPull3 },
                         { id: "p4", name: pullEx4, equip: eqDb, defaultWt: wtDb, sets: [{reps: 10, wt: wtDb, done: false}, {reps: 10, wt: wtDb, done: false}, {reps: 12, wt: wtDbLight, done: false}] }
@@ -1118,18 +1196,19 @@
                     title: `Legs & Core Burn (Lv.${level} Scaling)`,
                     desc: isFem ? "Stomach & Core specific targeting protocol." : "Progressive Overload based on Hunter Level.",
                     exercises: [
-                        { id: "c1", name: legEx1, equip: isFem ? "Floor" : eqDb, defaultWt: isFem ? "BW" : wtDb, sets: [{reps: 20, wt: isFem ? "BW" : wtDb, done: false}, {reps: 20, wt: isFem ? "BW" : wtDb, done: false}] },
-                        { id: "c2", name: legEx2, equip: "Pull-Up Bar / Floor", defaultWt: "BW", sets: setsLeg2 },
-                        { id: "c3", name: legEx3, equip: isFem ? "Floor" : eqDb, defaultWt: isFem ? "BW" : wtDb, sets: [{reps: 20, wt: isFem ? "BW" : wtDb, done: false}, {reps: 20, wt: isFem ? "BW" : wtDb, done: false}] }
+                        { id: "c1", name: legEx1, equip: isFem ? "Floor" : eqDb, defaultWt: isFem ? "BW" : wtDb, sets: [{reps: 30, wt: isFem ? "BW" : wtDb, done: false}, {reps: 30, wt: isFem ? "BW" : wtDb, done: false}] },
+                        { id: "c2", name: legEx2, equip: isFem ? "Floor" : "Pull-Up Bar / Floor", defaultWt: "BW", sets: setsLeg2 },
+                        { id: "c3", name: legEx3, equip: isFem ? "Floor" : eqDb, defaultWt: isFem ? "BW" : wtDb, sets: [{reps: 30, wt: isFem ? "BW" : wtDb, done: false}, {reps: 30, wt: isFem ? "BW" : wtDb, done: false}] }
                     ]
                 },
                 survival: {
                     title: `Survival Protocol (B-Rank Gate)`,
                     desc: isFem ? "High-volume bodyweight endurance (Core & Legs)." : "High-volume bodyweight endurance (Push & Full Body).",
                     exercises: isFem ? [
-                        { id: "sv1", name: "Bodyweight Squats", equip: "Floor", defaultWt: "BW", sets: [{reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}] },
-                        { id: "sv2", name: "Forearm Planks (Secs)", equip: "Floor", defaultWt: "BW", sets: [{reps: 60, wt: "BW", done: false}, {reps: 60, wt: "BW", done: false}] },
-                        { id: "sv3", name: "Bicycle Crunches", equip: "Floor", defaultWt: "BW", sets: [{reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}] }
+                        { id: "sv1", name: "Bicycle Crunches", equip: "Floor", defaultWt: "BW", sets: [{reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}, {reps: 30, wt: "BW", done: false}] },
+                        { id: "sv2", name: "Plank Jacks", equip: "Floor", defaultWt: "BW", sets: [{reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}] },
+                        { id: "sv3", name: "Lying Leg Raises", equip: "Floor", defaultWt: "BW", sets: [{reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}] },
+                        { id: "sv4", name: "Bodyweight Squats", equip: "Floor", defaultWt: "BW", sets: [{reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}] }
                     ] : [
                         { id: "sv1", name: "Push-ups", equip: "Floor", defaultWt: "BW", sets: [{reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}] },
                         { id: "sv2", name: "Bodyweight Squats", equip: "Floor", defaultWt: "BW", sets: [{reps: 25, wt: "BW", done: false}, {reps: 25, wt: "BW", done: false}] },
@@ -1137,7 +1216,7 @@
                     ]
                 },
                 boss: {
-                    title: `Boss Subjugation (S-Rank Gate)`,
+                    title: `Boss Challenge (S-Rank Gate)`,
                     desc: `The Dungeon Boss has appeared. Prepare for a brutal full-body encounter.`,
                     exercises: [
                         { id: "b1", name: "Burpees", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 15, wt: "BW", done: false}, {reps: 15, wt: "BW", done: false}] },
@@ -1146,7 +1225,7 @@
                     ]
                 },
                 break: {
-                    title: `Emergency Subjugation (Dungeon Break)`,
+                    title: `Emergency Clearance (Dungeon Break)`,
                     desc: `A Red Gate has opened! Massive XP reward. Time is running out.`,
                     exercises: [
                         { id: "brk1", name: "Burpees", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 20, wt: "BW", done: false}, {reps: 20, wt: "BW", done: false}] },
@@ -1155,7 +1234,7 @@
                     ]
                 },
                 penalty: {
-                    title: `Desert Subjugation (Penalty)`,
+                    title: `Desert Clearance (Penalty)`,
                     desc: `Escape the Penalty Zone to restore system access.`,
                     exercises: [
                         { id: "pen1", name: "Penalty Push-ups", equip: "Bodyweight", defaultWt: "BW", sets: [{reps: 100, wt: "BW", done: false}] },
@@ -1178,16 +1257,24 @@
             completedDates: [],
             restDays: ['Wed', 'Sun'],
             noEquipmentMode: false,
-            dungeonClearedToday: false,
+            
+            // New Individual Gate Locking System
+            clearedGates: { pull: false, push: false, calisthenics: false, survival: false },
+            
             bossClearedToday: false,
+            redKeyObtainedToday: false,
             dailyQuestState: { pushups: 0, pullups: 0, squats: 0, planks: 0, runMiles: 0.0, jumprope: 0, targets: null, claimed: false },
+            
+            // New Weekly Tracking
+            weeklyReps: { weekStartStr: '', pushups: 0, pullups: 0, squats: 0 },
+            
             waterIntake: 0,
             meals: [],
             activeRoutineKey: 'pull',
             activeRoutineData: null,
             history: [],
             stats: { unspentAP: 0, str: 10, agi: 10, int: 10, vit: 10 },
-            inventory: { pot_recover: 0, scroll_reset: 0, rune_xp: 0 },
+            inventory: { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 },
             equippedTitle: 'novice',
             unlockedTitles: ['novice'],
             penaltyActive: false,
@@ -1204,6 +1291,25 @@
         
         const CIRCLE_RADIUS = 42;
         const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
+
+        // Instant Cross-Tab/Device Sync Listener
+        const syncChannel = new BroadcastChannel('hunter_sync_channel');
+        syncChannel.onmessage = (event) => {
+            if (event.data === 'state_updated') {
+                const saved = localStorage.getItem('solo_leveling_v6_data');
+                if (saved) {
+                    try { window.appState = { ...window.appState, ...JSON.parse(saved) }; } catch(e){}
+                    renderPlayerHUD();
+                    renderStatsSection();
+                    if (document.getElementById('gate-selection-screen') && !document.getElementById('gate-selection-screen').classList.contains('hidden')) {
+                        renderGateSelection();
+                    }
+                    if (document.getElementById('tab-quest') && !document.getElementById('tab-quest').classList.contains('hidden')) {
+                        renderDailyQuests();
+                    }
+                }
+            }
+        };
 
         function forceHideSplash() {
             const splash = document.getElementById('splash-screen');
@@ -1255,16 +1361,31 @@
         }
 
         function loadStateFromStorage() {
-            const saved = localStorage.getItem('solo_leveling_v5_data');
+            const saved = localStorage.getItem('solo_leveling_v6_data');
             if (saved) {
                 try { window.appState = { ...window.appState, ...JSON.parse(saved) }; } catch(e){}
             }
             
             if (window.appState.noEquipmentMode === undefined) window.appState.noEquipmentMode = false;
             if (window.appState.bossClearedToday === undefined) window.appState.bossClearedToday = false;
+            if (window.appState.redKeyObtainedToday === undefined) window.appState.redKeyObtainedToday = false;
+            if (!window.appState.clearedGates) window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false };
+            
+            // Legacy Migration from dungeonClearedToday
+            if (window.appState.dungeonClearedToday) {
+                if (window.appState.activeRoutineKey && window.appState.clearedGates[window.appState.activeRoutineKey] !== undefined) {
+                    window.appState.clearedGates[window.appState.activeRoutineKey] = true;
+                }
+                delete window.appState.dungeonClearedToday;
+            }
+
             if (window.appState.dailyQuestState.planks === undefined) window.appState.dailyQuestState.planks = 0;
+            if (!window.appState.weeklyReps) window.appState.weeklyReps = { weekStartStr: '', pushups: 0, pullups: 0, squats: 0 };
+            
             if (!window.appState.stats) window.appState.stats = { unspentAP: 0, str: 10, agi: 10, int: 10, vit: 10 };
-            if (!window.appState.inventory) window.appState.inventory = { pot_recover: 0, scroll_reset: 0, rune_xp: 0 };
+            if (!window.appState.inventory) window.appState.inventory = { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 };
+            if (window.appState.inventory.red_key === undefined) window.appState.inventory.red_key = 0;
+            if (window.appState.inventory.blue_key === undefined) window.appState.inventory.blue_key = 0;
             if (!window.appState.unlockedTitles) window.appState.unlockedTitles = ['novice'];
             if (!window.appState.lifetimeStats) window.appState.lifetimeStats = { penaltyCleared: 0, gatesCleared: 0 };
             if (!window.appState.completedDates) window.appState.completedDates = [];
@@ -1283,7 +1404,45 @@
         }
 
         function saveStateToStorage() {
-            localStorage.setItem('solo_leveling_v5_data', JSON.stringify(window.appState));
+            localStorage.setItem('solo_leveling_v6_data', JSON.stringify(window.appState));
+            try { syncChannel.postMessage('state_updated'); } catch(e){}
+        }
+        
+        // Custom Key Loot Drop Popup
+        function triggerLootPopup(itemType) {
+            const popup = document.getElementById('loot-popup');
+            const title = document.getElementById('loot-popup-title');
+            const icon = document.getElementById('loot-popup-icon');
+            const container = document.getElementById('loot-popup-icon-container');
+            
+            if (itemType === 'red_key') {
+                window.appState.inventory.red_key = (window.appState.inventory.red_key || 0) + 1;
+                title.innerText = 'RED KEY';
+                title.className = 'text-xl font-black text-rose-500 system-title uppercase';
+                icon.className = 'fa-solid fa-key text-rose-500 drop-shadow-[0_0_8px_#f43f5e]';
+                container.className = 'w-20 h-20 rounded-2xl flex items-center justify-center text-4xl shadow-inner border border-rose-500/50 bg-rose-950/20';
+            } else if (itemType === 'blue_key') {
+                window.appState.inventory.blue_key = (window.appState.inventory.blue_key || 0) + 1;
+                title.innerText = 'BLUE KEY';
+                title.className = 'text-xl font-black text-cyan-400 system-title uppercase';
+                icon.className = 'fa-solid fa-key text-cyan-400 drop-shadow-[0_0_8px_#22d3ee]';
+                container.className = 'w-20 h-20 rounded-2xl flex items-center justify-center text-4xl shadow-inner border border-cyan-500/50 bg-cyan-950/20';
+            }
+            
+            saveStateToStorage();
+            updateRPGNotifications();
+            
+            popup.classList.remove('hidden');
+            const content = document.getElementById('loot-popup-content');
+            content.classList.remove('animate-pop-in');
+            void content.offsetWidth; // trigger reflow
+            content.classList.add('animate-pop-in');
+            
+            setTimeout(() => {
+                if (!popup.classList.contains('hidden')) {
+                    popup.classList.add('hidden');
+                }
+            }, 1000);
         }
 
         function updateRPGNotifications() {
@@ -1295,8 +1454,8 @@
             }
 
             const lootBadge = document.getElementById('loot-badge');
-            const inv = window.appState.inventory || {pot_recover:0, scroll_reset:0, rune_xp:0};
-            const hasLoot = (inv.pot_recover + inv.scroll_reset + inv.rune_xp) > 0;
+            const inv = window.appState.inventory || {pot_recover:0, scroll_reset:0, rune_xp:0, red_key:0, blue_key:0};
+            const hasLoot = (inv.pot_recover + inv.scroll_reset + inv.rune_xp + inv.red_key + inv.blue_key) > 0;
             if (hasLoot) {
                 if (lootBadge) lootBadge.classList.remove('hidden');
             } else {
@@ -1311,10 +1470,20 @@
             }
         }
 
+        function getMondayOfCurrentWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
+            d.setDate(diff);
+            d.setHours(0,0,0,0);
+            return d.toDateString();
+        }
+
         function isTodayRestDay() {
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const todayName = days[new Date().getDay()];
-            return (window.appState.restDays || []).includes(todayName);
+            const dayFormatted = todayName.charAt(0).toUpperCase() + todayName.slice(1).toLowerCase();
+            return (window.appState.restDays || []).includes(dayFormatted);
         }
 
         function checkRestDayAutoCompletion() {
@@ -1353,7 +1522,7 @@
             
             return {
                 pushups: variance(base.pushups),
-                pullups: variance(base.pullups),
+                pullups: variance(base.pullups), 
                 squats: variance(base.squats),
                 planks: 0,
                 runMiles: Math.round(variance(base.runMiles) * 100) / 100,
@@ -1363,13 +1532,23 @@
 
         function checkDailyMidnightReset() {
             const todayStr = new Date().toDateString();
+            const currentWeekStart = getMondayOfCurrentWeek(new Date());
+            
+            // Check Weekly Reset
+            if (window.appState.weeklyReps.weekStartStr !== currentWeekStart) {
+                window.appState.weeklyReps = {
+                    weekStartStr: currentWeekStart,
+                    pushups: 0, pullups: 0, squats: 0
+                };
+            }
             
             if (window.appState.lastActiveDate !== todayStr) {
                 const now = Date.now();
                 const yesterday = new Date(now - 86400000);
                 const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 const yesterdayName = days[yesterday.getDay()];
-                const wasRestDay = (window.appState.restDays || []).includes(yesterdayName);
+                const yesterdayFormatted = yesterdayName.charAt(0).toUpperCase() + yesterdayName.slice(1).toLowerCase();
+                const wasRestDay = (window.appState.restDays || []).includes(yesterdayFormatted);
 
                 if (!window.appState.dailyQuestState.claimed && !wasRestDay && window.appState.lastResetTimestamp > 0) {
                     const vitStat = window.appState.stats?.vit || 10;
@@ -1429,11 +1608,15 @@
 
         function applyTheme() {
             const body = document.getElementById('body-container');
-            body.classList.remove('bg-theme-penalty', 'bg-theme-survival');
+            body.classList.remove('bg-theme-penalty', 'bg-theme-survival', 'theme-female');
             if (window.appState.penaltyActive) {
                 body.classList.add('bg-theme-penalty');
             } else if (window.appState.noEquipmentMode) {
                 body.classList.add('bg-theme-survival');
+            }
+            
+            if (window.appState.profileClass === 'female') {
+                body.classList.add('theme-female');
             }
         }
 
@@ -1450,11 +1633,18 @@
 
             window.appState.lastActiveDate = new Date().toDateString();
             window.appState.lastResetTimestamp = now;
+            
+            // Reset Quests & Vitals always
             window.appState.dailyQuestState = { pushups: 0, pullups: 0, squats: 0, planks: 0, runMiles: 0.0, jumprope: 0, targets: generateDailyTargets(window.appState.profileClass), claimed: false };
-            window.appState.dungeonClearedToday = false;
-            window.appState.bossClearedToday = false;
             window.appState.waterIntake = 0;
             window.appState.meals = [];
+
+            // ONLY reset Dungeon Gates if it is a TRUE silent midnight rollover
+            if (silent) {
+                window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false };
+                window.appState.bossClearedToday = false;
+                window.appState.redKeyObtainedToday = false;
+            }
             
             if (!window.appState.penaltyActive) {
                 checkRestDayAutoCompletion();
@@ -1469,7 +1659,7 @@
                 renderNutritionSection();
                 renderStatsSection();
                 closeSettingsModal();
-                if (!silent) showToast("DAILY RESET EXECUTED! 24H COOLDOWN STARTED.");
+                if (!silent) showToast("DAILY QUESTS RESET! DUNGEON PROGRESS RETAINED.");
             }
         }
 
@@ -1550,6 +1740,7 @@
                 document.getElementById('features-modal').classList.remove('hidden');
             }
 
+            applyTheme();
             checkRestDayAutoCompletion();
             resetCurrentRoutine();
             saveStateToStorage();
@@ -1563,6 +1754,7 @@
         function setProfileClass(cls) {
             window.appState.profileClass = cls;
             window.appState.dailyQuestState.targets = generateDailyTargets(cls);
+            applyTheme();
             resetCurrentRoutine();
             saveStateToStorage();
             renderDailyQuests();
@@ -1635,10 +1827,54 @@
             document.getElementById('settings-modal').classList.add('opacity-0', 'pointer-events-none');
         }
 
-        // RPG Hubs & Modals
         function openHunterHubModal() {
             closeProfileDrawer();
-            document.getElementById('hub-ap-count').innerText = `${window.appState.stats.unspentAP} AP`;
+            
+            const content = document.getElementById('hub-dynamic-content');
+            const titleObj = TITLES_DB.find(t => t.id === window.appState.equippedTitle);
+            const titleName = titleObj ? titleObj.name : 'NOVICE HUNTER';
+            const stats = window.appState.stats;
+            const hName = window.appState.hunterName || 'SUNG JIN-WOO';
+            
+            const maxStat = Math.max(stats.str, stats.agi, stats.int, stats.vit, 15); 
+            
+            const renderBar = (label, val, color) => {
+                const pct = Math.min(100, Math.round((val / maxStat) * 100));
+                return `
+                    <div class="flex items-center text-[9px] font-bold">
+                        <span class="w-8 text-slate-400">${label}</span>
+                        <div class="flex-1 h-1.5 bg-system-900 rounded-full mx-2 overflow-hidden border border-system-border/40">
+                            <div class="h-full ${color} rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                        <span class="w-4 text-right text-white">${val}</span>
+                    </div>
+                `;
+            };
+
+            content.innerHTML = `
+                <div class="text-center mb-3">
+                    <div class="text-xl font-black text-white system-title uppercase tracking-widest">${hName.toUpperCase()}</div>
+                </div>
+                <div class="bg-system-950 border border-system-border/60 rounded-xl p-3 space-y-2 relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-5">
+                        <i class="fa-solid fa-chart-radar text-6xl text-system-neon"></i>
+                    </div>
+                    <div class="text-[10px] text-system-neon font-black uppercase tracking-wider mb-2">Status Matrix</div>
+                    ${renderBar('STR', stats.str, 'bg-rose-400')}
+                    ${renderBar('AGI', stats.agi, 'bg-emerald-400')}
+                    ${renderBar('INT', stats.int, 'bg-sky-400')}
+                    ${renderBar('VIT', stats.vit, 'bg-amber-400')}
+                </div>
+                <div class="bg-system-950 border border-system-border/60 rounded-xl p-3 flex justify-between items-center relative overflow-hidden mt-3">
+                    <div class="relative z-10">
+                        <div class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Current Title</div>
+                        <div class="text-xs font-black text-amber-400 uppercase mt-0.5">${titleName}</div>
+                    </div>
+                    <i class="fa-solid fa-crown text-amber-500/20 text-3xl absolute -right-1 -bottom-1"></i>
+                </div>
+            `;
+            
+            document.getElementById('hub-ap-count').innerText = `${stats.unspentAP} AP`;
             document.getElementById('hunter-hub-modal').classList.remove('opacity-0', 'pointer-events-none');
         }
         function closeHunterHubModal() {
@@ -1740,6 +1976,7 @@
 
         function renderDailyQuests() {
             const isRest = isTodayRestDay();
+            const isFem = window.appState.profileClass === 'female';
             const grid = document.getElementById('quest-items-grid');
             const btnsContainer = document.getElementById('quest-controls-card');
             const bannerBox = document.getElementById('quest-banner-box');
@@ -1752,7 +1989,7 @@
             if (window.appState.penaltyActive) {
                 headerTitle.innerHTML = `<span>PENALTY ZONE ACTIVE</span>`;
                 bannerBox.className = "bg-orange-950/40 border border-orange-500/40 rounded-xl p-3 flex items-start space-x-2.5";
-                bannerText.innerHTML = `<strong class="text-orange-400 uppercase font-black">LOCKED:</strong> CLEAR THE DESERT SUBJUGATION GATE TO RESTORE QUEST ACCESS.`;
+                bannerText.innerHTML = `<strong class="text-orange-400 uppercase font-black">LOCKED:</strong> CLEAR THE DESERT PENALTY GATE TO RESTORE QUEST ACCESS.`;
                 btnsContainer.style.display = 'none';
 
                 const claimBtn = document.getElementById('claim-quest-btn');
@@ -1805,14 +2042,21 @@
 
                 const items = [];
                 if (target.pushups > 0) items.push({ key: 'pushups', name: 'PUSH-UPS', cur: current.pushups, max: target.pushups, unit: 'reps', inc: 10 });
-                if (target.pullups > 0) items.push({ key: 'pullups', name: 'PULL-UPS', cur: current.pullups, max: target.pullups, unit: 'reps', inc: 2 });
+                if (target.pullups > 0) items.push({ 
+                    key: 'pullups', 
+                    name: isFem ? 'DEAD HANGS' : 'PULL-UPS', 
+                    cur: current.pullups, 
+                    max: target.pullups, 
+                    unit: isFem ? 'secs' : 'reps', 
+                    inc: isFem ? 20 : 2 
+                });
                 if (target.squats > 0) items.push({ key: 'squats', name: 'SQUATS', cur: current.squats, max: target.squats, unit: 'reps', inc: 10 });
                 if (target.planks > 0) items.push({ key: 'planks', name: 'PLANKS', cur: current.planks, max: target.planks, unit: 'secs', inc: 30 });
 
                 if (target.runMiles > 0) {
                     items.push({ key: 'runMiles', name: 'RUNNING', cur: current.runMiles, max: target.runMiles, unit: 'mi', inc: 0.25 });
                 } else if (target.jumprope > 0) {
-                    items.push({ key: 'jumprope', name: 'JUMP ROPE / CIRCUIT', cur: current.jumprope, max: target.jumprope, unit: 'reps', inc: 250 });
+                    items.push({ key: 'jumprope', name: 'JUMP ROPE / CIRCUIT', cur: current.jumprope, max: target.jumprope, unit: 'reps', inc: 100 });
                 }
 
                 items.forEach(item => {
@@ -1885,6 +2129,11 @@
             state.claimed = true;
             window.appState.completedQuestsCount = (window.appState.completedQuestsCount || 0) + 1;
             
+            // Add to Weekly Trackers
+            if (state.pushups > 0) window.appState.weeklyReps.pushups += state.pushups;
+            if (state.pullups > 0) window.appState.weeklyReps.pullups += state.pullups;
+            if (state.squats > 0) window.appState.weeklyReps.squats += state.squats;
+            
             const todayStr = new Date().toDateString();
             if (!window.appState.completedDates) window.appState.completedDates = [];
             if (!window.appState.completedDates.includes(todayStr)) {
@@ -1892,10 +2141,18 @@
             }
 
             awardXP(100);
+            
+            // 9% Chance for Blue Key
+            if (Math.random() < 0.09) {
+                triggerLootPopup('blue_key');
+            } else {
+                showToast("QUEST CLEARED! REWARD +100 XP GRANTED!");
+            }
+            
             renderDailyQuests();
             renderStatsSection();
+            renderPlayerHUD();
             checkTitleUnlocks();
-            showToast("QUEST CLEARED! REWARD +100 XP GRANTED!");
         }
 
         function addWater(oz) {
@@ -1966,16 +2223,26 @@
         function openInventoryModal() {
             const list = document.getElementById('inventory-grid');
             const items = [
-                { id: 'pot_recover', name: 'Recovery Potion', icon: 'fa-flask', color: 'text-rose-400', count: window.appState.inventory.pot_recover },
-                { id: 'scroll_reset', name: 'Job Change Scroll', icon: 'fa-scroll', color: 'text-amber-400', count: window.appState.inventory.scroll_reset },
-                { id: 'rune_xp', name: 'Shadow Runestone', icon: 'fa-gem', color: 'text-purple-400', count: window.appState.inventory.rune_xp }
+                { id: 'pot_recover', name: 'Recovery Potion', desc: 'Instantly restores daily Vitals (HP/MP) to full.', icon: 'fa-flask', color: 'text-rose-400', count: window.appState.inventory.pot_recover || 0 },
+                { id: 'scroll_reset', name: 'Job Change Scroll', desc: 'Wipes your 24h reset cooldown, allowing immediate replay.', icon: 'fa-scroll', color: 'text-amber-400', count: window.appState.inventory.scroll_reset || 0 },
+                { id: 'rune_xp', name: 'Shadow Runestone', desc: 'Absorb the stone to instantly gain +500 XP.', icon: 'fa-gem', color: 'text-purple-400', count: window.appState.inventory.rune_xp || 0 },
+                { id: 'blue_key', name: 'Blue Gate Key', desc: 'Consumable. Allows re-entry into a cleared normal gate.', icon: 'fa-key', color: 'text-cyan-400', count: window.appState.inventory.blue_key || 0 },
+                { id: 'red_key', name: 'Red Gate Key', desc: 'Grants access to the S-Rank Boss Room.', icon: 'fa-key', color: 'text-rose-500', count: window.appState.inventory.red_key || 0 }
             ];
 
+            list.className = "space-y-3";
             list.innerHTML = items.map(item => `
-                <button onclick="useItem('${item.id}')" class="bg-system-950 border border-system-border rounded-xl p-3 text-center btn-active relative group transition-colors ${item.count <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-system-neon cursor-pointer'}" ${item.count <= 0 ? 'disabled' : ''}>
-                    <span class="absolute -top-2 -right-2 bg-system-900 border border-system-border text-[9px] rounded-full w-5 h-5 flex items-center justify-center font-bold text-white">${item.count}</span>
-                    <i class="fa-solid ${item.icon} ${item.color} text-2xl mb-2 group-hover:scale-110 transition-transform"></i>
-                    <div class="text-[9px] font-bold text-slate-300 leading-tight">${item.name}</div>
+                <button onclick="useItem('${item.id}')" class="w-full bg-system-950 border border-system-border rounded-xl p-3 text-left flex items-center btn-active group transition-colors ${item.count <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-system-neon cursor-pointer'}" ${item.count <= 0 ? 'disabled' : ''}>
+                    <div class="w-10 h-10 shrink-0 rounded-lg bg-system-900 border border-system-border flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <i class="fa-solid ${item.icon} ${item.color} text-lg"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <div class="text-xs font-bold text-slate-200 uppercase tracking-wider">${item.name}</div>
+                        <div class="text-[9.5px] text-slate-400 mt-0.5 leading-tight">${item.desc}</div>
+                    </div>
+                    <div class="ml-2 pl-3 border-l border-system-border/50 text-right">
+                        <span class="bg-system-900 border border-system-border text-xs font-black text-white px-2 py-1 rounded-lg">x${item.count}</span>
+                    </div>
                 </button>
             `).join('');
             
@@ -1987,22 +2254,37 @@
         }
 
         function useItem(id) {
-            if (window.appState.inventory[id] <= 0) return;
+            if (!window.appState.inventory[id] || window.appState.inventory[id] <= 0) return;
+            
+            if (id === 'red_key') {
+                closeInventoryModal();
+                switchTab('workout');
+                showToast("Key ready. Select the Boss Gate to enter.");
+                return; 
+            }
+            if (id === 'blue_key') {
+                closeInventoryModal();
+                switchTab('workout');
+                showToast("Tap a cleared Normal Gate to use the Blue Key.");
+                return;
+            }
             
             window.appState.inventory[id]--;
             
             if (id === 'pot_recover') {
                 const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets;
-                const dynamicWater = Math.max(40, config.water - ((window.appState.stats.int - 10) * 2));
-                const dynamicCals = Math.max(1200, config.cals - ((window.appState.stats.int - 10) * 20));
+                const intStat = window.appState.stats?.int || 10;
+                const dynamicWater = Math.max(40, config.water - ((intStat - 10) * 2));
+                const dynamicCals = Math.max(1200, config.cals - ((intStat - 10) * 20));
                 
                 window.appState.waterIntake = dynamicWater;
                 window.appState.meals.unshift({ id: Date.now(), type: 'Status Potion', cals: dynamicCals });
                 showToast("Vitals fully restored.");
                 renderNutritionSection();
             } else if (id === 'scroll_reset') {
-                window.appState.dungeonClearedToday = false;
+                window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false };
                 window.appState.bossClearedToday = false;
+                window.appState.redKeyObtainedToday = false;
                 showToast("Gate cooldowns reset!");
                 renderGateSelection();
             } else if (id === 'rune_xp') {
@@ -2012,6 +2294,7 @@
             
             saveStateToStorage();
             openInventoryModal();
+            updateRPGNotifications();
         }
 
         // Standard Modals
@@ -2112,14 +2395,26 @@
             const grid = document.getElementById('shadow-army-grid');
             if (!grid) return;
             
-            grid.innerHTML = SHADOWS_DB.map(s => {
-                const isUnlocked = window.appState.playerLevel >= s.reqLevel;
+            const unlockedShadows = SHADOWS_DB.filter(s => window.appState.playerLevel >= s.reqLevel);
+            
+            if (unlockedShadows.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-2 bg-system-950 border border-purple-500/30 rounded-xl p-6 text-center space-y-3">
+                        <i class="fa-solid fa-ghost text-4xl text-purple-500/20"></i>
+                        <h4 class="font-black text-purple-400 text-sm tracking-widest uppercase">The Void is Empty</h4>
+                        <p class="text-[10px] text-slate-400 leading-relaxed">No shadows have been extracted yet. Defeat powerful enemies and grow your strength to absolute levels. Your first extraction becomes available at Lv. 5.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = unlockedShadows.map(s => {
                 return `
-                    <div class="bg-system-950 border ${isUnlocked ? 'border-purple-500/50' : 'border-system-border/40 opacity-50 grayscale'} rounded-xl p-3 flex flex-col items-center text-center relative overflow-hidden transition-all">
-                        ${isUnlocked ? '<div class="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent"></div>' : ''}
-                        <i class="fa-solid ${s.icon} text-2xl ${isUnlocked ? 'text-purple-400 drop-shadow-[0_0_8px_#c084fc]' : 'text-slate-600'} mb-2 relative z-10"></i>
-                        <h4 class="font-black text-white text-xs relative z-10">${isUnlocked ? s.name : '???'}</h4>
-                        <span class="text-[9px] font-bold ${isUnlocked ? 'text-system-neon' : 'text-slate-500'} relative z-10">${isUnlocked ? s.buff : `Unlocks Lv.${s.reqLevel}`}</span>
+                    <div class="bg-system-950 border border-purple-500/50 rounded-xl p-3 flex flex-col items-center text-center relative overflow-hidden transition-all shadow-[0_0_10px_rgba(168,85,247,0.1)]">
+                        <div class="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent"></div>
+                        <i class="fa-solid ${s.icon} text-2xl text-purple-400 drop-shadow-[0_0_8px_#c084fc] mb-2 relative z-10"></i>
+                        <h4 class="font-black text-white text-xs relative z-10">${s.name}</h4>
+                        <span class="text-[9px] font-bold text-system-neon relative z-10">${s.buff}</span>
                     </div>
                 `;
             }).join('');
@@ -2181,17 +2476,15 @@
             const drawerXPBar = document.getElementById('drawer-xp-bar');
             if (drawerXPBar) drawerXPBar.style.width = `${pct}%`;
             
-            const drawerQuests = document.getElementById('drawer-quests-count');
-            if (drawerQuests) drawerQuests.innerText = window.appState.completedQuestsCount || 0;
-            const drawerGates = document.getElementById('drawer-gates-count');
-            if (drawerGates && window.appState.lifetimeStats) drawerGates.innerText = window.appState.lifetimeStats.gatesCleared || 0;
-            const drawerShadows = document.getElementById('drawer-shadows-count');
-            if (drawerShadows) {
-                const unlockedCount = SHADOWS_DB.filter(s => window.appState.playerLevel >= s.reqLevel).length;
-                drawerShadows.innerText = unlockedCount;
-            }
-            const drawerPullups = document.getElementById('drawer-pullups-count');
-            if (drawerPullups) drawerPullups.innerText = window.appState.dailyQuestState?.pullups || 0;
+            // Render Weekly Stats
+            const drawerPush = document.getElementById('drawer-week-push');
+            if (drawerPush) drawerPush.innerText = window.appState.weeklyReps?.pushups || 0;
+            const drawerSquat = document.getElementById('drawer-week-squat');
+            if (drawerSquat) drawerSquat.innerText = window.appState.weeklyReps?.squats || 0;
+            const drawerPullLabel = document.getElementById('drawer-week-pull-label');
+            if (drawerPullLabel) drawerPullLabel.innerText = window.appState.profileClass === 'female' ? 'DEAD HANGS' : 'PULL-UPS';
+            const drawerPull = document.getElementById('drawer-week-pull');
+            if (drawerPull) drawerPull.innerText = window.appState.weeklyReps?.pullups || 0;
 
             const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets;
             const intStat = window.appState.stats?.int || 10;
@@ -2213,6 +2506,22 @@
         }
 
         // --- DUNGEONS & WORKOUT SYSTEM ---
+        window.handleLockedGateClick = function(gateId) {
+            if (window.appState.inventory.blue_key > 0) {
+                if(confirm("Consume 1 Blue Key to unlock this gate for re-entry?")) {
+                    window.appState.inventory.blue_key--;
+                    window.appState.clearedGates[gateId] = false;
+                    saveStateToStorage();
+                    updateRPGNotifications();
+                    renderGateSelection();
+                    switchRoutine(gateId);
+                    showToast("Blue Key consumed. Gate Unlocked.");
+                }
+            } else {
+                showToast("Gate Cleared. A Blue Key is required for re-entry today.");
+            }
+        };
+
         function renderGateSelection() {
             const grid = document.getElementById('gate-selection-grid');
             const breakBanner = document.getElementById('dungeon-break-banner');
@@ -2226,8 +2535,9 @@
 
             const isRest = isTodayRestDay();
             const isNoEq = window.appState.noEquipmentMode;
-            const normalCleared = window.appState.dungeonClearedToday;
             const bossCleared = window.appState.bossClearedToday;
+            const hasRedKey = (window.appState.inventory.red_key || 0) > 0;
+            const hasBlueKey = (window.appState.inventory.blue_key || 0) > 0;
 
             let gates = [];
 
@@ -2246,16 +2556,26 @@
             let html = '';
 
             gates.forEach(g => {
-                const locked = isRest || normalCleared;
-                const isThisCleared = normalCleared && window.appState.activeRoutineKey === g.id;
+                const isThisCleared = window.appState.clearedGates[g.id] === true;
+                const locked = isRest || isThisCleared;
                 const progress = isThisCleared ? 100 : 0;
                 
-                const statusText = isThisCleared ? 'CLEARED' : locked ? 'LOCKED' : 'ENTER';
-                const statusIcon = isThisCleared ? 'fa-check-double text-emerald-400' : locked ? 'fa-lock text-slate-500' : 'fa-chevron-right text-system-neon';
-                const statusColor = isThisCleared ? 'text-emerald-400' : locked ? 'text-slate-500' : 'text-system-neon';
+                const statusText = isThisCleared ? (hasBlueKey ? 'USE BLUE KEY' : 'CLEARED') : (isRest ? 'LOCKED' : 'ENTER');
+                const statusIcon = isThisCleared ? (hasBlueKey ? 'fa-key text-cyan-400' : 'fa-check-double text-emerald-400') : (isRest ? 'fa-lock text-slate-500' : 'fa-chevron-right text-system-neon');
+                const statusColor = isThisCleared ? (hasBlueKey ? 'text-cyan-400' : 'text-emerald-400') : (isRest ? 'text-slate-500' : 'text-system-neon');
+
+                // Dynamic click action based on cleared status
+                let onClickAction = '';
+                if (!isRest) {
+                    if (isThisCleared) {
+                        onClickAction = `handleLockedGateClick('${g.id}')`;
+                    } else {
+                        onClickAction = `switchRoutine('${g.id}')`;
+                    }
+                }
 
                 html += `
-                    <div onclick="${locked ? '' : `switchRoutine('${g.id}')`}" class="bg-system-900 border ${locked && !isThisCleared ? 'border-system-border/40 opacity-50 grayscale cursor-not-allowed' : `${g.border} ${g.bg} cursor-pointer btn-active`} rounded-2xl p-5 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden gap-3">
+                    <div onclick="${onClickAction}" class="bg-system-900 border ${isRest ? 'border-system-border/40 opacity-50 grayscale cursor-not-allowed' : isThisCleared ? 'border-emerald-500/50 cursor-pointer btn-active' : `${g.border} ${g.bg} cursor-pointer btn-active`} rounded-2xl p-5 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden gap-3">
                         <div class="flex items-center justify-between relative z-10 w-full">
                             <div class="flex items-center space-x-4">
                                 <div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border border-system-border/80 shadow-inner">
@@ -2273,7 +2593,7 @@
                         </div>
                         <div class="w-full relative z-10">
                             <div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5">
-                                <span>Subjugation Progress</span>
+                                <span>Completion Progress</span>
                                 <span class="${isThisCleared ? 'text-emerald-400' : ''}">${progress}%</span>
                             </div>
                             <div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50">
@@ -2286,11 +2606,12 @@
 
             // Boss Gate Logic
             if (!isNoEq) {
-                const bossAvailable = !isRest && normalCleared && !bossCleared;
+                const bossAvailable = !isRest && hasRedKey && !bossCleared;
                 const bossProgress = bossCleared ? 100 : 0;
-                const bossStatusText = bossCleared ? 'CLEARED' : bossAvailable ? 'UNLOCKED' : 'LOCKED';
-                const bossStatusIcon = bossCleared ? 'fa-check-double text-emerald-400' : bossAvailable ? 'fa-skull text-system-boss' : 'fa-lock text-slate-500';
-                const bossStatusColor = bossCleared ? 'text-emerald-400' : bossAvailable ? 'text-system-boss' : 'text-slate-500';
+                
+                const bossStatusText = bossCleared ? 'CLEARED' : bossAvailable ? 'UNLOCKED' : (hasRedKey ? 'LOCKED' : 'NEEDS RED KEY');
+                const bossStatusIcon = bossCleared ? 'fa-check-double text-emerald-400' : bossAvailable ? 'fa-skull text-system-boss' : (hasRedKey ? 'fa-lock text-slate-500' : 'fa-key text-rose-500');
+                const bossStatusColor = bossCleared ? 'text-emerald-400' : bossAvailable ? 'text-system-boss' : (hasRedKey ? 'text-slate-500' : 'text-rose-500');
 
                 html += `
                     <div class="pt-3 border-t border-system-border/50 mt-3">
@@ -2303,7 +2624,7 @@
                                     </div>
                                     <div>
                                         <h3 class="font-black text-white uppercase tracking-wider text-base">BOSS ROOM</h3>
-                                        <span class="text-[10px] ${bossAvailable ? 'text-system-boss' : bossCleared ? 'text-emerald-400' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Subjugation</span>
+                                        <span class="text-[10px] ${bossAvailable ? 'text-system-boss' : bossCleared ? 'text-emerald-400' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Challenge</span>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -2313,7 +2634,7 @@
                             </div>
                             <div class="w-full relative z-10">
                                 <div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5">
-                                    <span>Subjugation Progress</span>
+                                    <span>Completion Progress</span>
                                     <span class="${bossCleared ? 'text-emerald-400' : ''}">${bossProgress}%</span>
                                 </div>
                                 <div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50">
@@ -2321,7 +2642,7 @@
                                 </div>
                             </div>
                         </div>
-                        <p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate unlocks after clearing 1 daily gate.</p>
+                        <p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate requires a Red Key (Drops from normal gates).</p>
                     </div>
                 `;
             }
@@ -2366,6 +2687,7 @@
             const isBoss = window.appState.activeRoutineKey === 'boss';
             const isBreak = window.appState.activeRoutineKey === 'break';
             const isSurvival = window.appState.activeRoutineKey === 'survival';
+            const isNormalGateCleared = window.appState.clearedGates[window.appState.activeRoutineKey] === true;
 
             const activeDungeonScreen = document.getElementById('active-dungeon-screen');
             const penaltyBanner = document.getElementById('dungeon-penalty-banner');
@@ -2412,16 +2734,16 @@
                     breakBg.classList.add('hidden');
                 }
 
-                const isLocked = (isRest && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : window.appState.dungeonClearedToday));
+                const isLocked = (isRest && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : isNormalGateCleared));
 
                 if (isLocked) {
-                    const label = isRest ? "REST DAY: DUNGEONS GREYED OUT" : "DUNGEON CLEARED FOR TODAY (LOCKED)";
+                    const label = isRest ? "REST DAY: DUNGEONS GREYED OUT" : "GATE CLEARED FOR TODAY (LOCKED)";
                     clearBtn.className = "w-full py-3.5 bg-system-850 border border-system-border text-slate-500 font-black text-xs rounded-xl flex items-center justify-center space-x-2 tracking-wider font-mono uppercase cursor-not-allowed opacity-60";
                     clearBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>${label}</span>`;
                     clearBtn.onclick = null;
                 } else {
                     clearBtn.className = `btn-active w-full py-3.5 ${isBoss ? 'bg-gradient-to-r from-system-boss to-rose-500 border-rose-300/40' : isBreak ? 'bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 border-rose-300/40' : (isSurvival ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-300/40' : 'bg-gradient-to-r from-purple-600 via-system-accent to-system-neon border-cyan-200/40')} text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border tracking-wider font-mono uppercase shadow-lg cursor-pointer`;
-                    clearBtn.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i><span>${isBoss ? 'SUBJUGATE BOSS (+150 XP)' : isBreak ? 'SEAL DUNGEON BREAK (+300 XP)' : 'CLEAR DUNGEON (+50 XP)'}</span>`;
+                    clearBtn.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i><span>${isBoss ? 'CLEAR BOSS (+150 XP)' : isBreak ? 'SEAL DUNGEON BREAK (+300 XP)' : 'CLEAR DUNGEON (+50 XP)'}</span>`;
                     clearBtn.onclick = finishWorkout;
                 }
             }
@@ -2432,7 +2754,7 @@
             
             if (!data || !data.exercises) return;
 
-            const isLockedGlobal = (isRest && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : window.appState.dungeonClearedToday));
+            const isLockedGlobal = (isRest && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : isNormalGateCleared));
 
             data.exercises.forEach((ex, exIndex) => {
                 const exCard = document.createElement('div');
@@ -2484,7 +2806,8 @@
         function updateSetVal(exIndex, setIndex, field, val) {
             const isBoss = window.appState.activeRoutineKey === 'boss';
             const isBreak = window.appState.activeRoutineKey === 'break';
-            const isLockedGlobal = (isTodayRestDay() && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : window.appState.dungeonClearedToday));
+            const isNormalGateCleared = window.appState.clearedGates[window.appState.activeRoutineKey] === true;
+            const isLockedGlobal = (isTodayRestDay() && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : isNormalGateCleared));
             if (isLockedGlobal && !window.appState.penaltyActive) return;
             
             window.appState.activeRoutineData.exercises[exIndex].sets[setIndex][field] = val;
@@ -2494,7 +2817,8 @@
         function toggleSetDone(exIndex, setIndex) {
             const isBoss = window.appState.activeRoutineKey === 'boss';
             const isBreak = window.appState.activeRoutineKey === 'break';
-            const isLockedGlobal = (isTodayRestDay() && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : window.appState.dungeonClearedToday));
+            const isNormalGateCleared = window.appState.clearedGates[window.appState.activeRoutineKey] === true;
+            const isLockedGlobal = (isTodayRestDay() && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : isNormalGateCleared));
             if (isLockedGlobal && !window.appState.penaltyActive) return;
 
             const current = window.appState.activeRoutineData.exercises[exIndex].sets[setIndex].done;
@@ -2512,7 +2836,8 @@
         function addSetToExercise(exIndex) {
             const isBoss = window.appState.activeRoutineKey === 'boss';
             const isBreak = window.appState.activeRoutineKey === 'break';
-            const isLockedGlobal = (isTodayRestDay() && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : window.appState.dungeonClearedToday));
+            const isNormalGateCleared = window.appState.clearedGates[window.appState.activeRoutineKey] === true;
+            const isLockedGlobal = (isTodayRestDay() && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : isNormalGateCleared));
             if (isLockedGlobal && !window.appState.penaltyActive) return;
 
             const ex = window.appState.activeRoutineData.exercises[exIndex];
@@ -2525,7 +2850,8 @@
         function finishWorkout() {
             const isBoss = window.appState.activeRoutineKey === 'boss';
             const isBreak = window.appState.activeRoutineKey === 'break';
-            const isLockedGlobal = (isTodayRestDay() && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : window.appState.dungeonClearedToday));
+            const isNormalGateCleared = window.appState.clearedGates[window.appState.activeRoutineKey] === true;
+            const isLockedGlobal = (isTodayRestDay() && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : isNormalGateCleared));
             
             if (isLockedGlobal && !window.appState.penaltyActive) return;
 
@@ -2557,7 +2883,7 @@
                 applyTheme();
                 resetCurrentRoutine(); 
                 checkTitleUnlocks();
-                showToast("PENALTY SUBJUGATION CLEARED! SYSTEM ACCESS RESTORED.");
+                showToast("PENALTY GATE CLEARED! SYSTEM ACCESS RESTORED.");
                 saveStateToStorage();
                 renderDailyQuests();
                 return;
@@ -2571,29 +2897,55 @@
                 volume: sessionVolume
             });
 
+            let delayLootPopup = false;
+            let lootedType = null;
+
             if (isBoss) {
                 window.appState.bossClearedToday = true;
                 awardXP(150);
+                if (Math.random() < 0.98) {
+                    delayLootPopup = true;
+                    lootedType = 'blue_key';
+                }
             } else if (isBreak) {
                 window.appState.dungeonBreak.active = false;
                 awardXP(300);
             } else {
-                window.appState.dungeonClearedToday = true;
+                // Clear the SPECIFIC normal gate
+                window.appState.clearedGates[window.appState.activeRoutineKey] = true;
                 if(window.appState.lifetimeStats) window.appState.lifetimeStats.gatesCleared++;
                 awardXP(50);
+                
+                if (!window.appState.redKeyObtainedToday && !window.appState.noEquipmentMode) {
+                    window.appState.redKeyObtainedToday = true;
+                    delayLootPopup = true;
+                    lootedType = 'red_key';
+                } else {
+                    if (Math.random() < 0.20) {
+                        delayLootPopup = true;
+                        lootedType = 'blue_key';
+                    }
+                }
             }
             
-            const dropChance = (isBoss || isBreak) ? 0.6 : 0.3;
-            if (Math.random() < dropChance) {
-                const roll = Math.random();
-                if (roll < 0.5) window.appState.inventory.pot_recover++;
-                else if (roll < 0.8) window.appState.inventory.scroll_reset++;
-                else window.appState.inventory.rune_xp++;
-                showToast("Loot Drop Acquired! Check Inventory.");
-            } else {
-                if (isBoss) showToast("BOSS SUBJUGATED (+150 XP)!");
-                else if (isBreak) showToast("DUNGEON BREAK SEALED (+300 XP)!");
-                else showToast("DUNGEON CLEARED (+50 XP)! BOSS ROOM UNLOCKED.");
+            if (delayLootPopup && lootedType) {
+                setTimeout(() => triggerLootPopup(lootedType), 500);
+            }
+            
+            // Standard generic loot
+            if (!delayLootPopup) {
+                const dropChance = (isBoss || isBreak) ? 0.6 : 0.3;
+                if (Math.random() < dropChance) {
+                    const roll = Math.random();
+                    if (roll < 0.5) window.appState.inventory.pot_recover++;
+                    else if (roll < 0.8) window.appState.inventory.scroll_reset++;
+                    else window.appState.inventory.rune_xp++;
+                    showToast(`Loot Drop Acquired!`);
+                } else {
+                    if (isBoss) showToast("BOSS CLEARED (+150 XP)!");
+                    else if (isBreak) showToast("DUNGEON BREAK SEALED (+300 XP)!");
+                    else showToast(`DUNGEON CLEARED (+50 XP)!`);
+                }
             }
             
             updateRPGNotifications();
@@ -2623,6 +2975,8 @@
 
             const daysLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
             const restDaysList = window.appState.restDays || [];
+            
+            const restDaysUpper = restDaysList.map(d => d.toUpperCase());
 
             if (badge) {
                 badge.innerText = `Rest Days: ${restDaysList.join(', ') || 'None'}`;
@@ -2635,7 +2989,7 @@
                 const dateStr = d.toDateString();
                 const dayName = daysLabels[i];
                 const isToday = dateStr === new Date().toDateString();
-                const isRestDay = restDaysList.includes(dayName);
+                const isRestDay = restDaysUpper.includes(dayName);
                 const isCompleted = (window.appState.completedDates || []).includes(dateStr);
                 const isFuture = d > new Date() && !isToday;
                 
@@ -2674,7 +3028,7 @@
             if (!container) return;
 
             if (!topHunters || topHunters.length === 0) {
-                window.renderFallbackLeaderboard();
+                container.innerHTML = '<div class="text-center py-4 text-slate-500 text-xs">Awaiting Hunters...</div>';
                 return;
             }
 
@@ -2686,13 +3040,13 @@
                     '<span class="w-6 h-6 rounded-lg bg-amber-700 text-slate-100 font-black text-xs flex items-center justify-center">3</span>'
                 ];
 
-                const isMe = hunter.name === window.appState.hunterName;
+                const isMe = window.currentUser && hunter.uid === window.currentUser.uid;
 
                 const item = document.createElement('div');
                 item.className = `flex justify-between items-center p-2.5 rounded-xl border text-xs font-mono ${isMe ? 'bg-system-accent/10 border-system-accent' : 'bg-system-950 border-system-border/60'}`;
                 item.innerHTML = `
                     <div class="flex items-center space-x-2.5">
-                        ${rankBadges[idx] || '#'}
+                        ${rankBadges[idx] || `<span class="w-6 h-6 rounded-lg bg-slate-800 text-white font-black text-xs flex items-center justify-center">${idx + 1}</span>`}
                         <div>
                             <div class="font-bold text-white flex items-center gap-1.5">
                                 <span>${hunter.name}</span>
@@ -2707,40 +3061,6 @@
                 `;
                 container.appendChild(item);
             });
-        };
-
-        window.renderFallbackLeaderboard = function() {
-            const container = document.getElementById('leaderboard-container');
-            if (!container) return;
-
-            const titleObj = TITLES_DB.find(t => t.id === window.appState.equippedTitle);
-
-            const myStats = {
-                name: window.appState.hunterName || 'Sung Jin-Woo',
-                level: window.appState.playerLevel || 1,
-                xp: window.appState.playerXP || 0,
-                title: titleObj ? titleObj.name : 'Novice Hunter'
-            };
-
-            container.innerHTML = '';
-            const item = document.createElement('div');
-            item.className = 'flex justify-between items-center p-2.5 rounded-xl border text-xs font-mono bg-system-accent/10 border-system-accent';
-            item.innerHTML = `
-                <div class="flex items-center space-x-2.5">
-                    <span class="w-6 h-6 rounded-lg bg-amber-400 text-system-950 font-black text-xs flex items-center justify-center">1</span>
-                    <div>
-                        <div class="font-bold text-white flex items-center gap-1.5">
-                            <span>${myStats.name}</span>
-                            <span class="text-[9px] bg-system-neon/20 text-system-neon px-1 rounded font-bold">YOU</span>
-                        </div>
-                        <div class="text-[10px] text-slate-400">LVL ${myStats.level} • ${myStats.title}</div>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="font-black text-system-glow">${myStats.xp} XP</span>
-                </div>
-            `;
-            container.appendChild(item);
         };
 
         function renderStatsSection() {
@@ -2778,12 +3098,46 @@
 
         function clearAllData() {
             if (confirm("Reset all local player data and force initial setup startup wizard?")) {
-                localStorage.removeItem('solo_leveling_v5_data');
+                localStorage.removeItem('solo_leveling_v6_data');
                 localStorage.removeItem('solo_leveling_initialized');
                 localStorage.removeItem('solo_leveling_features_seen');
                 location.reload();
             }
         }
+
+        // --- DATA BACKUP & RESTORE LOGIC ---
+        window.exportData = function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.appState));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "solo_leveling_backup_v6.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            showToast("DATA EXPORTED SUCCESSFULLY");
+        };
+
+        window.importData = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    if (importedState && importedState.hunterName) {
+                        window.appState = { ...window.appState, ...importedState };
+                        saveStateToStorage();
+                        showToast("DATA RESTORED! SYSTEM REBOOTING...");
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast("INVALID BACKUP FILE DETECTED");
+                    }
+                } catch(err) {
+                    showToast("ERROR READING DATA FILE");
+                }
+            };
+            reader.readAsText(file);
+        };
 
         // --- TIMER MODAL LOGIC ---
         function openTimerModal() { document.getElementById('timer-modal').classList.remove('opacity-0', 'pointer-events-none'); }
