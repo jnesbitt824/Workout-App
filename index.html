@@ -60,6 +60,14 @@
         .quest-box-pulse { animation: systemPulse 2.5s infinite alternate ease-in-out; }
         .boss-glow { animation: bossPulse 3s infinite alternate ease-in-out; }
         .raid-glow { animation: raidPulse 2.5s infinite alternate ease-in-out; }
+
+        /* Locked / key-unlockable dungeon gates */
+        .gate-locked { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
+        .gate-key-pulse { cursor: pointer; animation: keyPulse 1.4s infinite alternate ease-in-out; }
+        @keyframes keyPulse {
+            0%   { filter: grayscale(0.9) brightness(0.8); opacity: 0.6; box-shadow: 0 0 0 rgba(56,189,248,0); }
+            100% { filter: grayscale(0) brightness(1.1);   opacity: 1;   box-shadow: 0 0 22px rgba(56,189,248,0.6); }
+        }
         
         @keyframes systemPulse {
             0% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.25), inset 0 0 10px rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); }
@@ -191,6 +199,40 @@
         .aura-gold .shadow-\[0_0_20px_rgba\(56\,189\,248\,0\.15\)\] { box-shadow: 0 0 20px rgba(251, 191, 36, 0.15) !important; }
         .aura-gold .shadow-\[0_0_30px_rgba\(56\,189\,248\,0\.3\)\] { box-shadow: 0 0 30px rgba(251, 191, 36, 0.3) !important; }
         .aura-gold .selection\:bg-system-neon *::selection { background-color: #fbbf24 !important; }
+
+        
+        /* Red Key Pulse Animation */
+        .gate-key-pulse-red { cursor: pointer; animation: keyPulseRed 1.4s infinite alternate ease-in-out; }
+        @keyframes keyPulseRed {
+            0%   { filter: brightness(0.9); box-shadow: 0 0 0 rgba(225,29,72,0); }
+            100% { filter: brightness(1.2); box-shadow: 0 0 25px rgba(225,29,72,0.8); }
+        }
+
+        /* Persistent Blue Key Theme Protection */
+        .text-blue-key,
+        .aura-pink .text-blue-key,
+        .aura-red .text-blue-key,
+        .aura-purple .text-blue-key,
+        .aura-gold .text-blue-key {
+            color: #38bdf8 !important;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.7) !important;
+        }
+
+        .border-blue-key,
+        .aura-pink .border-blue-key,
+        .aura-red .border-blue-key,
+        .aura-purple .border-blue-key,
+        .aura-gold .border-blue-key {
+            border-color: #38bdf8 !important;
+        }
+
+        .bg-blue-key,
+        .aura-pink .bg-blue-key,
+        .aura-red .bg-blue-key,
+        .aura-purple .bg-blue-key,
+        .aura-gold .bg-blue-key {
+            background-color: #38bdf8 !important;
+        }
     </style>
 
     <script type="module">
@@ -333,32 +375,53 @@
         </div>
     </div>
 
+    
+    <!-- SYSTEM POPUP & PROMPT MODAL (REPLACES NATIVE TOASTS & PROMPTS) -->
+    <div id="system-dialog-modal" class="fixed inset-0 z-[160] flex items-center justify-center bg-system-950/90 backdrop-blur-md hidden font-mono p-4 transition-opacity">
+        <div id="system-dialog-card" class="bg-system-900 border-2 border-system-neon rounded-3xl p-6 w-full max-w-sm text-center shadow-[0_0_30px_rgba(56,189,248,0.3)] transform transition-transform animate-pop-in flex flex-col relative max-h-[90vh]">
+            <div id="system-dialog-badge" class="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-system-950 border-2 border-system-neon flex items-center justify-center text-system-neon text-xl shadow-[0_0_15px_#38bdf8]">
+                <i id="system-dialog-icon" class="fa-solid fa-bell"></i>
+            </div>
+             
+            <div id="system-dialog-tag" class="mt-2 text-[10px] text-system-neon font-bold tracking-widest uppercase">[ SYSTEM NOTIFICATION ]</div>
+            <h2 id="system-dialog-title" class="text-xl font-black text-white system-title uppercase mt-1 tracking-widest">SYSTEM ALERT</h2>
+             
+            <div id="system-dialog-content" class="mt-4 space-y-3 text-left overflow-y-auto pr-1 flex-1 hide-scrollbar">
+                <!-- Injected dynamically -->
+            </div>
+             
+            <div id="system-dialog-actions" class="mt-5 flex gap-2 w-full">
+                <!-- Injected dynamically: ACKNOWLEDGE or CANCEL + CONFIRM -->
+            </div>
+        </div>
+    </div>
+
     <!-- WELCOME FEATURE SET MODAL -->
-    <div id="features-modal" class="fixed inset-0 z-[70] bg-system-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden font-mono">
-        <div class="bg-system-900 border-2 border-system-neon rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
-            <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-tr from-purple-700 to-system-neon flex items-center justify-center text-system-950 text-xl font-black shadow-lg">
+    <div id="features-modal" class="fixed inset-0 z-[70] bg-system-950 flex flex-col hidden font-mono animate-fade-in-up">
+        <div class="w-full max-w-md mx-auto h-full flex flex-col p-6 pt-12 pb-8 text-center space-y-6">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-purple-700 to-system-neon flex items-center justify-center text-system-950 text-3xl font-black shadow-lg">
                 <i class="fa-solid fa-star"></i>
             </div>
             <div>
-                <span class="text-[10px] text-system-neon uppercase font-bold tracking-widest">[ SYSTEM BRIEFING ]</span>
-                <h2 class="text-lg font-black text-white system-title mt-1">FEATURE OVERVIEW</h2>
+                <span class="text-xs text-system-neon uppercase font-bold tracking-widest">[ SYSTEM BRIEFING ]</span>
+                <h2 class="text-2xl font-black text-white system-title mt-1">FEATURE OVERVIEW</h2>
             </div>
-            <div class="flex-1 overflow-y-auto space-y-2.5 text-left text-xs text-slate-300 pr-1">
-                <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
-                    <span class="font-bold text-system-neon">🌟 Dynamic Auras & Shadow Buffs</span>
-                    <p class="text-[11px] text-slate-400">Unlock custom UI Auras (Red, Purple, Gold) and equip extracted Shadows in the Necromancy tab for mechanical buffs (+XP, nullify penalties)!</p>
+            <div class="flex-1 overflow-y-auto space-y-4 text-left text-sm text-slate-300 pr-2 no-scrollbar">
+                <div class="bg-system-900 p-4 rounded-xl border border-system-border/60 space-y-1.5 shadow-sm">
+                    <span class="font-bold text-system-neon text-base">🌟 Dynamic Auras & Shadows</span>
+                    <p class="text-xs text-slate-400">Unlock custom UI Auras (Red, Purple, Gold) and equip extracted Shadows in the Necromancy tab for mechanical buffs (+XP, nullify penalties)!</p>
                 </div>
-                <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
-                    <span class="font-bold text-rose-500">⚔️ Dynamic Boss Encounters</span>
-                    <p class="text-[11px] text-slate-400">The S-Rank Boss Gate now dynamically rotates (Lycan, Golem, Kasaka) depending on the day of the week!</p>
+                <div class="bg-system-900 p-4 rounded-xl border border-system-border/60 space-y-1.5 shadow-sm">
+                    <span class="font-bold text-rose-500 text-base">⚔️ Dynamic Boss Encounters</span>
+                    <p class="text-xs text-slate-400">The S-Rank Boss Gate now dynamically rotates (Lycan, Golem, Kasaka) depending on the day of the week!</p>
                 </div>
-                <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/60 space-y-1">
-                    <span class="font-bold text-purple-400">🌍 Global Raids & Loot</span>
-                    <p class="text-[11px] text-slate-400">Collaborate with hunters worldwide to defeat World Bosses and collect Keys and Potions from your endeavors.</p>
+                <div class="bg-system-900 p-4 rounded-xl border border-system-border/60 space-y-1.5 shadow-sm">
+                    <span class="font-bold text-purple-400 text-base">🌍 Global Raids & Loot</span>
+                    <p class="text-xs text-slate-400">Collaborate with hunters worldwide to defeat World Bosses and collect Keys and Potions from your endeavors.</p>
                 </div>
             </div>
 
-            <button onclick="dismissFeaturesModal()" class="btn-active w-full py-3 bg-gradient-to-r from-purple-600 to-system-neon text-system-950 font-black text-xs rounded-xl uppercase tracking-wider cursor-pointer shadow-lg">
+            <button onclick="dismissFeaturesModal()" class="btn-active w-full py-4 mt-auto bg-gradient-to-r from-purple-600 to-system-neon text-system-950 font-black text-sm rounded-xl uppercase tracking-wider cursor-pointer shadow-lg">
                 ACKNOWLEDGE & AWAKEN
             </button>
         </div>
@@ -411,20 +474,32 @@
         </div>
     </div>
 
-    <!-- ALL WORKOUTS DIRECTORY MODAL -->
-    <div id="workouts-modal" class="fixed inset-0 z-[55] bg-system-950/85 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300 font-mono">
-        <div class="bg-system-900 border border-system-neon rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl relative space-y-4">
+    <!-- EXERCISE TUTORIALS DIRECTORY MODAL -->
+    <div id="workouts-modal" class="fixed inset-0 z-[55] bg-system-950/90 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300 font-mono">
+        <div class="bg-system-900 border border-system-neon rounded-3xl p-5 w-full max-w-sm text-center shadow-[0_0_25px_rgba(56,189,248,0.2)] relative space-y-3.5 max-h-[88vh] flex flex-col">
             <button onclick="closeWorkoutsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 cursor-pointer">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <div class="flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-dumbbell text-system-neon text-lg"></i>
-                <h3 class="text-sm font-black text-white uppercase tracking-wider">ALL DUNGEON EXERCISES</h3>
+            <div class="flex items-center justify-center space-x-2 border-b border-system-border/50 pb-2.5">
+                <i class="fa-brands fa-youtube text-rose-500 text-xl animate-pulse"></i>
+                <h3 class="text-sm font-black text-white uppercase tracking-wider">DUNGEON TUTORIALS</h3>
             </div>
-            <div id="workouts-list-container" class="space-y-2 text-left text-xs max-h-72 overflow-y-auto pr-1">
-                <!-- Populated via JS -->
+            
+            <!-- Category Filter Tabs -->
+            <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[10px] font-bold">
+                <button onclick="filterTutorials('all')" id="tut-tab-all" class="tut-filter-btn px-2.5 py-1 rounded-lg border border-system-neon bg-system-neon/20 text-system-glow font-black cursor-pointer">ALL</button>
+                <button onclick="filterTutorials('pull')" id="tut-tab-pull" class="tut-filter-btn px-2.5 py-1 rounded-lg border border-system-border bg-system-950 text-slate-400 cursor-pointer">PULL</button>
+                <button onclick="filterTutorials('push')" id="tut-tab-push" class="tut-filter-btn px-2.5 py-1 rounded-lg border border-system-border bg-system-950 text-slate-400 cursor-pointer">PUSH</button>
+                <button onclick="filterTutorials('legs')" id="tut-tab-legs" class="tut-filter-btn px-2.5 py-1 rounded-lg border border-system-border bg-system-950 text-slate-400 cursor-pointer">LEGS</button>
+                <button onclick="filterTutorials('boss')" id="tut-tab-boss" class="tut-filter-btn px-2.5 py-1 rounded-lg border border-system-border bg-system-950 text-slate-400 cursor-pointer">BOSS</button>
             </div>
-            <button onclick="closeWorkoutsModal()" class="w-full py-2.5 bg-system-800 text-white font-bold text-xs rounded-xl border border-system-border cursor-pointer">CLOSE</button>
+
+            <!-- Tutorials list container -->
+            <div id="workouts-list-container" class="space-y-2 text-left text-xs overflow-y-auto pr-1 flex-1 hide-scrollbar">
+                <!-- Injected dynamically via JS -->
+            </div>
+
+            <button onclick="closeWorkoutsModal()" class="w-full py-2.5 bg-system-800 hover:bg-system-700 text-white font-bold text-xs rounded-xl border border-system-border cursor-pointer transition-colors uppercase tracking-wider">CLOSE</button>
         </div>
     </div>
 
@@ -639,54 +714,121 @@
 
     <!-- FIRST-LAUNCH INITIALIZATION MODAL -->
     <div id="init-modal" class="fixed inset-0 z-50 bg-system-950/95 backdrop-blur-md flex items-center justify-center p-4 hidden">
-        <div class="bg-system-900 border-2 border-system-accent rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl font-mono space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-purple-700 to-system-neon flex items-center justify-center text-system-950 text-2xl font-black shadow-lg">
-                <i class="fa-solid fa-user-shield"></i>
+        <div class="bg-system-900 border-2 border-system-accent rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl font-mono min-h-[420px] flex flex-col relative">
+            
+            <!-- STEP 1: Alias -->
+            <div id="init-step-1" class="flex-1 flex flex-col justify-between animate-fade-in-up">
+                <div>
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-purple-700 to-system-neon flex items-center justify-center text-system-950 text-2xl font-black shadow-lg mb-4">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <span class="text-[10px] text-system-neon uppercase font-bold tracking-widest">[ SYSTEM ASSIGNMENT ]</span>
+                    <h2 class="text-xl font-black text-white system-title mt-1">HUNTER REGISTRATION</h2>
+                    <p class="text-xs text-slate-400 mt-2">Enter your permanent Hunter Alias to initialize the System.</p>
+                    <div class="text-left space-y-1 bg-system-950 p-3 rounded-2xl border border-system-border mt-6">
+                        <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Hunter Alias</label>
+                        <input type="text" id="init-username-input" placeholder="e.g. Sung Jin-Woo" class="w-full bg-system-900 border border-system-border/80 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-system-neon transition-colors">
+                    </div>
+                </div>
+                <button onclick="nextInitStep(2)" class="btn-active w-full py-3 bg-system-800 hover:bg-system-700 text-white font-bold text-xs rounded-xl border border-system-border mt-6 cursor-pointer transition-colors">NEXT STEP <i class="fa-solid fa-arrow-right ml-1"></i></button>
             </div>
-            <div>
-                <span class="text-[10px] text-system-neon uppercase font-bold tracking-widest">[ SYSTEM ASSIGNMENT ]</span>
-                <h2 class="text-xl font-black text-white system-title mt-1">SELECT HUNTER PROFILE</h2>
-                <p class="text-xs text-slate-400 mt-1">Choose your parameters & pick 1-2 rest days.</p>
-            </div>
-            <div class="text-left space-y-1 bg-system-950 p-3 rounded-2xl border border-system-border">
-                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Hunter Alias (Permanent Name)</label>
-                <input type="text" id="init-username-input" placeholder="e.g. Sung Jin-Woo" class="w-full bg-system-900 border border-system-border/80 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-system-neon">
-            </div>
-            <div class="text-left space-y-1 bg-system-950 p-3 rounded-2xl border border-system-border">
-                <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Select 1-2 Rest Days</label>
-                <div id="init-rest-days-grid" class="grid grid-cols-4 gap-1.5 pt-1 text-xs">
-                    <button type="button" onclick="toggleInitRestDay('Mon')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Mon</button>
-                    <button type="button" onclick="toggleInitRestDay('Tue')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Tue</button>
-                    <button type="button" onclick="toggleInitRestDay('Wed')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Wed</button>
-                    <button type="button" onclick="toggleInitRestDay('Thu')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Thu</button>
-                    <button type="button" onclick="toggleInitRestDay('Fri')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Fri</button>
-                    <button type="button" onclick="toggleInitRestDay('Sat')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Sat</button>
-                    <button type="button" onclick="toggleInitRestDay('Sun')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Sun</button>
+
+            <!-- STEP 2: Rest Days -->
+            <div id="init-step-2" class="flex-1 flex flex-col justify-between hidden animate-fade-in-up">
+                <div>
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-purple-700 to-system-neon flex items-center justify-center text-system-950 text-2xl font-black shadow-lg mb-4">
+                        <i class="fa-solid fa-bed"></i>
+                    </div>
+                    <span class="text-[10px] text-system-neon uppercase font-bold tracking-widest">[ RECOVERY PROTOCOL ]</span>
+                    <h2 class="text-xl font-black text-white system-title mt-1">SELECT REST DAYS</h2>
+                    <p class="text-xs text-slate-400 mt-2">Choose 1 to 2 days for systemic recovery. The System will automatically clear daily quests on these days.</p>
+                    <div class="text-left space-y-1 bg-system-950 p-3 rounded-2xl border border-system-border mt-6">
+                        <div id="init-rest-days-grid" class="grid grid-cols-4 gap-1.5 pt-1 text-xs">
+                            <button type="button" onclick="toggleInitRestDay('Mon')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Mon</button>
+                            <button type="button" onclick="toggleInitRestDay('Tue')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Tue</button>
+                            <button type="button" onclick="toggleInitRestDay('Wed')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Wed</button>
+                            <button type="button" onclick="toggleInitRestDay('Thu')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Thu</button>
+                            <button type="button" onclick="toggleInitRestDay('Fri')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Fri</button>
+                            <button type="button" onclick="toggleInitRestDay('Sat')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Sat</button>
+                            <button type="button" onclick="toggleInitRestDay('Sun')" class="init-rest-btn py-1.5 rounded-lg border border-system-border bg-system-900 text-slate-300 font-bold">Sun</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button onclick="prevInitStep(1)" class="btn-active py-3 px-4 bg-system-950 hover:bg-system-900 text-slate-400 font-bold text-xs rounded-xl border border-system-border cursor-pointer transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+                    <button onclick="nextInitStep(3)" class="btn-active flex-1 py-3 bg-system-800 hover:bg-system-700 text-white font-bold text-xs rounded-xl border border-system-border cursor-pointer transition-colors">NEXT STEP <i class="fa-solid fa-arrow-right ml-1"></i></button>
                 </div>
             </div>
-            <div class="space-y-2.5 text-left">
-                <button onclick="selectProfileClass('male')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
-                    <div class="w-9 h-9 rounded-xl bg-purple-600/30 text-purple-300 flex items-center justify-center text-base"><i class="fa-solid fa-mars"></i></div>
-                    <div>
-                        <div class="text-xs font-black text-white">SHADOW MONARCH (MALE)</div>
-                        <div class="text-[10px] text-slate-400">34yo • 160 lbs • Full Workout Routine</div>
+
+            <!-- STEP 3: Class Selection -->
+            <div id="init-step-3" class="flex-1 flex flex-col justify-between hidden animate-fade-in-up">
+                <div>
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-purple-700 to-system-neon flex items-center justify-center text-system-950 text-2xl font-black shadow-lg mb-4">
+                        <i class="fa-solid fa-user-shield"></i>
                     </div>
-                </button>
-                <button onclick="selectProfileClass('female')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
-                    <div class="w-9 h-9 rounded-xl bg-pink-600/30 text-pink-300 flex items-center justify-center text-base"><i class="fa-solid fa-venus"></i></div>
-                    <div>
-                        <div class="text-xs font-black text-white">SHADOW ASSASSIN (FEMALE)</div>
-                        <div class="text-[10px] text-slate-400">29yo • 115 lbs • Grip & Core Specific Target</div>
+                    <span class="text-[10px] text-system-neon uppercase font-bold tracking-widest">[ AWAKENING ]</span>
+                    <h2 class="text-xl font-black text-white system-title mt-1">CHOOSE CLASS</h2>
+                    <p class="text-xs text-slate-400 mt-1 mb-4">Select your base archetype to calibrate physical targets.</p>
+                    
+                    <div class="space-y-2.5 text-left max-h-[220px] overflow-y-auto pr-1 no-scrollbar">
+                        <button onclick="chooseClassAndProceed('male')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
+                            <div class="w-9 h-9 rounded-xl bg-purple-600/30 text-purple-300 flex items-center justify-center text-base"><i class="fa-solid fa-mars"></i></div>
+                            <div>
+                                <div class="text-xs font-black text-white">SHADOW MONARCH (MALE)</div>
+                                <div class="text-[10px] text-slate-400">34yo • 160 lbs • Full Workout Routine</div>
+                            </div>
+                        </button>
+                        <button onclick="chooseClassAndProceed('female')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
+                            <div class="w-9 h-9 rounded-xl bg-pink-600/30 text-pink-300 flex items-center justify-center text-base"><i class="fa-solid fa-venus"></i></div>
+                            <div>
+                                <div class="text-xs font-black text-white">SHADOW ASSASSIN (FEMALE)</div>
+                                <div class="text-[10px] text-slate-400">29yo • 115 lbs • Grip & Core Specific Target</div>
+                            </div>
+                        </button>
+                        <button onclick="chooseClassAndProceed('child')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
+                            <div class="w-9 h-9 rounded-xl bg-cyan-600/30 text-cyan-300 flex items-center justify-center text-base"><i class="fa-solid fa-child font-black"></i></div>
+                            <div>
+                                <div class="text-xs font-black text-white">SHADOW APPRENTICE (CHILD)</div>
+                                <div class="text-[10px] text-slate-400">13yo Boy • Scaled Quests & Vitals</div>
+                            </div>
+                        </button>
                     </div>
-                </button>
-                <button onclick="selectProfileClass('child')" class="btn-active w-full p-3 rounded-2xl bg-system-950 border border-system-border hover:border-system-neon flex items-center space-x-3 transition cursor-pointer">
-                    <div class="w-9 h-9 rounded-xl bg-cyan-600/30 text-cyan-300 flex items-center justify-center text-base"><i class="fa-solid fa-child font-black"></i></div>
-                    <div>
-                        <div class="text-xs font-black text-white">SHADOW APPRENTICE (CHILD)</div>
-                        <div class="text-[10px] text-slate-400">13yo Boy • Scaled Quests & Vitals</div>
-                    </div>
-                </button>
+                </div>
+                <div class="mt-4">
+                    <button onclick="prevInitStep(2)" class="btn-active w-full py-3 bg-system-950 hover:bg-system-900 text-slate-400 font-bold text-xs rounded-xl border border-system-border cursor-pointer transition-colors"><i class="fa-solid fa-arrow-left mr-2"></i> BACK</button>
+                </div>
             </div>
+
+            <!-- STEP 4: Confirmation Summary -->
+            <div id="init-step-4" class="flex-1 flex flex-col justify-between hidden animate-fade-in-up">
+                <div>
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-emerald-600 to-system-neon flex items-center justify-center text-system-950 text-2xl font-black shadow-lg mb-4">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <span class="text-[10px] text-system-neon uppercase font-bold tracking-widest">[ FINALIZATION ]</span>
+                    <h2 class="text-xl font-black text-white system-title mt-1">CONFIRM PROFILE</h2>
+                    
+                    <div class="bg-system-950 p-4 rounded-2xl border border-system-border mt-6 space-y-3 text-left text-xs shadow-inner">
+                        <div class="flex justify-between border-b border-system-border/50 pb-2">
+                            <span class="text-slate-400 font-bold uppercase tracking-wider">Hunter Alias</span>
+                            <span id="summary-alias" class="text-white font-black truncate max-w-[150px]"></span>
+                        </div>
+                        <div class="flex justify-between border-b border-system-border/50 pb-2">
+                            <span class="text-slate-400 font-bold uppercase tracking-wider">Class</span>
+                            <span id="summary-class" class="text-system-neon font-black"></span>
+                        </div>
+                        <div class="flex justify-between pb-1">
+                            <span class="text-slate-400 font-bold uppercase tracking-wider">Rest Days</span>
+                            <span id="summary-rest" class="text-purple-400 font-black"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 space-y-2.5">
+                    <button onclick="confirmInitialization()" class="btn-active w-full py-3.5 bg-gradient-to-r from-emerald-600 to-system-neon text-system-950 font-black text-xs rounded-xl border border-cyan-200/40 uppercase tracking-widest shadow-[0_0_15px_rgba(56,189,248,0.4)] cursor-pointer">CONFIRM & AWAKEN</button>
+                    <button onclick="startOverInit()" class="btn-active w-full py-3 bg-system-950 hover:bg-system-900 text-slate-400 font-bold text-xs rounded-xl border border-system-border cursor-pointer transition-colors uppercase tracking-wider">START OVER</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -760,9 +902,9 @@
             </div>
 
             <div class="pt-2 border-t border-system-border/60">
-                <button onclick="openWorkoutsModal()" class="btn-active w-full py-2.5 bg-system-850 hover:bg-system-800 border border-system-border text-system-glow text-xs font-bold rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
-                    <i class="fa-solid fa-dumbbell text-system-neon"></i>
-                    <span>ALL WORKOUTS LIBRARY</span>
+                <button onclick="openTutorialsModal()" class="btn-active w-full py-2.5 bg-system-850 hover:bg-system-800 border border-system-border text-system-glow text-xs font-bold rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
+                    <i class="fa-brands fa-youtube text-rose-500 text-sm"></i>
+                    <span>EXERCISE TUTORIALS</span>
                 </button>
             </div>
 
@@ -1321,13 +1463,13 @@
         window.appState = {
             profileClass: 'male', hunterName: 'Sung Jin-Woo', hunterId: null, lastActiveDate: new Date().toDateString(), lastResetTimestamp: 0,
             playerLevel: 1, playerXP: 0, completedQuestsCount: 0, completedDates: [], restDays: ['Wed', 'Sun'], noEquipmentMode: false,
-            clearedGates: { pull: false, push: false, calisthenics: false, survival: false }, bossClearedToday: false, redKeyObtainedToday: false,
+            clearedGates: { pull: false, push: false, calisthenics: false, survival: false }, bossClearedToday: false, bossUnlocked: false, redKeyObtainedToday: false,
             dailyQuestState: { pushups: 0, pullups: 0, squats: 0, planks: 0, runMiles: 0.0, jumprope: 0, targets: null, claimed: false },
             weeklyReps: { weekStartStr: '', pushups: 0, pullups: 0, squats: 0 }, waterIntake: 0, meals: [], activeRoutineKey: 'pull', activeRoutineData: null,
-            history: [], stats: { unspentAP: 0, str: 10, agi: 10, int: 10, vit: 10 }, inventory: { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 },
+            history: [], stats: { unspentAP: 0, str: 1, agi: 1, int: 1, vit: 1 }, inventory: { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 },
             equippedTitle: 'novice', unlockedTitles: ['novice'], penaltyActive: false, dungeonBreak: { active: false, expiresAt: 0 },
             lifetimeStats: { penaltyCleared: 0, gatesCleared: 0 }, notifications: { daily: false, vitals: false, raid: false, permission: 'default' },
-            workoutStartedToday: 0, activeAura: 'default', equippedShadow: null
+            workoutStartedToday: 0, activeAura: 'default', equippedShadow: null, starterGiftsClaimed: false
         };
 
         let timerInterval = null; let timerTotalSeconds = 90; let timerRemainingSeconds = 90; let isTimerRunning = false; let breakInterval = null;
@@ -1349,25 +1491,96 @@
 
         function forceHideSplash() {
             const splash = document.getElementById('splash-screen');
-            if (splash) {
+            if (splash && !splash.classList.contains('opacity-0')) {
                 splash.classList.remove('opacity-100'); splash.classList.add('opacity-0');
                 setTimeout(() => {
                     splash.style.display = 'none';
-                    if (!localStorage.getItem('solo_leveling_initialized')) document.getElementById('init-modal').classList.remove('hidden');
-                    else if (!localStorage.getItem('solo_leveling_features_seen')) document.getElementById('features-modal').classList.remove('hidden');
+                    if (!localStorage.getItem('solo_leveling_initialized')) {
+                        document.getElementById('init-modal').classList.remove('hidden');
+                    } else if (!localStorage.getItem('solo_leveling_starter_gifts_claimed')) {
+                        triggerStarterGifts(500);
+                    }
                 }, 700);
             }
         }
 
-        window.onload = function() {
+        function initSystemApp() {
+            if (window.systemInitialized) return;
+            window.systemInitialized = true;
             try {
                 loadStateFromStorage(); checkDailyMidnightReset(); checkRestDayAutoCompletion(); checkTitleUnlocks(); applyTheme();
                 renderPlayerHUD(); renderDailyQuests(); renderGateSelection(); renderNutritionSection(); renderStatsSection(); renderShadows();
                 updateRPGNotifications(); checkDungeonBreakStatus(); initNotifications();
-            } catch (err) { console.error("Soft recovery executed.", err); } finally { setTimeout(forceHideSplash, 2500); }
-        };
+            } catch (err) { console.error("Soft recovery executed.", err); } finally { setTimeout(forceHideSplash, 1500); }
+        }
 
-        function dismissFeaturesModal() { localStorage.setItem('solo_leveling_features_seen', 'true'); document.getElementById('features-modal').classList.add('hidden'); }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSystemApp);
+        } else {
+            initSystemApp();
+        }
+
+        window.addEventListener('load', initSystemApp);
+        setTimeout(forceHideSplash, 3500);
+
+        function triggerStarterGifts(delay = 500) {
+            if (localStorage.getItem('solo_leveling_starter_gifts_claimed') === 'true') return;
+            localStorage.setItem('solo_leveling_starter_gifts_claimed', 'true');
+            if (window.appState) {
+                window.appState.starterGiftsClaimed = true;
+                saveStateToStorage();
+            }
+
+            setTimeout(() => {
+                window.pendingRewardQueue = [
+                    {
+                        type: 'STARTER GIFT',
+                        xpResult: null,
+                        loot: [{ name: 'Blue Key', icon: 'fa-key', color: 'text-blue-key' }],
+                        newTitles: [],
+                        customMsg: 'A key to reopen cleared gates.',
+                        callback: () => {
+                            if (!window.appState.inventory) window.appState.inventory = { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 };
+                            window.appState.inventory.blue_key = (window.appState.inventory.blue_key || 0) + 1;
+                            saveStateToStorage();
+                            updateRPGNotifications();
+                        }
+                    },
+                    {
+                        type: 'STARTER GIFT',
+                        xpResult: null,
+                        loot: [{ name: '25 Stat Points (AP)', icon: 'fa-dna', color: 'text-system-neon' }],
+                        newTitles: [],
+                        customMsg: 'Awakened power: 25 Ability Points granted to allocate across your stats.',
+                        callback: () => {
+                            if (!window.appState.stats) window.appState.stats = { unspentAP: 0, str: 1, agi: 1, int: 1, vit: 1 };
+                            window.appState.stats.unspentAP = (window.appState.stats.unspentAP || 0) + 25;
+                            saveStateToStorage();
+                            updateRPGNotifications();
+                        }
+                    }
+                ];
+
+                if (!window.appState.inventory) window.appState.inventory = { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 };
+                window.appState.inventory.pot_recover = (window.appState.inventory.pot_recover || 0) + 1;
+                saveStateToStorage();
+                updateRPGNotifications();
+
+                showRewardSummary({
+                    type: 'STARTER GIFT',
+                    xpResult: null,
+                    loot: [{ name: 'Recovery Potion', icon: 'fa-flask', color: 'text-rose-400' }],
+                    newTitles: [],
+                    customMsg: 'System support item provided.'
+                });
+            }, delay);
+        }
+
+        function dismissFeaturesModal() { 
+            localStorage.setItem('solo_leveling_features_seen', 'true'); 
+            document.getElementById('features-modal').classList.add('hidden'); 
+            triggerStarterGifts(500);
+        }
 
         function loadStateFromStorage() {
             const saved = localStorage.getItem('solo_leveling_v8_data');
@@ -1375,10 +1588,11 @@
             
             if (window.appState.noEquipmentMode === undefined) window.appState.noEquipmentMode = false;
             if (window.appState.bossClearedToday === undefined) window.appState.bossClearedToday = false;
+            if (window.appState.bossUnlocked === undefined) window.appState.bossUnlocked = false;
             if (window.appState.redKeyObtainedToday === undefined) window.appState.redKeyObtainedToday = false;
             if (!window.appState.clearedGates) window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false };
             if (!window.appState.weeklyReps) window.appState.weeklyReps = { weekStartStr: '', pushups: 0, pullups: 0, squats: 0 };
-            if (!window.appState.stats) window.appState.stats = { unspentAP: 0, str: 10, agi: 10, int: 10, vit: 10 };
+            if (!window.appState.stats) window.appState.stats = { unspentAP: 0, str: 1, agi: 1, int: 1, vit: 1 };
             if (!window.appState.inventory) window.appState.inventory = { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 };
             if (window.appState.inventory.red_key === undefined) window.appState.inventory.red_key = 0;
             if (window.appState.inventory.blue_key === undefined) window.appState.inventory.blue_key = 0;
@@ -1393,6 +1607,8 @@
             if (window.appState.workoutStartedToday === undefined) window.appState.workoutStartedToday = 0;
             if (!window.appState.activeAura) window.appState.activeAura = 'default';
             if (window.appState.equippedShadow === undefined) window.appState.equippedShadow = null;
+            if (window.appState.starterGiftsClaimed === undefined) window.appState.starterGiftsClaimed = false;
+            if (localStorage.getItem('solo_leveling_starter_gifts_claimed') === 'true') window.appState.starterGiftsClaimed = true;
             
             if (!window.appState.dailyQuestState.targets) window.appState.dailyQuestState.targets = generateDailyTargets(window.appState.profileClass);
             if (!window.appState.activeRoutineData || !window.appState.activeRoutineData.title) {
@@ -1405,13 +1621,12 @@
             try { syncChannel.postMessage('state_updated'); } catch(e){}
         }
         
-        // --- NEW REWARDS SUMMARY ENGINE ---
         window.showRewardSummary = function(data) {
             const modal = document.getElementById('reward-summary-modal');
             const titleEl = document.getElementById('reward-title');
             const contentEl = document.getElementById('reward-content');
             
-            titleEl.innerText = `${data.type} CLEARED`;
+            titleEl.innerText = data.type.includes('GIFT') ? `${data.type} UNLOCKED` : `${data.type} CLEARED`;
             let html = '';
             let animDelay = 0.1;
             
@@ -1481,7 +1696,6 @@
             contentEl.innerHTML = html;
             modal.classList.remove('hidden');
             
-            // Remove pop-in class and re-add for animation restart
             const contentBox = modal.querySelector('div.animate-pop-in');
             if (contentBox) {
                 contentBox.classList.remove('animate-pop-in');
@@ -1492,13 +1706,19 @@
         
         window.closeRewardSummary = function() {
             document.getElementById('reward-summary-modal').classList.add('hidden');
+            if (window.pendingRewardQueue && window.pendingRewardQueue.length > 0) {
+                const nextReward = window.pendingRewardQueue.shift();
+                setTimeout(() => {
+                    if (nextReward.callback) nextReward.callback();
+                    showRewardSummary(nextReward);
+                }, 400);
+            }
         };
         
         function awardXP(amount) {
             if (amount <= 0) return { xpGained: 0, leveledUp: false, newLevel: window.appState.playerLevel, apGained: 0 };
-            let multiplier = 1 + (Math.max(0, window.appState.stats.str - 10) * 0.05); 
+            let multiplier = 1 + (Math.max(0, (window.appState.stats?.str || 1) - 1) * 0.05); 
             
-            // Shadow Army Buffs
             if (window.appState.equippedShadow === 'igris') multiplier += 0.05;
             if (window.appState.equippedShadow === 'beru') multiplier += 0.10;
 
@@ -1621,15 +1841,14 @@
                 const wasRestDay = (window.appState.restDays || []).includes(yesterdayFormatted);
 
                 if (!window.appState.dailyQuestState.claimed && !wasRestDay && window.appState.lastResetTimestamp > 0) {
-                    const vitStat = window.appState.stats?.vit || 10; const evasionChance = (vitStat - 10) * 0.05;
+                    const vitStat = window.appState.stats?.vit || 1; const evasionChance = (vitStat - 1) * 0.05;
                     if (Math.random() > evasionChance) window.appState.penaltyActive = true; else showToast("VIT Stat allowed you to evade the Penalty Zone!");
                 }
                 
-                // --- Vitals Daily Minimum Penalty Check ---
                 const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets; 
-                const intStat = window.appState.stats?.int || 10;
-                const dynamicWater = Math.max(40, config.water - ((intStat - 10) * 2)); 
-                const dynamicCals = Math.max(1200, config.cals - ((intStat - 10) * 20));
+                const intStat = window.appState.stats?.int || 1;
+                const dynamicWater = Math.max(40, config.water - ((intStat - 1) * 2)); 
+                const dynamicCals = Math.max(1200, config.cals - ((intStat - 1) * 20));
                 const curWater = window.appState.waterIntake || 0; 
                 const curCals = (window.appState.meals || []).reduce((acc, m) => acc + m.cals, 0);
 
@@ -1693,9 +1912,9 @@
             window.appState.lastActiveDate = new Date().toDateString(); window.appState.lastResetTimestamp = now;
             window.appState.dailyQuestState = { pushups: 0, pullups: 0, squats: 0, planks: 0, runMiles: 0.0, jumprope: 0, targets: generateDailyTargets(window.appState.profileClass), claimed: false }; window.appState.waterIntake = 0; window.appState.meals = [];
 
-            window.appState.workoutStartedToday = 0; // Wipe workout lockout on new day
+            window.appState.workoutStartedToday = 0;
 
-            if (silent) { window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false }; window.appState.bossClearedToday = false; window.appState.redKeyObtainedToday = false; }
+            if (silent) { window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false }; window.appState.bossClearedToday = false; window.appState.bossUnlocked = false; window.appState.redKeyObtainedToday = false; }
             if (!window.appState.penaltyActive) checkRestDayAutoCompletion();
             
             applyTheme(); saveStateToStorage();
@@ -1703,6 +1922,45 @@
         }
 
         let tempInitRestDays = ['Wed', 'Sun'];
+        let tempInitClass = 'male';
+
+        window.nextInitStep = function(step) {
+            if (step === 2) {
+                const nameInput = document.getElementById('init-username-input').value.trim();
+                if (!nameInput) { showToast("Hunter Alias is required."); return; }
+                document.getElementById('init-step-1').classList.add('hidden');
+                document.getElementById('init-step-2').classList.remove('hidden');
+            } else if (step === 3) {
+                if (tempInitRestDays.length === 0) { showToast("Select at least 1 rest day."); return; }
+                document.getElementById('init-step-2').classList.add('hidden');
+                document.getElementById('init-step-3').classList.remove('hidden');
+            }
+        };
+
+        window.chooseClassAndProceed = function(cls) {
+            tempInitClass = cls;
+            document.getElementById('summary-alias').innerText = document.getElementById('init-username-input').value.trim() || 'SUNG JIN-WOO';
+            document.getElementById('summary-class').innerText = CLASS_QUEST_CONFIGS[cls].title.toUpperCase();
+            document.getElementById('summary-rest').innerText = tempInitRestDays.length > 0 ? tempInitRestDays.join(', ') : 'None';
+            
+            document.getElementById('init-step-3').classList.add('hidden');
+            document.getElementById('init-step-4').classList.remove('hidden');
+        };
+
+        window.confirmInitialization = function() {
+            selectProfileClass(tempInitClass);
+        };
+
+        window.startOverInit = function() {
+            document.getElementById('init-step-4').classList.add('hidden');
+            document.getElementById('init-step-3').classList.add('hidden');
+            document.getElementById('init-step-2').classList.add('hidden');
+            document.getElementById('init-step-1').classList.remove('hidden');
+        };
+
+        window.openRankModal = function() { document.getElementById('rank-modal').classList.remove('opacity-0', 'pointer-events-none'); };
+        window.closeRankModal = function() { document.getElementById('rank-modal').classList.add('opacity-0', 'pointer-events-none'); };
+
         function toggleInitRestDay(day) {
             if (tempInitRestDays.includes(day)) { if (tempInitRestDays.length > 1) tempInitRestDays = tempInitRestDays.filter(d => d !== day); } 
             else { if (tempInitRestDays.length < 2) tempInitRestDays.push(day); else showToast("Maximum 2 rest days allowed."); }
@@ -1737,10 +1995,15 @@
             const initInput = document.getElementById('init-username-input'); if (initInput && initInput.value.trim()) window.appState.hunterName = initInput.value.trim();
             window.appState.profileClass = cls; window.appState.restDays = [...tempInitRestDays]; window.appState.dailyQuestState.targets = generateDailyTargets(cls);
             window.appState.activeAura = (cls === 'female') ? 'pink' : 'default';
-            localStorage.setItem('solo_leveling_initialized', 'true'); document.getElementById('init-modal').classList.add('hidden');
-            if (!localStorage.getItem('solo_leveling_features_seen')) document.getElementById('features-modal').classList.remove('hidden');
+            localStorage.setItem('solo_leveling_initialized', 'true'); 
+            localStorage.setItem('solo_leveling_features_seen', 'true'); 
+            document.getElementById('init-modal').classList.add('hidden');
+            document.getElementById('features-modal').classList.add('hidden');
+            
             applyTheme(); checkRestDayAutoCompletion(); resetCurrentRoutine(); saveStateToStorage(); renderDailyQuests(); renderNutritionSection(); renderPlayerHUD();
-            if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard(); showToast(`CLASS REGISTERED: ${CLASS_QUEST_CONFIGS[cls].title.toUpperCase()}`);
+            if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard();
+            
+            triggerStarterGifts(600);
         }
 
         function setProfileClass(cls) {
@@ -1797,7 +2060,6 @@
             const renderBar = (label, val, color) => { const pct = Math.min(100, Math.round((val / maxStat) * 100)); return `<div class="flex items-center text-[9px] font-bold"><span class="w-8 text-slate-400">${label}</span><div class="flex-1 h-1.5 bg-system-900 rounded-full mx-2 overflow-hidden border border-system-border/40"><div class="h-full ${color} rounded-full" style="width: ${pct}%"></div></div><span class="w-4 text-right text-white">${val}</span></div>`; };
             content.innerHTML = `<div class="text-center mb-3"><div class="text-xl font-black text-white system-title uppercase tracking-widest">${hName.toUpperCase()}</div></div><div class="bg-system-950 border border-system-border/60 rounded-xl p-3 space-y-2 relative overflow-hidden"><div class="absolute -right-4 -bottom-4 opacity-5"><i class="fa-solid fa-chart-radar text-6xl text-system-neon"></i></div><div class="text-[10px] text-system-neon font-black uppercase tracking-wider mb-2">Status Matrix</div>${renderBar('STR', stats.str, 'bg-rose-400')} ${renderBar('AGI', stats.agi, 'bg-emerald-400')} ${renderBar('INT', stats.int, 'bg-sky-400')} ${renderBar('VIT', stats.vit, 'bg-amber-400')}</div><div class="bg-system-950 border border-system-border/60 rounded-xl p-3 flex justify-between items-center relative overflow-hidden mt-3"><div class="relative z-10"><div class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Current Title</div><div class="text-xs font-black text-amber-400 uppercase mt-0.5">${titleName}</div></div><i class="fa-solid fa-crown text-amber-500/20 text-3xl absolute -right-1 -bottom-1"></i></div>`;
             
-            // Render Auras
             const auraGrid = document.getElementById('hub-aura-container');
             const auras = [
                 { id: 'default', name: 'Default', unlocked: true, hex: '#38bdf8' },
@@ -1830,7 +2092,7 @@
             updateRPGNotifications();
         }
 
-        function allocateStat(statId) { if (window.appState.stats.unspentAP > 0) { window.appState.stats.unspentAP--; window.appState.stats[statId]++; saveStateToStorage(); renderApStats(); renderNutritionSection(); } }
+        function allocateStat(statId) { if (window.appState.stats.unspentAP > 0) { window.appState.stats.unspentAP--; window.appState.stats[statId]++; saveStateToStorage(); renderApStats(); renderNutritionSection(); showToast(`+1 ${statId.toUpperCase()} Allocated`); } }
 
         function openTitleModal() {
             const list = document.getElementById('titles-list');
@@ -1880,7 +2142,7 @@
             let loot = [];
             if (Math.random() < 0.09) { 
                 window.appState.inventory.blue_key = (window.appState.inventory.blue_key || 0) + 1; 
-                loot.push({name: 'Blue Key', icon: 'fa-key', color: 'text-cyan-400'}); 
+                loot.push({name: 'Blue Key', icon: 'fa-key', color: 'text-blue-key'}); 
             }
             
             const newTitles = checkTitleUnlocks();
@@ -1888,6 +2150,17 @@
             renderDailyQuests(); renderStatsSection(); renderPlayerHUD(); 
             
             showRewardSummary({ type: 'DAILY QUEST', xpResult, loot, newTitles });
+        }
+
+        function getDynInc(max, isTimeOrMiles) {
+            if (isTimeOrMiles === 'miles') return max >= 2 ? 0.5 : 0.25;
+            if (isTimeOrMiles === 'secs') return max >= 120 ? 30 : 15;
+            if (max <= 10) return 2;
+            if (max <= 30) return 5;
+            if (max <= 100) return 10;
+            if (max <= 300) return 25;
+            if (max <= 1000) return 50;
+            return 100;
         }
 
         function renderDailyQuests() {
@@ -1912,12 +2185,12 @@
                 const target = window.appState.dailyQuestState.targets || CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].quests; const current = window.appState.dailyQuestState;
                 const btns = document.getElementById('quest-buttons-container'); btns.innerHTML = ''; const items = [];
 
-                if (target.pushups > 0) items.push({ key: 'pushups', name: 'PUSH-UPS', cur: current.pushups, max: target.pushups, unit: 'reps', inc: 10 });
-                if (target.pullups > 0) items.push({ key: 'pullups', name: isFem ? 'DEAD HANGS' : 'PULL-UPS', cur: current.pullups, max: target.pullups, unit: isFem ? 'secs' : 'reps', inc: isFem ? 20 : 2 });
-                if (target.squats > 0) items.push({ key: 'squats', name: 'SQUATS', cur: current.squats, max: target.squats, unit: 'reps', inc: 10 });
-                if (target.planks > 0) items.push({ key: 'planks', name: 'PLANKS', cur: current.planks, max: target.planks, unit: 'secs', inc: 30 });
-                if (target.runMiles > 0) items.push({ key: 'runMiles', name: 'RUNNING', cur: current.runMiles, max: target.runMiles, unit: 'mi', inc: 0.25 });
-                else if (target.jumprope > 0) items.push({ key: 'jumprope', name: 'JUMP ROPE / CIRCUIT', cur: current.jumprope, max: target.jumprope, unit: 'reps', inc: 100 });
+                if (target.pushups > 0) items.push({ key: 'pushups', name: 'PUSH-UPS', cur: current.pushups, max: target.pushups, unit: 'reps', inc: getDynInc(target.pushups, false) });
+                if (target.pullups > 0) items.push({ key: 'pullups', name: isFem ? 'DEAD HANGS' : 'PULL-UPS', cur: current.pullups, max: target.pullups, unit: isFem ? 'secs' : 'reps', inc: getDynInc(target.pullups, isFem ? 'secs' : false) });
+                if (target.squats > 0) items.push({ key: 'squats', name: 'SQUATS', cur: current.squats, max: target.squats, unit: 'reps', inc: getDynInc(target.squats, false) });
+                if (target.planks > 0) items.push({ key: 'planks', name: 'PLANKS', cur: current.planks, max: target.planks, unit: 'secs', inc: getDynInc(target.planks, 'secs') });
+                if (target.runMiles > 0) items.push({ key: 'runMiles', name: 'RUNNING', cur: current.runMiles, max: target.runMiles, unit: 'mi', inc: getDynInc(target.runMiles, 'miles') });
+                else if (target.jumprope > 0) items.push({ key: 'jumprope', name: 'JUMP ROPE / CIRCUIT', cur: current.jumprope, max: target.jumprope, unit: 'reps', inc: getDynInc(target.jumprope, false) });
 
                 items.forEach(item => {
                     const done = item.cur >= item.max; const row = document.createElement('div'); row.className = "flex justify-between items-center text-xs border-b border-system-border/40 pb-1.5";
@@ -1949,8 +2222,8 @@
         function quickAddMeal(name, cals) { window.appState.meals.unshift({ id: Date.now(), type: name, cals }); saveStateToStorage(); renderNutritionSection(); showToast(`+${cals} kcal (${name}) Logged!`); }
 
         function renderNutritionSection() {
-            const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets; const intStat = window.appState.stats?.int || 10;
-            const dynamicWater = Math.max(40, config.water - ((intStat - 10) * 2)); const dynamicCals = Math.max(1200, config.cals - ((intStat - 10) * 20));
+            const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets; const intStat = window.appState.stats?.int || 1;
+            const dynamicWater = Math.max(40, config.water - ((intStat - 1) * 2)); const dynamicCals = Math.max(1200, config.cals - ((intStat - 1) * 20));
             document.getElementById('water-target').innerText = dynamicWater; document.getElementById('cal-target').innerText = dynamicCals;
             const currentWater = window.appState.waterIntake || 0; document.getElementById('water-current').innerText = currentWater;
             const wPct = Math.min(100, Math.round((currentWater / dynamicWater) * 100)); document.getElementById('water-progress-bar').style.width = `${wPct}%`;
@@ -1969,8 +2242,8 @@
                 { id: 'pot_recover', name: 'Recovery Potion', desc: 'Instantly restores daily Vitals (HP/MP) to full.', icon: 'fa-flask', color: 'text-rose-400', count: window.appState.inventory.pot_recover || 0 },
                 { id: 'scroll_reset', name: 'Job Change Scroll', desc: 'Wipes your 24h reset cooldown, allowing immediate replay.', icon: 'fa-scroll', color: 'text-amber-400', count: window.appState.inventory.scroll_reset || 0 },
                 { id: 'rune_xp', name: 'Shadow Runestone', desc: 'Absorb the stone to instantly gain +500 XP.', icon: 'fa-gem', color: 'text-purple-400', count: window.appState.inventory.rune_xp || 0 },
-                { id: 'blue_key', name: 'Blue Gate Key', desc: 'Consumable. Allows re-entry into a cleared normal gate.', icon: 'fa-key', color: 'text-cyan-400', count: window.appState.inventory.blue_key || 0 },
-                { id: 'red_key', name: 'Red Gate Key', desc: 'Grants access to the S-Rank Boss Room.', icon: 'fa-key', color: 'text-rose-500', count: window.appState.inventory.red_key || 0 }
+                { id: 'blue_key', name: 'Blue Gate Key', desc: 'Consumable. Allows re-entry into a cleared normal gate.', icon: 'fa-key', color: 'text-blue-key', count: window.appState.inventory.blue_key || 0 },
+                { id: 'red_key', name: 'Red Gate Key', desc: 'Consumable. Unlocks or re-opens the S-Rank Boss Room.', icon: 'fa-key', color: 'text-rose-500', count: window.appState.inventory.red_key || 0 }
             ];
             list.className = "space-y-3";
             list.innerHTML = items.map(item => `
@@ -1986,17 +2259,17 @@
 
         function useItem(id) {
             if (!window.appState.inventory[id] || window.appState.inventory[id] <= 0) return;
-            if (id === 'red_key') { closeInventoryModal(); switchTab('workout'); showToast("Key ready. Select the Boss Gate to enter."); return; }
+            if (id === 'red_key') { closeInventoryModal(); switchTab('workout'); handleBossGateClick(); return; }
             if (id === 'blue_key') { closeInventoryModal(); switchTab('workout'); showToast("Tap a cleared Normal Gate to use the Blue Key."); return; }
             
             window.appState.inventory[id]--;
             if (id === 'pot_recover') {
-                const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets; const intStat = window.appState.stats?.int || 10;
-                const dynamicWater = Math.max(40, config.water - ((intStat - 10) * 2)); const dynamicCals = Math.max(1200, config.cals - ((intStat - 10) * 20));
+                const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets; const intStat = window.appState.stats?.int || 1;
+                const dynamicWater = Math.max(40, config.water - ((intStat - 1) * 2)); const dynamicCals = Math.max(1200, config.cals - ((intStat - 1) * 20));
                 window.appState.waterIntake = dynamicWater; window.appState.meals.unshift({ id: Date.now(), type: 'Status Potion', cals: dynamicCals });
                 showToast("Vitals fully restored."); renderNutritionSection();
             } else if (id === 'scroll_reset') {
-                window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false }; window.appState.bossClearedToday = false; window.appState.redKeyObtainedToday = false;
+                window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false }; window.appState.bossClearedToday = false; window.appState.bossUnlocked = false; window.appState.redKeyObtainedToday = false;
                 showToast("Gate cooldowns reset!"); renderGateSelection();
             } else if (id === 'rune_xp') { awardXP(500); showToast("Absorbed +500 XP"); }
             saveStateToStorage(); openInventoryModal(); updateRPGNotifications();
@@ -2010,7 +2283,7 @@
             
             const activeSec = document.getElementById(`tab-${tabId}`);
             activeSec.classList.remove('hidden');
-            void activeSec.offsetWidth; // Trigger reflow to restart CSS animation
+            void activeSec.offsetWidth;
             activeSec.classList.add('animate-fade-in-up');
             
             document.querySelectorAll('.nav-tab-btn').forEach(btn => { 
@@ -2085,8 +2358,8 @@
             if (document.getElementById('drawer-week-pull-label')) document.getElementById('drawer-week-pull-label').innerText = window.appState.profileClass === 'female' ? 'DEAD HANGS' : 'PULL-UPS';
             if (document.getElementById('drawer-week-pull')) document.getElementById('drawer-week-pull').innerText = window.appState.weeklyReps?.pullups || 0;
 
-            const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets; const intStat = window.appState.stats?.int || 10;
-            const dynamicWater = Math.max(40, config.water - ((intStat - 10) * 2)); const dynamicCals = Math.max(1200, config.cals - ((intStat - 10) * 20));
+            const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets; const intStat = window.appState.stats?.int || 1;
+            const dynamicWater = Math.max(40, config.water - ((intStat - 1) * 2)); const dynamicCals = Math.max(1200, config.cals - ((intStat - 1) * 20));
             const curWater = window.appState.waterIntake || 0; const curCals = (window.appState.meals || []).reduce((acc, m) => acc + m.cals, 0);
 
             if (document.getElementById('drawer-hp-text')) document.getElementById('drawer-hp-text').innerText = `${curCals} / ${dynamicCals}`;
@@ -2095,13 +2368,139 @@
             if (document.getElementById('drawer-mp-bar')) document.getElementById('drawer-mp-bar').style.width = `${Math.min(100, (curWater / dynamicWater) * 100)}%`;
         }
 
-        window.handleLockedGateClick = function(gateId) {
-            if (window.appState.inventory.blue_key > 0) {
-                if(confirm("Consume 1 Blue Key to unlock this gate for re-entry?")) {
-                    window.appState.inventory.blue_key--; window.appState.clearedGates[gateId] = false; saveStateToStorage(); updateRPGNotifications(); renderGateSelection(); switchRoutine(gateId); showToast("Blue Key consumed. Gate Unlocked.");
+        
+        window.handleBossGateClick = function() {
+            const isRest = isTodayRestDay();
+            const hasRedKey = (window.appState.inventory.red_key || 0) > 0;
+            const bossCleared = window.appState.bossClearedToday;
+            const bossUnlocked = window.appState.bossUnlocked && !bossCleared;
+
+            if (isRest) {
+                window.showSystemPopup({
+                    title: "REST DAY PROTOCOL",
+                    tag: "[ SYSTEM RECOVERY ACTIVE ]",
+                    message: "The S-Rank Boss Room is currently sealed under the System Recovery Protocol. Take time to recover your energy.",
+                    icon: "fa-solid fa-bed text-purple-400",
+                    type: "alert"
+                });
+                return;
+            }
+
+            if (bossCleared) {
+                if (hasRedKey) {
+                    window.showSystemPopup({
+                        title: "BOSS ROOM RE-ENTRY",
+                        message: "Consume 1 Red Key to summon the S-Rank Boss again for repeat clearance?",
+                        icon: "fa-solid fa-key text-rose-500",
+                        type: "confirm",
+                        isWarning: true,
+                        onConfirm: () => {
+                            window.appState.inventory.red_key--;
+                            window.appState.bossClearedToday = false;
+                            window.appState.bossUnlocked = true;
+                            window.appState.activeRoutineKey = 'boss';
+                            window.appState.activeRoutineData = JSON.parse(JSON.stringify(getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass)['boss']));
+                            saveStateToStorage();
+                            updateRPGNotifications();
+                            renderGateSelection();
+                            switchRoutine('boss');
+                            showToast("Red Key consumed. S-Rank Boss Room Unlocked!");
+                        }
+                    });
+                } else {
+                    window.showSystemPopup({
+                        title: "BOSS ROOM SEALED",
+                        tag: "[ SYSTEM CLEARANCE COMPLETE ]",
+                        message: "The S-Rank Boss has already been conquered today. A Red Gate Key is required to summon and re-open the Boss Room.",
+                        icon: "fa-solid fa-key text-rose-500",
+                        type: "alert",
+                        isWarning: true
+                    });
                 }
-            } else { showToast("Gate Cleared. A Blue Key is required for re-entry today."); }
+            } else if (bossUnlocked) {
+                switchRoutine('boss');
+            } else {
+                if (hasRedKey) {
+                    window.showSystemPopup({
+                        title: "BOSS ROOM ENTRY",
+                        message: "Consume 1 Red Key to unlock and enter the S-Rank Boss Room?",
+                        icon: "fa-solid fa-key text-rose-500",
+                        type: "confirm",
+                        isWarning: true,
+                        onConfirm: () => {
+                            window.appState.inventory.red_key--;
+                            window.appState.bossUnlocked = true;
+                            window.appState.activeRoutineKey = 'boss';
+                            window.appState.activeRoutineData = JSON.parse(JSON.stringify(getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass)['boss']));
+                            saveStateToStorage();
+                            updateRPGNotifications();
+                            renderGateSelection();
+                            switchRoutine('boss');
+                            showToast("Red Key consumed. Entering S-Rank Boss Room!");
+                        }
+                    });
+                } else {
+                    window.showSystemPopup({
+                        title: "S-RANK ACCESS RESTRICTED",
+                        tag: "[ KEY REQUIRED ]",
+                        message: "The S-Rank Boss Room requires an authorized Red Gate Key to unlock. Clear regular dungeon gates to discover Red Key drops.",
+                        icon: "fa-solid fa-key text-rose-500",
+                        type: "alert",
+                        isWarning: true
+                    });
+                }
+            }
         };
+
+        window.handleGateClick = function(gateId) {
+            const isRest = isTodayRestDay();
+            const isCleared = window.appState.clearedGates && window.appState.clearedGates[gateId] === true;
+            const hasBlueKey = (window.appState.inventory.blue_key || 0) > 0;
+
+            if (isRest) {
+                window.showSystemPopup({
+                    title: "REST DAY PROTOCOL",
+                    tag: "[ SYSTEM RECOVERY ACTIVE ]",
+                    message: "All dungeon gates are sealed today to enforce systemic rest and physical recovery. Daily quests are auto-completed for you today so you can focus on resting.",
+                    icon: "fa-solid fa-bed text-purple-400",
+                    type: "alert"
+                });
+                return;
+            }
+
+            if (isCleared) {
+                if (hasBlueKey) {
+                    window.showSystemPopup({
+                        title: "GATE RE-ENTRY DIRECTIVE",
+                        message: "Consume 1 Blue Key to unlock this conquered gate for repeat clearance?",
+                        icon: "fa-solid fa-key text-blue-key",
+                        type: "confirm",
+                        onConfirm: () => {
+                            window.appState.inventory.blue_key--;
+                            window.appState.clearedGates[gateId] = false;
+                            saveStateToStorage();
+                            updateRPGNotifications();
+                            renderGateSelection();
+                            switchRoutine(gateId);
+                            showToast("Blue Key consumed. Gate Unlocked.");
+                        }
+                    });
+                } else {
+                    window.showSystemPopup({
+                        title: "GATE ACCESS SEALED",
+                        tag: "[ SYSTEM RE-ENTRY PROTOCOL ]",
+                        message: "This dungeon gate has already been conquered today. A Blue Gate Key is required to break the daily seal and re-enter.",
+                        icon: "fa-solid fa-key text-blue-key",
+                        type: "alert"
+                    });
+                }
+                return;
+            }
+
+            // Gate is open: smoothly open the active workout routine!
+            switchRoutine(gateId);
+        };
+        window.handleLockedGateClick = window.handleGateClick;
 
         function renderGateSelection() {
             const grid = document.getElementById('gate-selection-grid'); const breakBanner = document.getElementById('dungeon-break-banner');
@@ -2125,27 +2524,78 @@
 
             let html = '';
             gates.forEach(g => {
-                const isThisCleared = window.appState.clearedGates[g.id] === true; const locked = isRest || isThisCleared; const progress = isThisCleared ? 100 : 0;
-                const statusText = isThisCleared ? (hasBlueKey ? 'USE BLUE KEY' : 'CLEARED') : (isRest ? 'LOCKED' : 'ENTER');
-                const statusIcon = isThisCleared ? (hasBlueKey ? 'fa-key text-cyan-400' : 'fa-check-double text-emerald-400') : (isRest ? 'fa-lock text-slate-500' : 'fa-chevron-right text-system-neon');
-                const statusColor = isThisCleared ? (hasBlueKey ? 'text-cyan-400' : 'text-emerald-400') : (isRest ? 'text-slate-500' : 'text-system-neon');
+                const isThisCleared = window.appState.clearedGates[g.id] === true;
+                const state = isRest ? 'rest' : isThisCleared ? (hasBlueKey ? 'key' : 'locked') : 'open';
+                const progress = isThisCleared ? 100 : 0;
 
-                let onClickAction = '';
-                if (!isRest) { onClickAction = isThisCleared ? `handleLockedGateClick('${g.id}')` : `switchRoutine('${g.id}')`; }
+                const statusText  = { rest: 'LOCKED', locked: 'LOCKED', key: 'USE BLUE KEY', open: 'ENTER' }[state];
+                const statusIcon  = { rest: 'fa-lock text-slate-500', locked: 'fa-lock text-slate-500', key: 'fa-key text-blue-key', open: 'fa-chevron-right text-system-neon' }[state];
+                const statusColor = { rest: 'text-slate-500', locked: 'text-slate-500', key: 'text-blue-key', open: 'text-system-neon' }[state];
 
-                html += `<div onclick="${onClickAction}" class="bg-system-900 border ${isRest ? 'border-system-border/40 opacity-50 grayscale cursor-not-allowed' : isThisCleared ? 'border-emerald-500/50 cursor-pointer btn-active' : `${g.border} ${g.bg} cursor-pointer btn-active`} rounded-2xl p-5 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden gap-3"><div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border border-system-border/80 shadow-inner"><i class="fa-solid ${g.icon} ${g.color} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${g.name}</h3><span class="text-[10px] ${g.color} font-bold tracking-widest uppercase">${g.rank}</span></div></div><div class="text-right"><i class="fa-solid ${statusIcon}"></i><div class="text-[9px] ${statusColor} mt-1 font-bold">${statusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${isThisCleared ? 'text-emerald-400' : ''}">${progress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${isThisCleared ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-slate-700'} transition-all duration-500" style="width: ${progress}%"></div></div></div></div>`;
+                const wrapClass = {
+                    open:   `${g.border} ${g.bg} cursor-pointer btn-active`,
+                    key:    'border-blue-key gate-key-pulse btn-active cursor-pointer',
+                    locked: 'border-system-border/40 gate-locked cursor-pointer hover:border-system-border',
+                    rest:   'border-system-border/40 gate-locked cursor-pointer hover:border-purple-500/40'
+                }[state];
+
+                const onClickAction = `handleGateClick('${g.id}')`;
+
+                html += `<div onclick="${onClickAction}" class="bg-system-900 border ${wrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden gap-3"><div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border border-system-border/80 shadow-inner"><i class="fa-solid ${g.icon} ${g.color} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${g.name}</h3><span class="text-[10px] ${g.color} font-bold tracking-widest uppercase">${g.rank}</span></div></div><div class="text-right"><i class="fa-solid ${statusIcon}"></i><div class="text-[9px] ${statusColor} mt-1 font-bold">${statusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span>${progress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${isThisCleared ? 'bg-emerald-500' : 'bg-slate-700'} transition-all duration-500" style="width: ${progress}%"></div></div></div></div>`;
             });
 
             if (!isNoEq) {
-                const bossAvailable = !isRest && hasRedKey && !bossCleared; const bossProgress = bossCleared ? 100 : 0;
-                const bossStatusText = bossCleared ? 'CLEARED' : bossAvailable ? 'UNLOCKED' : (hasRedKey ? 'LOCKED' : 'NEEDS RED KEY');
-                const bossStatusIcon = bossCleared ? 'fa-check-double text-emerald-400' : bossAvailable ? 'fa-skull text-system-boss' : (hasRedKey ? 'fa-lock text-slate-500' : 'fa-key text-rose-500');
-                const bossStatusColor = bossCleared ? 'text-emerald-400' : bossAvailable ? 'text-system-boss' : (hasRedKey ? 'text-slate-500' : 'text-rose-500');
+                const hasRedKey = (window.appState.inventory.red_key || 0) > 0;
+                const bossCleared = window.appState.bossClearedToday;
+                const bossUnlocked = window.appState.bossUnlocked && !bossCleared;
+                const bossProgress = bossCleared ? 100 : 0;
                 
-                // Get dynamic boss name based on day
+                let bState = 'needs_key';
+                if (isRest) bState = 'rest';
+                else if (bossUnlocked) bState = 'unlocked';
+                else if (bossCleared) bState = hasRedKey ? 'key_reentry' : 'locked_cleared';
+                else if (hasRedKey) bState = 'key_unlock';
+
+                const bStatusText = {
+                    rest: 'LOCKED',
+                    unlocked: 'ENTER',
+                    key_reentry: 'USE RED KEY',
+                    key_unlock: 'USE RED KEY',
+                    needs_key: 'NEEDS RED KEY',
+                    locked_cleared: 'LOCKED'
+                }[bState];
+
+                const bStatusIcon = {
+                    rest: 'fa-lock text-slate-500',
+                    unlocked: 'fa-skull text-system-boss',
+                    key_reentry: 'fa-key text-rose-500',
+                    key_unlock: 'fa-key text-rose-500',
+                    needs_key: 'fa-key text-rose-500',
+                    locked_cleared: 'fa-lock text-slate-500'
+                }[bState];
+
+                const bStatusColor = {
+                    rest: 'text-slate-500',
+                    unlocked: 'text-system-boss',
+                    key_reentry: 'text-rose-400',
+                    key_unlock: 'text-rose-400',
+                    needs_key: 'text-rose-500',
+                    locked_cleared: 'text-slate-500'
+                }[bState];
+
+                const isInteractive = bState === 'unlocked' || bState === 'key_unlock' || bState === 'key_reentry';
+                const bWrapClass = {
+                    rest: 'border-system-border/40 gate-locked',
+                    unlocked: 'border-system-boss boss-glow cursor-pointer btn-active',
+                    key_reentry: 'border-rose-500/80 gate-key-pulse-red cursor-pointer btn-active',
+                    key_unlock: 'border-rose-500/80 gate-key-pulse-red cursor-pointer btn-active',
+                    needs_key: 'border-system-border/40 opacity-50 grayscale cursor-pointer',
+                    locked_cleared: 'border-system-border/40 gate-locked'
+                }[bState];
+
                 const currentBossName = getPresetRoutines(1, 'male').boss.title.split(' (')[0].toUpperCase();
 
-                html += `<div class="pt-3 border-t border-system-border/50 mt-3"><div onclick="${bossAvailable ? `switchRoutine('boss')` : ''}" class="bg-system-900 border ${bossAvailable ? 'border-system-boss boss-glow cursor-pointer btn-active' : bossCleared ? 'border-emerald-500/50' : 'border-system-border/40 opacity-50 grayscale cursor-not-allowed'} rounded-2xl p-5 flex flex-col justify-between transition-colors relative overflow-hidden gap-3">${bossAvailable ? '<div class="absolute inset-0 bg-gradient-to-r from-rose-950/20 to-transparent"></div>' : ''}<div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border ${bossAvailable ? 'border-system-boss' : 'border-system-border/80'} shadow-inner"><i class="fa-solid fa-skull ${bossAvailable ? 'text-system-boss' : bossCleared ? 'text-emerald-400' : 'text-slate-500'} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${currentBossName}</h3><span class="text-[10px] ${bossAvailable ? 'text-system-boss' : bossCleared ? 'text-emerald-400' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Boss Room</span></div></div><div class="text-right"><i class="fa-solid ${bossStatusIcon}"></i><div class="text-[9px] ${bossStatusColor} mt-1 font-bold">${bossStatusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${bossCleared ? 'text-emerald-400' : ''}">${bossProgress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${bossCleared ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-slate-700'} transition-all duration-500" style="width: ${bossProgress}%"></div></div></div></div><p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate requires a Red Key (Drops from normal gates).</p></div>`;
+                html += `<div class="pt-3 border-t border-system-border/50 mt-3"><div onclick="handleBossGateClick()" class="bg-system-900 border ${bWrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors relative overflow-hidden gap-3">${isInteractive ? '<div class="absolute inset-0 bg-gradient-to-r from-rose-950/20 to-transparent"></div>' : ''}<div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border ${isInteractive ? 'border-system-boss' : 'border-system-border/80'} shadow-inner"><i class="fa-solid fa-skull ${isInteractive ? 'text-system-boss' : 'text-slate-500'} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${currentBossName}</h3><span class="text-[10px] ${isInteractive ? 'text-system-boss' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Boss Room</span></div></div><div class="text-right"><i class="fa-solid ${bStatusIcon}"></i><div class="text-[9px] ${bStatusColor} mt-1 font-bold">${bStatusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span>${bossProgress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${bossCleared ? 'bg-emerald-500' : 'bg-slate-700'} transition-all duration-500" style="width: ${bossProgress}%"></div></div></div></div><p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate consumes a Red Key to enter or re-open (Drops from normal gates).</p></div>`;
             }
             grid.innerHTML = html;
         }
@@ -2245,7 +2695,7 @@
                             <span class="text-[10px] text-slate-400 font-semibold uppercase">${unitLabel}</span>
                         </div>
                         <div class="flex items-center space-x-1">
-                            <input type="text" ${isLockedGlobal && !isPenalty ? 'disabled' : ''} value="${set.wt}" onchange="updateSetVal(${exIndex}, ${setIndex}, 'wt', this.value)" class="w-16 bg-system-900 border border-system-border rounded-lg px-2 py-1 text-center text-xs font-bold text-white focus:outline-none ${isPenalty ? 'focus:border-orange-500' : isBoss || isBreak ? 'focus:border-system-boss' : (isSurvival ? 'focus:border-amber-500' : 'focus:border-system-neon')}">
+                            <input type="text" ${(isLockedGlobal && !isPenalty) || set.wt === 'BW' || set.wt === 'Miles' ? 'disabled' : ''} value="${set.wt}" onchange="updateSetVal(${exIndex}, ${setIndex}, 'wt', this.value)" class="w-16 bg-system-900 border border-system-border rounded-lg px-2 py-1 text-center text-xs font-bold ${set.wt === 'BW' || set.wt === 'Miles' ? 'text-slate-500 cursor-not-allowed' : 'text-white'} focus:outline-none ${isPenalty ? 'focus:border-orange-500' : isBoss || isBreak ? 'focus:border-system-boss' : (isSurvival ? 'focus:border-amber-500' : 'focus:border-system-neon')}">
                         </div>
                         <button ${isLockedGlobal && !isPenalty ? 'disabled' : ''} onclick="toggleSetDone(${exIndex}, ${setIndex})" class="btn-active w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer ${set.done ? (isPenalty ? 'bg-orange-500 text-black font-black' : isBoss || isBreak ? 'bg-system-boss text-white font-black' : (isSurvival ? 'bg-amber-500 text-system-950 font-black' : 'bg-system-neon text-system-950 font-black shadow-sm')) : 'bg-system-850 text-slate-500 hover:text-slate-300'}"><i class="fa-solid fa-check text-xs"></i></button>
                     </div>
@@ -2324,7 +2774,6 @@
                 saveStateToStorage(); 
                 renderDailyQuests();
                 
-                // Force UI back to gate selection smoothly
                 document.getElementById('active-dungeon-screen').classList.add('hidden');
                 renderGateSelection();
                 document.getElementById('gate-selection-screen').classList.remove('hidden');
@@ -2347,7 +2796,7 @@
             if (isBoss) { 
                 baseXpAmount = 150; 
                 typeStr = 'BOSS RAID'; 
-                window.appState.bossClearedToday = true; 
+                window.appState.bossClearedToday = true; window.appState.bossUnlocked = false; 
                 if(completionPct < 1) failedEvent = true; 
             }
             else if (isBreak) { 
@@ -2376,16 +2825,15 @@
             }
             
             let loot = [];
-            // Shadow Army Loot Buff
             let blueKeyBuff = window.appState.equippedShadow === 'tank' ? 0.05 : 0;
             
             if (isBoss) {
-                if (Math.random() < (0.98 + blueKeyBuff) * completionPct) { window.appState.inventory.blue_key++; loot.push({ name: 'Blue Key', icon: 'fa-key', color: 'text-cyan-400' }); }
+                if (Math.random() < (0.98 + blueKeyBuff) * completionPct) { window.appState.inventory.blue_key++; loot.push({ name: 'Blue Key', icon: 'fa-key', color: 'text-blue-key' }); }
             } else if (!isBreak) {
                 if (!window.appState.redKeyObtainedToday && !window.appState.noEquipmentMode) { 
                     window.appState.redKeyObtainedToday = true; window.appState.inventory.red_key++; loot.push({ name: 'Red Key', icon: 'fa-key', color: 'text-rose-500' });
                 } else if (Math.random() < (0.20 + blueKeyBuff) * completionPct) { 
-                    window.appState.inventory.blue_key++; loot.push({ name: 'Blue Key', icon: 'fa-key', color: 'text-cyan-400' }); 
+                    window.appState.inventory.blue_key++; loot.push({ name: 'Blue Key', icon: 'fa-key', color: 'text-blue-key' }); 
                 }
             }
             
@@ -2444,9 +2892,20 @@
         }
 
         function clearAllData() {
-            if (confirm("Reset all local player data and force initial setup startup wizard?")) {
-                localStorage.removeItem('solo_leveling_v8_data'); localStorage.removeItem('solo_leveling_initialized'); localStorage.removeItem('solo_leveling_features_seen'); location.reload();
-            }
+            window.showSystemPopup({
+                title: "SYSTEM DATA RESET",
+                message: "Reset all local player data and force the initial setup startup wizard? This cannot be undone.",
+                icon: "fa-solid fa-triangle-exclamation",
+                type: "confirm",
+                isWarning: true,
+                onConfirm: () => {
+                    localStorage.removeItem('solo_leveling_v8_data'); 
+                    localStorage.removeItem('solo_leveling_initialized'); 
+                    localStorage.removeItem('solo_leveling_features_seen'); 
+                    localStorage.removeItem('solo_leveling_starter_gifts_claimed');
+                    location.reload();
+                }
+            });
         }
 
         window.exportData = function() {
@@ -2476,7 +2935,7 @@
         document.getElementById('open-timer-btn').addEventListener('click', openTimerModal);
 
         function startRestTimer(baseSeconds) {
-            clearInterval(timerInterval); const agiReduction = Math.max(0, ((window.appState.stats?.agi || 10) - 10) * 2);
+            clearInterval(timerInterval); const agiReduction = Math.max(0, ((window.appState.stats?.agi || 1) - 1) * 2);
             timerTotalSeconds = Math.max(10, baseSeconds - agiReduction); timerRemainingSeconds = timerTotalSeconds;
             isTimerRunning = true; updateTimerDisplay();
             timerInterval = setInterval(() => {
@@ -2506,11 +2965,289 @@
             } catch(e){}
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast'); document.getElementById('toast-message').innerText = msg;
-            toast.classList.remove('opacity-0', 'pointer-events-none'); toast.classList.add('opacity-100');
-            setTimeout(() => { toast.classList.remove('opacity-100'); toast.classList.add('opacity-0', 'pointer-events-none'); }, 2500);
+        
+        // --- EXERCISE TUTORIALS & FORM GUIDE DATABASE ---
+        const TUTORIALS_DB = [
+            // PULL GATE
+            { name: "Pull-Ups (Wide & Neutral)", cat: "pull", equip: "Pull-up Bar", tip: "Depress scapula before pulling. Drive elbows down into back pockets; chin fully clears bar.", q: "pull up exercise tutorial form" },
+            { name: "Archer Pull-Ups", cat: "pull", equip: "Pull-up Bar", tip: "Pull toward one hand while fully extending the opposite arm straight along the bar.", q: "archer pull up form tutorial" },
+            { name: "L-Sit Pull-Ups", cat: "pull", equip: "Pull-up Bar", tip: "Maintain rigid 90-degree leg extension while executing strict pull-ups without swinging.", q: "l sit pull up tutorial" },
+            { name: "Inverted Rows / Australian Pull-Ups", cat: "pull", equip: "Low Bar / Table", tip: "Keep body completely planked. Pull chest up to touch the bar with elbows flared at 45 degrees.", q: "inverted row form tutorial" },
+            { name: "Dead Hangs", cat: "pull", equip: "Pull-up Bar", tip: "Active shoulders, engage grip completely, keep core braced and breathe steadily.", q: "dead hang exercise tutorial" },
+            { name: "Single-Arm DB Row", cat: "pull", equip: "Dumbbells", tip: "Keep back flat and pull elbow past torso toward hip. Avoid rotational twisting.", q: "single arm dumbbell row tutorial" },
+            { name: "DB Renegade Rows", cat: "pull", equip: "Dumbbells", tip: "Hold rigid push-up plank. Row dumbbell without tilting your hips from side to side.", q: "renegade row form tutorial" },
+            { name: "DB Hammer Curls", cat: "pull", equip: "Dumbbells", tip: "Neutral palms facing inwards. Pin elbows at sides and squeeze brachialis at the top.", q: "dumbbell hammer curl form" },
+            { name: "Jump Rope Conditioning", cat: "pull", equip: "Jump Rope", tip: "Stay on balls of feet with knees slightly bent. Turn rope using wrists, not shoulders.", q: "jump rope basic boxer step tutorial" },
+
+            // PUSH GATE
+            { name: "Station Bodyweight Dips", cat: "push", equip: "Dip Station", tip: "Lean slightly forward to bias chest; descend to 90 degrees elbow flexion, lock out triceps.", q: "chest dip exercise tutorial form" },
+            { name: "Weighted Dips", cat: "push", equip: "Dip Station / DB", tip: "Secure dumbbell between legs or belt. Maintain forward lean to protect shoulders.", q: "weighted dips form tutorial" },
+            { name: "Elevated / Incline Push-Ups", cat: "push", equip: "Floor / Wall", tip: "Straight spine line from head to heels. Elbows track back at roughly 45 degrees.", q: "incline push ups form tutorial" },
+            { name: "Decline / Pike Push-Ups", cat: "push", equip: "Floor / Box", tip: "Hips stacked over shoulders in an inverted V-shape. Head lowers diagonally forward.", q: "pike push up form tutorial" },
+            { name: "Handstand Push-Up Negatives", cat: "push", equip: "Wall", tip: "Kick into wall handstand. Lower down under 4-second strict control until crown touches pad.", q: "handstand pushup negative tutorial" },
+            { name: "DB Standing Overhead Press", cat: "push", equip: "Dumbbells", tip: "Brace glutes and abs. Press overhead in a slight arc without hyperextending lower back.", q: "dumbbell overhead press tutorial" },
+            { name: "DB Arnold Press", cat: "push", equip: "Dumbbells", tip: "Start palms facing you; rotate outwards as you press up into overhead extension.", q: "arnold press form tutorial" },
+            { name: "DB Lateral Raises", cat: "push", equip: "Dumbbells", tip: "Lead with elbows in the scapular plane (30 deg forward). Don't shrug traps.", q: "dumbbell lateral raise form tutorial" },
+            { name: "Forearm Planks & Shoulder Taps", cat: "push", equip: "Floor", tip: "Tuck pelvis into posterior pelvic tilt. Squeeze glutes and resist hip rotation.", q: "plank shoulder taps form tutorial" },
+
+            // LEGS & CORE
+            { name: "DB Goblet Squats", cat: "legs", equip: "Dumbbell", tip: "Hold weight tight against sternum. Keep chest tall, sit back and drive knees outward.", q: "goblet squat form tutorial" },
+            { name: "Bulgarian Split Squats", cat: "legs", equip: "Bench / DBs", tip: "Rear foot on bench. Drop back knee toward floor while front shin stays relatively vertical.", q: "bulgarian split squat form tutorial" },
+            { name: "Assisted Pistol Squats", cat: "legs", equip: "Floor / Support", tip: "Single leg squat. Keep balance on midfoot and control descent down into the hole.", q: "pistol squat progression tutorial" },
+            { name: "DB Romanian Deadlifts", cat: "legs", equip: "Dumbbells", tip: "Hinge backwards at hips with soft knees until hamstrings load. Keep spine neutral.", q: "dumbbell romanian deadlift tutorial" },
+            { name: "Toes-to-Bar / Hanging Leg Raises", cat: "legs", equip: "Pull-up Bar", tip: "Avoid excessive swinging; compress core and raise legs using hip flexors and lower abs.", q: "hanging leg raise form tutorial" },
+            { name: "Bicycle Crunches", cat: "legs", equip: "Floor", tip: "Slow tempo. Rotate shoulder toward opposite knee while extending opposite leg straight.", q: "bicycle crunch form tutorial" },
+            { name: "Plank Jacks & Mountain Climbers", cat: "legs", equip: "Floor", tip: "Keep hips level with shoulders. Drive knees forward rapidly under braced core.", q: "mountain climbers exercise form" },
+
+            // BOSS CHALLENGES & RAID
+            { name: "Burpees", cat: "boss", equip: "Bodyweight", tip: "Drop into push-up chest-to-floor, pop feet back under hips, and explode upward into jump.", q: "burpee exercise form tutorial" },
+            { name: "High Knees", cat: "boss", equip: "Bodyweight", tip: "Drive knees up to hip height with aggressive arm pump. Stay light on balls of feet.", q: "high knees exercise tutorial" },
+            { name: "Wall Sits", cat: "boss", equip: "Wall", tip: "Thighs strictly parallel to ground at 90 degrees. Press lower back firmly against wall.", q: "wall sit exercise form" },
+            { name: "Jump Squats", cat: "boss", equip: "Bodyweight", tip: "Sink into deep squat and explosively jump straight up; absorb landing softly into next rep.", q: "jump squat form tutorial" }
+        ];
+
+        window.renderTutorialsList = function(category = 'all') {
+            const container = document.getElementById('workouts-list-container');
+            if (!container) return;
+            const items = category === 'all' ? TUTORIALS_DB : TUTORIALS_DB.filter(t => t.cat === category);
+
+            container.innerHTML = items.map(t => {
+                const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(t.q)}`;
+                return `
+                    <div class="bg-system-950 border border-system-border/60 rounded-xl p-3 space-y-1.5 hover:border-system-neon transition-colors group">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h4 class="font-bold text-white text-xs group-hover:text-system-neon transition-colors">${t.name}</h4>
+                                <span class="text-[9px] bg-system-900 text-system-glow px-1.5 py-0.5 rounded border border-system-border/60 uppercase font-semibold inline-block mt-0.5">${t.equip}</span>
+                            </div>
+                            <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="btn-active shrink-0 flex items-center gap-1.5 bg-rose-950/60 hover:bg-rose-900/80 border border-rose-500/50 text-rose-300 px-2.5 py-1.5 rounded-lg text-[10px] font-black transition-colors" title="Watch Video Tutorial">
+                                <i class="fa-brands fa-youtube text-rose-500 text-sm"></i>
+                                <span>WATCH</span>
+                            </a>
+                        </div>
+                        <p class="text-[10px] text-slate-400 leading-relaxed"><strong class="text-slate-300">Form Cue:</strong> ${t.tip}</p>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.openWorkoutsModal = function() {
+            window.renderTutorialsList('all');
+            document.querySelectorAll('.tut-filter-btn').forEach(btn => {
+                btn.className = "tut-filter-btn px-2.5 py-1 rounded-lg border border-system-border bg-system-950 text-slate-400 cursor-pointer";
+            });
+            const allBtn = document.getElementById('tut-tab-all');
+            if (allBtn) allBtn.className = "tut-filter-btn px-2.5 py-1 rounded-lg border border-system-neon bg-system-neon/20 text-system-glow font-black cursor-pointer";
+            document.getElementById('workouts-modal').classList.remove('opacity-0', 'pointer-events-none');
+        };
+        window.openTutorialsModal = window.openWorkoutsModal;
+
+        window.closeWorkoutsModal = function() {
+            document.getElementById('workouts-modal').classList.add('opacity-0', 'pointer-events-none');
+        };
+        window.closeTutorialsModal = window.closeWorkoutsModal;
+
+        window.filterTutorials = function(cat) {
+            document.querySelectorAll('.tut-filter-btn').forEach(btn => {
+                btn.className = "tut-filter-btn px-2.5 py-1 rounded-lg border border-system-border bg-system-950 text-slate-400 cursor-pointer";
+            });
+            const active = document.getElementById(`tut-tab-${cat}`);
+            if (active) active.className = "tut-filter-btn px-2.5 py-1 rounded-lg border border-system-neon bg-system-neon/20 text-system-glow font-black cursor-pointer";
+            window.renderTutorialsList(cat);
+        };
+
+
+                // --- SOLO LEVELING SYSTEM POPUP & PROMPT ENGINE ---
+        window.systemDialogQueue = [];
+        window.isSystemDialogActive = false;
+
+        window.showSystemPopup = function(options) {
+            if (window.isSystemDialogActive) {
+                window.systemDialogQueue.push(options);
+                return;
+            }
+            window.isSystemDialogActive = true;
+
+            const modal = document.getElementById('system-dialog-modal');
+            const card = document.getElementById('system-dialog-card');
+            const badge = document.getElementById('system-dialog-badge');
+            const iconEl = document.getElementById('system-dialog-icon');
+            const tagEl = document.getElementById('system-dialog-tag');
+            const titleEl = document.getElementById('system-dialog-title');
+            const contentEl = document.getElementById('system-dialog-content');
+            const actionsEl = document.getElementById('system-dialog-actions');
+
+            const isConfirm = options.type === 'confirm';
+            const msg = options.message || '';
+            const isBlueKey = msg.includes('Blue Key');
+            const isRedKey = msg.includes('Red Key');
+            const isWarning = options.isWarning || isRedKey || (options.title && (options.title.includes('PENALTY') || options.title.includes('ALERT') || options.title.includes('WARNING') || options.title.includes('RESET'))) || (msg.includes('WARNING') || msg.includes('PENALTY') || msg.includes('denied') || msg.includes('FAILED'));
+
+            if (isWarning) {
+                card.className = "bg-system-900 border-2 border-rose-500 rounded-3xl p-6 w-full max-w-sm text-center shadow-[0_0_30px_rgba(225,29,72,0.4)] transform transition-transform animate-pop-in flex flex-col relative max-h-[90vh]";
+                badge.className = "absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-system-950 border-2 border-rose-500 flex items-center justify-center text-rose-500 text-xl shadow-[0_0_15px_#f43f5e]";
+                tagEl.className = "mt-2 text-[10px] text-rose-400 font-bold tracking-widest uppercase";
+                iconEl.className = isRedKey ? "fa-solid fa-key" : (options.icon || "fa-solid fa-triangle-exclamation");
+            } else if (isBlueKey) {
+                card.className = "bg-system-900 border-2 border-cyan-400 rounded-3xl p-6 w-full max-w-sm text-center shadow-[0_0_30px_rgba(56,189,248,0.35)] transform transition-transform animate-pop-in flex flex-col relative max-h-[90vh]";
+                badge.className = "absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-system-950 border-2 border-cyan-400 flex items-center justify-center text-blue-key text-xl shadow-[0_0_15px_#38bdf8]";
+                tagEl.className = "mt-2 text-[10px] text-system-neon font-bold tracking-widest uppercase";
+                iconEl.className = "fa-solid fa-key text-blue-key";
+            } else {
+                card.className = "bg-system-900 border-2 border-system-neon rounded-3xl p-6 w-full max-w-sm text-center shadow-[0_0_30px_rgba(56,189,248,0.3)] transform transition-transform animate-pop-in flex flex-col relative max-h-[90vh]";
+                badge.className = "absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-system-950 border-2 border-system-neon flex items-center justify-center text-system-neon text-xl shadow-[0_0_15px_#38bdf8]";
+                tagEl.className = "mt-2 text-[10px] text-system-neon font-bold tracking-widest uppercase";
+                iconEl.className = options.icon || (isConfirm ? "fa-solid fa-key" : "fa-solid fa-bell");
+            }
+
+            tagEl.innerText = options.tag || (isConfirm ? "[ SYSTEM DIRECTIVE ]" : "[ SYSTEM NOTIFICATION ]");
+            titleEl.innerText = options.title || (isConfirm ? "CONFIRMATION REQUIRED" : "NOTIFICATION");
+
+            let itemCardHtml = '';
+            if (isBlueKey) {
+                itemCardHtml = `
+                    <div class="animate-stagger bg-system-950 border border-cyan-500/40 rounded-xl p-3 flex items-center gap-3 mb-2 shadow-sm">
+                        <div class="w-10 h-10 rounded-lg bg-system-900 border border-cyan-400 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(56,189,248,0.3)]">
+                            <i class="fa-solid fa-key text-blue-key text-lg"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-black text-white text-xs uppercase tracking-wider">Blue Gate Key</div>
+                            <div class="text-[9.5px] text-cyan-300 font-bold">${isConfirm ? '1x Consumable Authorization' : 'Required Key Item'}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (isRedKey) {
+                itemCardHtml = `
+                    <div class="animate-stagger bg-system-950 border border-rose-500/40 rounded-xl p-3 flex items-center gap-3 mb-2 shadow-sm">
+                        <div class="w-10 h-10 rounded-lg bg-system-900 border border-rose-500 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(225,29,72,0.4)]">
+                            <i class="fa-solid fa-key text-rose-500 text-lg"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-black text-white text-xs uppercase tracking-wider">Red Gate Key</div>
+                            <div class="text-[9.5px] text-rose-300 font-bold">${isConfirm ? '1x S-Rank Clearance Authorization' : 'Required Boss Room Key'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            contentEl.innerHTML = `
+                ${itemCardHtml}
+                <div class="animate-stagger bg-system-950 border border-system-border/60 rounded-xl p-3.5 text-center shadow-inner">
+                    <p class="text-xs font-bold text-slate-200 leading-relaxed">${msg}</p>
+                </div>
+            `;
+
+            if (isConfirm) {
+                actionsEl.innerHTML = `
+                    <button onclick="closeSystemDialog(false)" class="btn-active flex-1 py-3 bg-system-950 hover:bg-system-850 text-slate-400 font-bold text-xs rounded-xl border border-system-border cursor-pointer transition-colors uppercase tracking-wider">
+                        CANCEL
+                    </button>
+                    <button onclick="closeSystemDialog(true)" class="btn-active flex-1 py-3 ${isWarning ? 'bg-gradient-to-r from-rose-600 to-rose-500 text-white' : 'bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950'} font-black text-xs rounded-xl shadow-lg cursor-pointer transition-colors uppercase tracking-wider flex items-center justify-center gap-1.5">
+                        <span>CONFIRM</span> <i class="fa-solid fa-check text-xs"></i>
+                    </button>
+                `;
+            } else {
+                actionsEl.innerHTML = `
+                    <button onclick="closeSystemDialog(true)" class="btn-active w-full py-3.5 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl uppercase tracking-wider cursor-pointer shadow-lg flex items-center justify-center gap-2">
+                        <span>ACKNOWLEDGE</span> <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                `;
+            }
+
+            window.currentDialogOnConfirm = options.onConfirm || null;
+            window.currentDialogOnCancel = options.onCancel || null;
+
+            modal.classList.remove('hidden');
+            card.classList.remove('animate-pop-in');
+            void card.offsetWidth;
+            card.classList.add('animate-pop-in');
+        };
+
+        window.closeSystemDialog = function(confirmed = false) {
+            const modal = document.getElementById('system-dialog-modal');
+            modal.classList.add('hidden');
+            window.isSystemDialogActive = false;
+
+            if (confirmed && window.currentDialogOnConfirm) {
+                window.currentDialogOnConfirm();
+            } else if (!confirmed && window.currentDialogOnCancel) {
+                window.currentDialogOnCancel();
+            }
+            window.currentDialogOnConfirm = null;
+            window.currentDialogOnCancel = null;
+
+            if (window.systemDialogQueue.length > 0) {
+                const next = window.systemDialogQueue.shift();
+                setTimeout(() => window.showSystemPopup(next), 250);
+            }
+        };
+
+        let toastTimeout = null;
+        function displayToast(msg) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            const msgEl = document.getElementById('toast-message');
+            if (msgEl) msgEl.innerText = msg;
+            
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2000);
         }
+
+        function showToast(msg) {
+            const lower = msg.toLowerCase();
+            const isToastItem = 
+                lower.includes('water') || 
+                lower.includes('meal') || 
+                lower.includes('kcal') || 
+                lower.includes('vitals') || 
+                lower.includes('stat') || 
+                lower.includes('allocated') || 
+                lower.includes('logged') || 
+                lower.includes('rest timer') || 
+                lower.includes('routine sets') || 
+                lower.includes('recovery');
+
+            // Leave stat allocation, vitals, daily logged reps, and recovery updates as toasts
+            if (isToastItem && !lower.includes('key') && !lower.includes('penalty') && !lower.includes('warning') && !lower.includes('break') && !lower.includes('locked')) {
+                displayToast(msg);
+                return;
+            }
+
+            // Key requirements, prompts, gate access, and system directives use the popup modal
+            let icon = "fa-solid fa-bell";
+            let title = "SYSTEM NOTICE";
+            let isWarning = false;
+
+            if (msg.includes("WARNING") || msg.includes("PENALTY") || msg.includes("LOCKED") || msg.includes("denied") || msg.includes("FAILED") || msg.includes("ERROR") || msg.includes("INVALID")) {
+                icon = "fa-solid fa-triangle-exclamation";
+                title = "SYSTEM ALERT";
+                isWarning = true;
+            } else if (msg.includes("Key") || msg.includes("Gate") || msg.includes("UNLOCKED") || msg.includes("Unlocked")) {
+                icon = "fa-solid fa-key";
+                title = "GATE PROTOCOL";
+            } else if (msg.includes("XP") || msg.includes("LEVEL") || msg.includes("REWARD") || msg.includes("TITLES")) {
+                icon = "fa-solid fa-award";
+                title = "HUNTER PROGRESS";
+            } else if (msg.includes("SHADOW") || msg.includes("Shadow")) {
+                icon = "fa-solid fa-ghost";
+                title = "NECROMANCY";
+            }
+
+            window.showSystemPopup({
+                title,
+                message: msg,
+                icon,
+                type: 'alert',
+                isWarning
+            });
+        }
+
     </script>
 </body>
 </html>
