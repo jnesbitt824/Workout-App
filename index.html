@@ -288,7 +288,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let db, auth;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -370,6 +370,41 @@
                 }
             });
         }
+
+        
+        window.checkFirestoreUsernameAvailable = async function(rawName) {
+            if (!db) return true;
+            try {
+                const normalized = rawName.trim().toLowerCase();
+                const usernameRef = doc(db, `artifacts/${appId}/public/data/usernames`, normalized);
+                const snap = await getDoc(usernameRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (window.currentUser && data.uid && data.uid !== window.currentUser.uid) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (e) {
+                console.log("Firestore username availability check error:", e);
+                return true;
+            }
+        };
+
+        window.reserveFirestoreUsername = async function(rawName) {
+            if (!db || !window.currentUser) return;
+            try {
+                const normalized = rawName.trim().toLowerCase();
+                const usernameRef = doc(db, `artifacts/${appId}/public/data/usernames`, normalized);
+                await setDoc(usernameRef, {
+                    uid: window.currentUser.uid,
+                    name: rawName.trim(),
+                    reservedAt: new Date().toISOString()
+                }, { merge: true });
+            } catch(e) {
+                console.log("Firestore username reservation error:", e);
+            }
+        };
 
         window.damageGlobalRaid = async function(amount) {
             if (!window.globalRaidState || !window.globalRaidState.active || amount <= 0 || !db) return;
@@ -858,8 +893,12 @@
                     <h2 class="text-xl font-black text-white system-title mt-1">HUNTER REGISTRATION</h2>
                     <p class="text-xs text-slate-400 mt-2">Enter your permanent Hunter Alias to initialize the System.</p>
                     <div class="text-left space-y-1 bg-system-950 p-3 rounded-2xl border border-system-border mt-6">
-                        <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Hunter Alias</label>
-                        <input type="text" id="init-username-input" placeholder="e.g. Sung Jin-Woo" class="w-full bg-system-900 border border-system-border/80 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-system-neon transition-colors">
+                        <div class="flex justify-between items-center">
+                            <label class="text-[10px] text-system-neon font-bold uppercase tracking-wider block">Hunter Alias</label>
+                            <span id="init-name-status" class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">3-20 Chars • Unique</span>
+                        </div>
+                        <input type="text" id="init-username-input" oninput="handleUsernameInput(this.value)" placeholder="e.g. Sung Jin-Woo" maxlength="20" class="w-full bg-system-900 border border-system-border/80 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-system-neon transition-colors">
+                        <p id="init-name-hint" class="text-[9px] text-slate-500 pt-0.5">Permanent Hunter Association callsign. No two hunters may share an alias.</p>
                     </div>
                 </div>
                 <button onclick="nextInitStep(2)" class="btn-active w-full py-3 bg-system-800 hover:bg-system-700 text-white font-bold text-xs rounded-xl border border-system-border mt-6 cursor-pointer transition-colors">NEXT STEP <i class="fa-solid fa-arrow-right ml-1"></i></button>
@@ -2236,10 +2275,106 @@
         let tempInitRestDays = ['Wed', 'Sun'];
         let tempInitClass = 'male';
 
-        window.nextInitStep = function(step) {
+        
+        // --- UNIQUE HUNTER ALIAS VALIDATION SYSTEM ---
+        let usernameCheckDebounce = null;
+
+        window.isUsernameAvailable = async function(rawName) {
+            if (!rawName) return { available: false, reason: "Hunter Alias cannot be empty." };
+            const trimmed = rawName.trim();
+            if (trimmed.length < 3) return { available: false, reason: "Alias must be at least 3 characters long." };
+            if (trimmed.length > 20) return { available: false, reason: "Alias cannot exceed 20 characters." };
+
+            const validPattern = /^[a-zA-Z0-9 _-]+$/;
+            if (!validPattern.test(trimmed)) {
+                return { available: false, reason: "Alias may only contain letters, numbers, spaces, and hyphens." };
+            }
+
+            const normalized = trimmed.toLowerCase();
+
+            // 1. Check reserved Cloud Hunters Seed & active cloud registry
+            const cloudHunters = window.getCloudHunters ? window.getCloudHunters() : [];
+            const isCloudHunter = cloudHunters.some(h => (h.name || '').trim().toLowerCase() === normalized);
+            if (isCloudHunter) {
+                return { available: false, reason: `The Alias "${trimmed}" is already registered to a recognized Hunter Association officer.` };
+            }
+
+            // 2. Check local network registry of previously registered accounts
+            let registeredList = [];
+            try {
+                const saved = localStorage.getItem('solo_leveling_registered_usernames');
+                if (saved) registeredList = JSON.parse(saved);
+            } catch(e){}
+
+            const currentOwned = (window.appState && window.appState.hunterName ? window.appState.hunterName.trim().toLowerCase() : '');
+            const isLocalTaken = registeredList.some(entry => {
+                const entryNorm = (typeof entry === 'string' ? entry : entry.name || '').trim().toLowerCase();
+                return entryNorm === normalized && entryNorm !== currentOwned;
+            });
+            if (isLocalTaken) {
+                return { available: false, reason: `The Alias "${trimmed}" is already registered on this network.` };
+            }
+
+            // 3. Query live Firestore cloud registry if online
+            if (window.checkFirestoreUsernameAvailable) {
+                const firestoreAvail = await window.checkFirestoreUsernameAvailable(trimmed);
+                if (!firestoreAvail) {
+                    return { available: false, reason: `The Alias "${trimmed}" is already registered by another Hunter worldwide.` };
+                }
+            }
+
+            return { available: true };
+        };
+
+        window.handleUsernameInput = function(val) {
+            const statusEl = document.getElementById('init-name-status');
+            const inputEl = document.getElementById('init-username-input');
+            if (!statusEl || !inputEl) return;
+
+            const trimmed = (val || '').trim();
+            if (!trimmed) {
+                statusEl.className = "text-[9px] font-bold text-slate-500 uppercase tracking-wider";
+                statusEl.innerText = "3-20 Chars • Unique";
+                inputEl.classList.remove('border-rose-500', 'border-emerald-500');
+                inputEl.classList.add('border-system-border/80');
+                return;
+            }
+
+            statusEl.className = "text-[9px] font-bold text-system-neon uppercase tracking-wider animate-pulse";
+            statusEl.innerText = "Checking Registry...";
+
+            if (usernameCheckDebounce) clearTimeout(usernameCheckDebounce);
+            usernameCheckDebounce = setTimeout(async () => {
+                const check = await window.isUsernameAvailable(trimmed);
+                if (check.available) {
+                    statusEl.className = "text-[9px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1";
+                    statusEl.innerHTML = '<i class="fa-solid fa-check"></i> Available';
+                    inputEl.classList.remove('border-rose-500', 'border-system-border/80');
+                    inputEl.classList.add('border-emerald-500');
+                } else {
+                    statusEl.className = "text-[9px] font-black text-rose-400 uppercase tracking-wider flex items-center gap-1";
+                    statusEl.innerHTML = '<i class="fa-solid fa-xmark"></i> Unavailable';
+                    inputEl.classList.remove('border-emerald-500', 'border-system-border/80');
+                    inputEl.classList.add('border-rose-500');
+                }
+            }, 300);
+        };
+
+        window.nextInitStep = async function(step) {
             if (step === 2) {
                 const nameInput = document.getElementById('init-username-input').value.trim();
-                if (!nameInput) { showToast("Hunter Alias is required."); return; }
+                const check = await window.isUsernameAvailable(nameInput);
+                if (!check.available) {
+                    window.showSystemPopup({
+                        title: "ALIAS UNAVAILABLE",
+                        tag: "[ REGISTRATION CONFLICT ]",
+                        message: check.reason,
+                        icon: "fa-solid fa-user-xmark text-rose-500",
+                        type: "alert",
+                        isWarning: true
+                    });
+                    return;
+                }
                 document.getElementById('init-step-1').classList.add('hidden');
                 document.getElementById('init-step-2').classList.remove('hidden');
             } else if (step === 3) {
@@ -2307,6 +2442,23 @@
             const initInput = document.getElementById('init-username-input'); if (initInput && initInput.value.trim()) window.appState.hunterName = initInput.value.trim();
             window.appState.profileClass = cls; window.appState.restDays = [...tempInitRestDays]; window.appState.dailyQuestState.targets = generateDailyTargets(cls);
             window.appState.activeAura = (cls === 'female') ? 'pink' : 'default';
+
+            // Permanently reserve unique username in local & cloud registries
+            const registeredName = window.appState.hunterName;
+            if (registeredName) {
+                let regList = [];
+                try {
+                    const saved = localStorage.getItem('solo_leveling_registered_usernames');
+                    if (saved) regList = JSON.parse(saved);
+                } catch(e){}
+                if (!regList.some(r => (typeof r === 'string' ? r : r.name || '').toLowerCase() === registeredName.toLowerCase())) {
+                    regList.push({ name: registeredName, registeredAt: new Date().toISOString() });
+                    localStorage.setItem('solo_leveling_registered_usernames', JSON.stringify(regList));
+                }
+                if (window.reserveFirestoreUsername) {
+                    window.reserveFirestoreUsername(registeredName);
+                }
+            }
             localStorage.setItem('solo_leveling_initialized', 'true'); 
             localStorage.setItem('solo_leveling_features_seen', 'true'); 
             document.getElementById('init-modal').classList.add('hidden');
