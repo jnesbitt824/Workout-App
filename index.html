@@ -1820,7 +1820,7 @@
             try {
                 loadStateFromStorage(); checkDailyMidnightReset(); checkRestDayAutoCompletion(); checkTitleUnlocks(); applyTheme();
                 renderPlayerHUD(); renderDailyQuests(); renderGateSelection(); renderNutritionSection(); renderStatsSection(); renderShadows();
-                updateRPGNotifications(); checkDungeonBreakStatus(); checkBossRaidTimerStatus(); initNotifications();
+                updateRPGNotifications(); checkDungeonBreakStatus(); checkBossRaidTimerStatus(); initNotifications(); if (window.renderLeaderboard) window.renderLeaderboard(); if (window.renderGlobalRaid) window.renderGlobalRaid();
             } catch (err) { console.error("Soft recovery executed.", err); } finally { setTimeout(forceHideSplash, 1500); }
         }
 
@@ -2042,7 +2042,7 @@
                 window.appState.playerXP -= nextXP; window.appState.playerLevel += 1; window.appState.stats.unspentAP += 5; 
                 leveledUp = true; apGained = 5; resetCurrentRoutine(); updateRPGNotifications(); renderShadows();
             }
-            saveStateToStorage(); renderPlayerHUD(); if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard();
+            saveStateToStorage(); renderPlayerHUD(); if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard(); if (window.renderLeaderboard) window.renderLeaderboard();
             return { xpGained: finalAmount, leveledUp, newLevel: window.appState.playerLevel, apGained };
         }
 
@@ -3313,10 +3313,234 @@
             calHTML += '</div>'; container.innerHTML = calHTML;
         }
 
+        
+        // --- LIVE CLOUD LEADERBOARD & GLOBAL HUNTER NETWORK ---
+        const CLOUD_HUNTERS_SEED = [
+            { id: 'h_thomas', name: 'Thomas Andre', level: 58, xp: 28450, questsCompleted: 240, title: 'The Goliath', rankClass: 'S-RANK', classType: 'male', recentGain: '+420 XP' },
+            { id: 'h_liu', name: 'Liu Zhigang', level: 55, xp: 25100, questsCompleted: 215, title: 'Divine Dragon', rankClass: 'S-RANK', classType: 'male', recentGain: '+500 XP' },
+            { id: 'h_cha', name: 'Cha Hae-In', level: 45, xp: 18200, questsCompleted: 195, title: 'Sword Saint', rankClass: 'S-RANK', classType: 'female', recentGain: '+350 XP' },
+            { id: 'h_choi', name: 'Choi Jong-In', level: 40, xp: 14300, questsCompleted: 175, title: 'Flame Monarch', rankClass: 'S-RANK', classType: 'male', recentGain: '+310 XP' },
+            { id: 'h_baek', name: 'Baek Yoonho', level: 38, xp: 12600, questsCompleted: 160, title: 'Beast Monarch', rankClass: 'S-RANK', classType: 'male', recentGain: '+280 XP' }
+        ];
+
+        window.getCloudHunters = function() {
+            let list = [];
+            const saved = localStorage.getItem('solo_leveling_cloud_hunters');
+            if (saved) {
+                try { list = JSON.parse(saved); } catch(e){}
+            }
+            if (!list || list.length === 0) {
+                list = JSON.parse(JSON.stringify(CLOUD_HUNTERS_SEED));
+                localStorage.setItem('solo_leveling_cloud_hunters', JSON.stringify(list));
+            }
+            return list;
+        };
+
+        window.saveCloudHunters = function(list) {
+            localStorage.setItem('solo_leveling_cloud_hunters', JSON.stringify(list));
+        };
+
+        window.renderLeaderboard = function(firestoreHunters = null) {
+            const container = document.getElementById('leaderboard-container');
+            if (!container) return;
+
+            let allHunters = [];
+
+            if (firestoreHunters && Array.isArray(firestoreHunters) && firestoreHunters.length > 0) {
+                allHunters = [...firestoreHunters];
+            } else {
+                allHunters = window.getCloudHunters();
+            }
+
+            // Incorporate Current Player's Real Account State
+            const userTitleObj = window.TITLES_DB ? window.TITLES_DB.find(t => t.id === window.appState.equippedTitle) : null;
+            let userRank = 'E-RANK';
+            const lvl = window.appState.playerLevel || 1;
+            if (lvl >= 35) userRank = 'S-RANK';
+            else if (lvl >= 20) userRank = 'B-RANK';
+            else if (lvl >= 10) userRank = 'C-RANK';
+            else if (lvl >= 5) userRank = 'D-RANK';
+
+            const currentUserName = window.appState.hunterName || 'Sung Jin-Woo';
+            const currentUserEntry = {
+                id: 'user_local_account',
+                uid: window.currentUser ? window.currentUser.uid : 'user_local',
+                name: currentUserName,
+                level: lvl,
+                xp: window.appState.playerXP || 0,
+                questsCompleted: window.appState.completedQuestsCount || 0,
+                title: userTitleObj ? userTitleObj.name : 'Novice Hunter',
+                rankClass: userRank,
+                classType: window.appState.profileClass || 'male',
+                isUser: true,
+                recentGain: `+${window.appState.playerXP || 0} XP`
+            };
+
+            // Filter out old user entries if any and insert fresh state
+            allHunters = allHunters.filter(h => h.id !== 'user_local_account' && (window.currentUser ? h.uid !== window.currentUser.uid : true) && h.name.toLowerCase() !== currentUserName.toLowerCase());
+            allHunters.push(currentUserEntry);
+
+            // Sort by level descending, then XP descending
+            allHunters.sort((a, b) => {
+                const scoreA = (a.level || 1) * 100000 + (a.xp || 0);
+                const scoreB = (b.level || 1) * 100000 + (b.xp || 0);
+                return scoreB - scoreA;
+            });
+
+            // Find user position
+            const userRankIndex = allHunters.findIndex(h => h.isUser);
+            const userPosition = userRankIndex + 1;
+
+            // Display Top 3
+            const top3 = allHunters.slice(0, 3);
+
+            let html = top3.map((h, idx) => {
+                const pos = idx + 1;
+                const isSelf = h.isUser;
+                
+                let badgeColor = 'text-amber-400 bg-amber-500/10 border-amber-400/50 shadow-[0_0_10px_rgba(251,191,36,0.25)]';
+                let rankIcon = 'fa-crown text-amber-400';
+                let cardBorder = isSelf ? 'border-system-neon/80 shadow-[0_0_15px_rgba(56,189,248,0.25)] bg-system-950' : 'border-amber-400/40 bg-system-950/80';
+
+                if (pos === 2) {
+                    badgeColor = 'text-slate-200 bg-slate-400/10 border-slate-300/40 shadow-[0_0_10px_rgba(203,213,225,0.15)]';
+                    rankIcon = 'fa-star text-slate-300';
+                    cardBorder = isSelf ? 'border-system-neon/80 shadow-[0_0_15px_rgba(56,189,248,0.25)] bg-system-950' : 'border-slate-500/40 bg-system-950/80';
+                } else if (pos === 3) {
+                    badgeColor = 'text-amber-600 bg-amber-700/10 border-amber-600/40';
+                    rankIcon = 'fa-shield-halved text-amber-600';
+                    cardBorder = isSelf ? 'border-system-neon/80 shadow-[0_0_15px_rgba(56,189,248,0.25)] bg-system-950' : 'border-amber-700/30 bg-system-950/80';
+                }
+
+                return `
+                    <div class="border ${cardBorder} rounded-xl p-3 flex items-center justify-between transition-all hover:border-system-neon/50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg border ${badgeColor} flex items-center justify-center font-black text-xs shrink-0">
+                                <i class="fa-solid ${rankIcon}"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-black text-white text-xs uppercase tracking-wide truncate max-w-[130px]">${h.name}</span>
+                                    ${isSelf ? '<span class="bg-system-neon/20 border border-system-neon/60 text-system-neon text-[8px] font-black px-1 rounded uppercase">YOU</span>' : ''}
+                                </div>
+                                <div class="text-[9.5px] text-slate-400 font-bold uppercase mt-0.5 flex items-center gap-1.5">
+                                    <span class="text-amber-400/90">${h.title || 'Hunter'}</span>
+                                    <span class="text-slate-600">•</span>
+                                    <span class="text-emerald-400 font-bold">${h.recentGain || '+250 XP'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-xs font-black text-white">LVL <strong class="text-system-glow text-sm">${h.level}</strong></div>
+                            <div class="text-[9px] text-slate-400 font-bold tracking-wider">${(h.xp || 0).toLocaleString()} XP</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // If user is not in top 3, show their standing below
+            if (userPosition > 3) {
+                html += `
+                    <div class="mt-2 pt-2 border-t border-system-border/40">
+                        <div class="border border-system-neon/60 bg-system-neon/10 rounded-xl p-2.5 flex items-center justify-between shadow-[0_0_10px_rgba(56,189,248,0.15)]">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="text-[10px] font-black bg-system-950 border border-system-neon text-system-neon px-2 py-0.5 rounded-md">#${userPosition}</span>
+                                <div>
+                                    <span class="text-xs font-black text-white uppercase">${currentUserName} <span class="text-[8px] text-system-neon uppercase">[YOU]</span></span>
+                                    <div class="text-[9px] text-slate-400 font-bold">${currentUserEntry.title} • ${currentUserEntry.recentGain}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-system-glow">LVL ${lvl}</span>
+                                <div class="text-[9px] text-slate-400 font-bold">${(window.appState.playerXP || 0).toLocaleString()} XP</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        };
+
+        window.forceSyncLeaderboard = async function() {
+            const btn = document.querySelector('button[onclick="forceSyncLeaderboard()"] i');
+            if (btn) btn.classList.add('fa-spin');
+
+            // Sync user data to Firestore if connected
+            if (window.syncHunterToLeaderboard) {
+                try { await window.syncHunterToLeaderboard(); } catch(e){}
+            }
+
+            // Simulate live cloud XP gains for other hunters
+            const hunters = window.getCloudHunters();
+            const randomIdx = Math.floor(Math.random() * hunters.length);
+            const xpBoost = Math.floor(Math.random() * 220) + 80;
+            hunters[randomIdx].xp = (hunters[randomIdx].xp || 0) + xpBoost;
+            hunters[randomIdx].recentGain = `+${xpBoost} XP`;
+            
+            if (hunters[randomIdx].xp >= (hunters[randomIdx].level * 500)) {
+                hunters[randomIdx].level += 1;
+            }
+
+            window.saveCloudHunters(hunters);
+
+            setTimeout(() => {
+                window.renderLeaderboard();
+                if (btn) btn.classList.remove('fa-spin');
+                showToast("Hunter Association cloud synced!");
+            }, 600);
+        };
+
+        window.renderGlobalRaid = function() {
+            const banner = document.getElementById('global-raid-banner');
+            if (!banner) return;
+            
+            if (!window.globalRaidState) {
+                window.globalRaidState = {
+                    active: true,
+                    name: "Kamish's Shadow (Global Raid)",
+                    maxHp: 25000,
+                    hp: 23450,
+                    participants: {}
+                };
+            }
+            
+            if (window.globalRaidState && window.globalRaidState.active) {
+                banner.classList.remove('hidden');
+                const nameEl = document.getElementById('global-raid-name');
+                const hpTextEl = document.getElementById('global-raid-hp-text');
+                const hpBarEl = document.getElementById('global-raid-hp-bar');
+                
+                if (nameEl) nameEl.innerText = window.globalRaidState.name || "Kamish's Shadow";
+                const maxHp = window.globalRaidState.maxHp || 25000;
+                const hp = Math.max(0, window.globalRaidState.hp !== undefined ? window.globalRaidState.hp : 23450);
+                if (hpTextEl) hpTextEl.innerText = `${hp.toLocaleString()} / ${maxHp.toLocaleString()}`;
+                if (hpBarEl) hpBarEl.style.width = `${Math.min(100, (hp / maxHp) * 100)}%`;
+            } else {
+                banner.classList.add('hidden');
+            }
+        };
+
+        // Live Cloud XP Ticker every 45s
+        setInterval(() => {
+            const hunters = window.getCloudHunters();
+            if (hunters && hunters.length > 0) {
+                const idx = Math.floor(Math.random() * hunters.length);
+                const gain = Math.floor(Math.random() * 150) + 50;
+                hunters[idx].xp = (hunters[idx].xp || 0) + gain;
+                hunters[idx].recentGain = `+${gain} XP`;
+                window.saveCloudHunters(hunters);
+                if (document.getElementById('tab-stats') && !document.getElementById('tab-stats').classList.contains('hidden')) {
+                    window.renderLeaderboard();
+                }
+            }
+        }, 45000);
+
         function renderStatsSection() {
             document.getElementById('stat-total-quests').innerText = window.appState.completedQuestsCount || 0; document.getElementById('stat-total-workouts').innerText = (window.appState.history || []).length;
             const totalVol = (window.appState.history || []).reduce((acc, curr) => acc + (curr.volume || 0), 0); document.getElementById('stat-total-volume').innerText = totalVol.toLocaleString();
             renderWeeklyCalendar();
+            if (window.renderLeaderboard) window.renderLeaderboard();
             const container = document.getElementById('workout-history-list'); container.innerHTML = '';
             if (!window.appState.history || window.appState.history.length === 0) { container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">No saved dungeon records.</div>`; return; }
             window.appState.history.forEach(item => {
