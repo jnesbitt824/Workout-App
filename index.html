@@ -3406,12 +3406,35 @@
                 const isThisCleared = window.appState.clearedGates[g.id] === true;
                 const isTimerActive = !isThisCleared && window.appState.gateTimers && window.appState.gateTimers[g.id] && window.appState.gateTimers[g.id].active && Date.now() < window.appState.gateTimers[g.id].expiresAt;
                 const state = isRest ? 'rest' : isThisCleared ? (hasBlueKey ? 'key' : 'locked') : (isTimerActive ? 'active' : 'open');
-                const currentProgress = getGateProgress(g.id);
-                const progress = isThisCleared ? 100 : currentProgress;
+                
+                // Actual progression reached
+                const actualProgress = getGateProgress(g.id);
+                const isFullyCompleted = isThisCleared && actualProgress === 100;
+                const progress = actualProgress;
 
-                const statusText  = { rest: 'LOCKED', locked: 'COMPLETED', key: 'USE BLUE KEY', open: 'ENTER', active: 'IN COMBAT' }[state];
-                const statusIcon  = { rest: 'fa-lock text-slate-500', locked: 'fa-circle-check text-slate-500', key: 'fa-key text-blue-key key-icon-pulse', open: 'fa-chevron-right text-system-neon', active: 'fa-stopwatch text-sky-400 animate-pulse' }[state];
-                const statusColor = { rest: 'text-slate-500', locked: 'text-slate-500', key: 'text-slate-400', open: 'text-system-neon', active: 'text-sky-400' }[state];
+                const statusText = {
+                    rest: 'LOCKED',
+                    locked: isFullyCompleted ? 'COMPLETED' : 'LOCKED',
+                    key: 'USE BLUE KEY',
+                    open: 'ENTER',
+                    active: 'IN COMBAT'
+                }[state];
+
+                const statusIcon = {
+                    rest: 'fa-lock text-slate-500',
+                    locked: isFullyCompleted ? 'fa-circle-check text-emerald-400' : 'fa-lock text-slate-500',
+                    key: 'fa-key text-blue-key key-icon-pulse',
+                    open: 'fa-chevron-right text-system-neon',
+                    active: 'fa-stopwatch text-sky-400 animate-pulse'
+                }[state];
+
+                const statusColor = {
+                    rest: 'text-slate-500',
+                    locked: isFullyCompleted ? 'text-emerald-400' : 'text-slate-500',
+                    key: 'text-slate-400',
+                    open: 'text-system-neon',
+                    active: 'text-sky-400'
+                }[state];
 
                 const isGateOpen = state === 'open' || state === 'active';
                 const iconColor = isGateOpen ? g.color : 'text-slate-500';
@@ -3428,15 +3451,22 @@
                 const onClickAction = `handleGateClick('${g.id}')`;
                 const rankHtml = isTimerActive ? `${g.rank} • <span id="gate-timer-${g.id}" class="text-sky-400 font-black">40:00</span>` : g.rank;
 
-                html += `<div id="gate-card-${g.id}" onclick="${onClickAction}" class="bg-system-900 border ${wrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden gap-3"><div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border border-system-border/80 shadow-inner"><i class="fa-solid ${g.icon} ${iconColor} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${g.name}</h3><span class="text-[10px] ${rankColor} font-bold tracking-widest uppercase">${rankHtml}</span></div></div><div class="text-right"><i class="fa-solid ${statusIcon}"></i><div class="text-[9px] ${statusColor} mt-1 font-bold">${statusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${progress > 0 ? (isThisCleared ? 'text-emerald-400 font-black' : 'text-system-neon font-black') : 'text-slate-500'}">${progress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${isThisCleared ? 'bg-emerald-500' : (progress > 0 ? 'bg-gradient-to-r from-sky-500 to-system-neon' : 'bg-slate-700')} transition-all duration-500" style="width: ${progress}%"></div></div></div></div>`;
+                // Color of progress text & bar
+                const progressTextColor = isFullyCompleted ? 'text-emerald-400 font-black' : (progress > 0 ? (isThisCleared ? 'text-slate-300 font-bold' : 'text-system-neon font-black') : 'text-slate-500');
+                const progressBarBg = isFullyCompleted ? 'bg-emerald-500' : (progress > 0 ? (isThisCleared ? 'bg-slate-600' : 'bg-gradient-to-r from-sky-500 to-system-neon') : 'bg-slate-700');
+
+                html += `<div id="gate-card-${g.id}" onclick="${onClickAction}" class="bg-system-900 border ${wrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden gap-3"><div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border border-system-border/80 shadow-inner"><i class="fa-solid ${g.icon} ${iconColor} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${g.name}</h3><span class="text-[10px] ${rankColor} font-bold tracking-widest uppercase">${rankHtml}</span></div></div><div class="text-right"><i class="fa-solid ${statusIcon}"></i><div class="text-[9px] ${statusColor} mt-1 font-bold">${statusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${progressTextColor}">${progress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${progressBarBg} transition-all duration-500" style="width: ${progress}%"></div></div></div></div>`;
             });
 
             if (!isNoEq) {
                 const hasRedKey = (window.appState.inventory.red_key || 0) > 0;
                 const bossCleared = window.appState.bossClearedToday;
                 const bossUnlocked = window.appState.bossUnlocked && !bossCleared;
-                const bossProgress = bossCleared ? 100 : getGateProgress('boss');
                 
+                const actualBossProgress = getGateProgress('boss');
+                const isBossFullyCompleted = bossCleared && actualBossProgress === 100;
+                const bossProgress = actualBossProgress;
+
                 let bState = 'needs_key';
                 if (isRest) bState = 'rest';
                 else if (bossUnlocked) bState = 'unlocked';
@@ -3452,7 +3482,7 @@
                     key_reentry: 'USE RED KEY',
                     key_unlock: 'USE RED KEY',
                     needs_key: 'NEEDS RED KEY',
-                    locked_cleared: 'COMPLETED'
+                    locked_cleared: isBossFullyCompleted ? 'COMPLETED' : 'LOCKED'
                 }[bState];
 
                 const bStatusIcon = {
@@ -3461,7 +3491,7 @@
                     key_reentry: 'fa-key text-rose-500 key-icon-pulse-red',
                     key_unlock: 'fa-key text-rose-500 key-icon-pulse-red',
                     needs_key: 'fa-key text-slate-500',
-                    locked_cleared: 'fa-circle-check text-slate-500'
+                    locked_cleared: isBossFullyCompleted ? 'fa-circle-check text-emerald-400' : 'fa-lock text-slate-500'
                 }[bState];
 
                 const bStatusColor = {
@@ -3470,10 +3500,9 @@
                     key_reentry: 'text-slate-400',
                     key_unlock: 'text-slate-400',
                     needs_key: 'text-slate-500',
-                    locked_cleared: 'text-slate-500'
+                    locked_cleared: isBossFullyCompleted ? 'text-emerald-400' : 'text-slate-500'
                 }[bState];
 
-                const isInteractive = bState === 'unlocked' || bState === 'key_unlock' || bState === 'key_reentry';
                 const bWrapClass = {
                     rest: 'border-system-border/40 gate-locked',
                     unlocked: 'border-system-boss boss-glow cursor-pointer btn-active',
@@ -3485,7 +3514,7 @@
 
                 const currentBossName = getPresetRoutines(1, 'male').boss.title.split(' (')[0].toUpperCase();
 
-                html += `<div class="pt-3 border-t border-system-border/50 mt-3"><div id="gate-card-boss" onclick="handleBossGateClick()" class="bg-system-900 border ${bWrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors relative overflow-hidden gap-3">${isBossFullyUnlocked ? '<div class="absolute inset-0 bg-gradient-to-r from-rose-950/20 to-transparent"></div>' : ''}<div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border ${isBossFullyUnlocked ? 'border-system-boss' : 'border-system-border/80'} shadow-inner"><i class="fa-solid fa-skull ${isBossFullyUnlocked ? 'text-system-boss' : 'text-slate-500'} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${currentBossName}</h3><span class="text-[10px] ${isBossFullyUnlocked ? 'text-system-boss' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Boss Room${isTimerActive ? ' • <span id="boss-gate-timer-display" class="text-rose-400 font-black">30:00</span>' : ''}</span></div></div><div class="text-right"><i class="fa-solid ${bStatusIcon}"></i><div class="text-[9px] ${bStatusColor} mt-1 font-bold">${bStatusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${bossProgress > 0 ? (bossCleared ? 'text-emerald-400 font-black' : 'text-rose-400 font-black') : 'text-slate-500'}">${bossProgress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${bossCleared ? 'bg-emerald-500' : (bossProgress > 0 ? 'bg-gradient-to-r from-rose-600 to-rose-400' : 'bg-slate-700')} transition-all duration-500" style="width: ${bossProgress}%"></div></div></div></div><p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate consumes a Red Key to enter or re-open (Drops from normal gates).</p></div>`;
+                html += `<div class="pt-3 border-t border-system-border/50 mt-3"><div id="gate-card-boss" onclick="handleBossGateClick()" class="bg-system-900 border ${bWrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors relative overflow-hidden gap-3">${isBossFullyUnlocked ? '<div class="absolute inset-0 bg-gradient-to-r from-rose-950/20 to-transparent"></div>' : ''}<div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border ${isBossFullyUnlocked ? 'border-system-boss' : 'border-system-border/80'} shadow-inner"><i class="fa-solid fa-skull ${isBossFullyUnlocked ? 'text-system-boss' : 'text-slate-500'} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${currentBossName}</h3><span class="text-[10px] ${isBossFullyUnlocked ? 'text-system-boss' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Boss Room${isTimerActive ? ' • <span id="boss-gate-timer-display" class="text-rose-400 font-black">30:00</span>' : ''}</span></div></div><div class="text-right"><i class="fa-solid ${bStatusIcon}"></i><div class="text-[9px] ${bStatusColor} mt-1 font-bold">${bStatusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${isBossFullyCompleted ? 'text-emerald-400 font-black' : (bossProgress > 0 ? (bossCleared ? 'text-slate-300 font-bold' : 'text-rose-400 font-black') : 'text-slate-500')}">${bossProgress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${isBossFullyCompleted ? 'bg-emerald-500' : (bossProgress > 0 ? (bossCleared ? 'bg-slate-600' : 'bg-gradient-to-r from-rose-600 to-rose-400') : 'bg-slate-700')} transition-all duration-500" style="width: ${bossProgress}%"></div></div></div></div><p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate consumes a Red Key to enter or re-open (Drops from normal gates).</p></div>`;
             }
             grid.innerHTML = html;
         }
@@ -3503,8 +3532,6 @@
         }
 
         function getGateProgress(key) {
-            if (key === 'boss' && window.appState.bossClearedToday) return 100;
-            if (window.appState.clearedGates && window.appState.clearedGates[key] === true) return 100;
             if (!window.appState.gateRoutines || !window.appState.gateRoutines[key] || !window.appState.gateRoutines[key].exercises) {
                 return 0;
             }
@@ -3628,7 +3655,7 @@
                 const isLocked = (isRest && !isBreak) || (isBoss ? window.appState.bossClearedToday : (isBreak ? !window.appState.dungeonBreak.active : isNormalGateCleared));
 
                 if (isLocked) {
-                    const label = isRest ? "REST DAY: DUNGEONS GREYED OUT" : "GATE CLEARED FOR TODAY (LOCKED)";
+                    const currentProg = getGateProgress(window.appState.activeRoutineKey); const isFullyDone = currentProg === 100; const label = isRest ? "REST DAY: DUNGEONS GREYED OUT" : (isFullyDone ? "GATE CLEARED FOR TODAY (LOCKED)" : `GATE LOCKED (${currentProg}% REACHED)`);
                     clearBtn.className = "w-full py-3.5 bg-system-850 border border-system-border text-slate-500 font-black text-xs rounded-xl flex items-center justify-center space-x-2 tracking-wider font-mono uppercase cursor-not-allowed opacity-60";
                     clearBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>${label}</span>`; clearBtn.onclick = null;
                     const rstBtn = document.getElementById('routine-reset-btn');
@@ -3758,11 +3785,6 @@
             }
 
             window.appState.history.unshift({ id: Date.now(), date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), title: activeData.title, completedSets: totalCompletedSets, volume: sessionVolume });
-            // Clean-reset this gate's routine sets in gateRoutines for the next run
-            const clearedKey = window.appState.activeRoutineKey;
-            const presets = getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass);
-            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
-            window.appState.gateRoutines[clearedKey] = JSON.parse(JSON.stringify(presets[clearedKey] || presets.pull));
 
             if (sessionVolume > 0 && window.globalRaidState && window.globalRaidState.active && window.damageGlobalRaid) {
                 window.damageGlobalRaid(sessionVolume);
