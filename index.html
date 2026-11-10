@@ -541,13 +541,13 @@
                 </div>
             </div>
 
-            <!-- 30-Minute Timer Protocol Warning -->
+            <!-- 40-Minute Timer Protocol Warning -->
             <div class="bg-sky-950/50 border border-sky-500/50 rounded-xl p-3 text-left flex items-start space-x-2.5">
                 <i class="fa-solid fa-clock text-sky-400 text-base mt-0.5 animate-pulse"></i>
                 <div>
-                    <span class="text-[9.5px] text-sky-400 font-black uppercase tracking-widest block">30-MINUTE COMBAT TIMER</span>
+                    <span class="text-[9.5px] text-sky-400 font-black uppercase tracking-widest block">40-MINUTE COMBAT TIMER</span>
                     <p class="text-[10.5px] text-sky-200/90 leading-tight mt-0.5 font-bold">
-                        Entering this gate activates an official 30-minute completion timer (30:00). Clear all workout sets before time expires to claim dungeon rewards (+50 XP).
+                        Entering this gate activates an official 40-minute completion timer (40:00). Clear all workout sets before time expires to claim dungeon rewards (+50 XP).
                     </p>
                 </div>
             </div>
@@ -558,7 +558,7 @@
                     CANCEL
                 </button>
                 <button onclick="startGateRaid()" class="btn-active flex-1 py-3 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl shadow-lg cursor-pointer transition-colors uppercase tracking-wider flex items-center justify-center gap-1.5">
-                    <span>ENTER (START 30M)</span> <i class="fa-solid fa-arrow-right text-xs"></i>
+                    <span>ENTER (START 40M)</span> <i class="fa-solid fa-arrow-right text-xs"></i>
                 </button>
             </div>
         </div>
@@ -630,9 +630,9 @@
             <div class="bg-rose-950/60 border border-rose-500/70 rounded-2xl p-3 text-left flex items-start space-x-3">
                 <i class="fa-solid fa-stopwatch text-rose-400 text-lg mt-0.5 animate-pulse"></i>
                 <div>
-                    <span class="text-[10px] text-rose-400 font-black uppercase tracking-widest block">20-MINUTE TIMEOUT PROTOCOL</span>
+                    <span class="text-[10px] text-rose-400 font-black uppercase tracking-widest block">30-MINUTE TIMEOUT PROTOCOL</span>
                     <p class="text-[10.5px] text-rose-200/90 leading-tight mt-0.5 font-bold">
-                        Continuing will start an official 20-minute combat timer. All workout sets must be cleared before time expires to claim rewards and avoid a -25 XP defeat penalty.
+                        Continuing will start an official 30-minute combat timer. All workout sets must be cleared before time expires to claim rewards and avoid a -25 XP defeat penalty.
                     </p>
                 </div>
             </div>
@@ -640,7 +640,7 @@
             <!-- Action Button -->
             <button id="boss-briefing-start-btn" onclick="startBossRaid()" class="btn-active w-full py-4 mt-auto bg-gradient-to-r from-rose-700 via-rose-600 to-amber-500 text-white font-black text-xs rounded-xl uppercase tracking-widest shadow-[0_0_25px_rgba(225,29,72,0.6)] cursor-pointer flex items-center justify-center gap-2 border border-rose-400/50">
                 <i class="fa-solid fa-swords text-sm"></i>
-                <span>COMMENCE RAID (START 20M TIMER)</span>
+                <span>COMMENCE RAID (START 30M TIMER)</span>
             </button>
         </div>
     </div>
@@ -1352,7 +1352,7 @@
                         </div>
                         <div class="text-right">
                             <span class="text-[8px] text-rose-300 font-bold uppercase block tracking-wider">TIME REMAINING</span>
-                            <span id="boss-countdown-display" class="text-sm font-black text-white bg-rose-600 px-2 py-0.5 rounded shadow-sm">20:00</span>
+                            <span id="boss-countdown-display" class="text-sm font-black text-white bg-rose-600 px-2 py-0.5 rounded shadow-sm">30:00</span>
                         </div>
                     </div>
                 </div>
@@ -1364,7 +1364,7 @@
                             <h2 id="routine-title" class="font-bold text-sm text-slate-100">Pull & Arm Hypertrophy</h2>
                             <p id="routine-desc" class="text-[11px] text-slate-400">Targeting Lats, Biceps with Pull-Up Bar & 2x 10lb Dumbbells.</p>
                         </div>
-                        <button onclick="resetCurrentRoutine()" class="text-xs text-system-neon hover:text-white bg-system-850 px-2.5 py-1 rounded-md border border-system-border cursor-pointer">
+                        <button id="routine-reset-btn" onclick="resetCurrentRoutine()" class="text-xs text-system-neon hover:text-white bg-system-850 px-2.5 py-1 rounded-md border border-system-border cursor-pointer">
                             <i class="fa-solid fa-rotate-right mr-1"></i>Reset
                         </button>
                     </div>
@@ -1568,28 +1568,28 @@
                 subtitle: "High Speed & Agility Combat Trial",
                 icon: "fa-paw",
                 lore: "A monstrous apex predator stalking the blood-soaked lower chambers of the subterranean catacombs. Renowned for its blinding dash speed and razor-honed adamantine fangs, this beast tears through steel-plated vanguard armor in seconds. Survival demands lightning reflexes, explosive bodyweight cadence, and relentless cardiovascular pace.",
-                timeLimitMs: 20 * 60 * 1000
+                timeLimitMs: 30 * 60 * 1000
             },
             golem: {
                 name: "Ancient Stone Golem",
                 subtitle: "Isometric Fortitude & Armor Trial",
                 icon: "fa-shield-halved",
                 lore: "An ancient arcane monolith forged from enchanted dungeon bedrock and condensed mana veins. Its near-indestructible carapace neutralizes conventional attacks, crushing hunters under sheer compressive force. Only hunters capable of enduring prolonged isometric tension and unflinching core stability can shatter its core.",
-                timeLimitMs: 20 * 60 * 1000
+                timeLimitMs: 30 * 60 * 1000
             },
             kasaka: {
                 name: "Blue-Poison Fang Kasaka",
                 subtitle: "Endurance & Acidic Venom Trial",
                 icon: "fa-dragon",
                 lore: "A legendary giant serpent cloaked in toxic cerulean scales, lurking within the flooded subterranean passages of Hapjeong Station. Its venomous mist erodes oxygen capacity and rapidly drains muscular stamina. To defeat Kasaka, a hunter must outlast its suffocating coils through supreme whole-body conditioning.",
-                timeLimitMs: 20 * 60 * 1000
+                timeLimitMs: 30 * 60 * 1000
             },
             igris: {
                 name: "Blood-Red Commander Igris",
                 subtitle: "Martial Mastery & Power Trial",
                 icon: "fa-chess-knight",
                 lore: "The supreme crimson knight standing perpetual vigil before the empty throne room of the Job Change Quest. Brandishing a massive two-handed greatsword with transcendent precision and chilling composure, Igris represents the ultimate crucible of strength, requiring total mastery over mind, spirit, and muscle.",
-                timeLimitMs: 20 * 60 * 1000
+                timeLimitMs: 30 * 60 * 1000
             }
         };
 
@@ -1608,27 +1608,77 @@
                 if (Date.now() > window.appState.bossRaidTimer.expiresAt) {
                     window.appState.bossRaidTimer.active = false;
                     window.appState.bossUnlocked = false;
+                    window.appState.bossClearedToday = true; // Auto-lock the boss gate
                     window.appState.bossBriefingSeen = false;
-                    window.appState.playerXP = Math.max(0, window.appState.playerXP - 25);
                     if (bossTimerInterval) clearInterval(bossTimerInterval);
+
+                    // Calculate completed sets and reward whatever XP gained
+                    const routine = getGateRoutineData('boss');
+                    let totalSets = 0;
+                    let completedSets = 0;
+                    let sessionVolume = 0;
+
+                    if (routine && routine.exercises) {
+                        routine.exercises.forEach(ex => {
+                            if (ex.sets) {
+                                ex.sets.forEach(s => {
+                                    totalSets++;
+                                    if (s.done) {
+                                        completedSets++;
+                                        const numericWt = parseFloat(s.wt) || 0;
+                                        const numericReps = parseInt(s.reps) || 0;
+                                        if (!ex.name.includes('(Secs)') && ex.wt !== 'Miles') sessionVolume += (numericWt * numericReps);
+                                        else sessionVolume += numericReps;
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    const completionPct = totalSets > 0 ? (completedSets / totalSets) : 0;
+                    const baseXp = 150;
+                    const xpAmount = Math.floor(baseXp * completionPct);
+                    const xpResult = awardXP(xpAmount);
+
+                    if (completedSets > 0) {
+                        window.appState.history.unshift({
+                            id: Date.now(),
+                            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                            title: (routine.title || "Boss Raid") + " (Time Expired)",
+                            completedSets: completedSets,
+                            volume: sessionVolume
+                        });
+                    }
+
+                    if (sessionVolume > 0 && window.globalRaidState && window.globalRaidState.active && window.damageGlobalRaid) {
+                        window.damageGlobalRaid(sessionVolume);
+                    }
+
+                    const newTitles = checkTitleUnlocks();
                     saveStateToStorage();
                     updateRPGNotifications();
                     renderPlayerHUD();
-                    
+
                     const activeScreen = document.getElementById('active-dungeon-screen');
-                    if (activeScreen && !activeScreen.classList.contains('hidden') && window.appState.activeRoutineKey === 'boss') {
-                        returnToGateSelect(true);
-                    } else {
-                        renderGateSelection();
+                    const isInsideBossRoom = activeScreen && !activeScreen.classList.contains('hidden') && window.appState.activeRoutineKey === 'boss';
+
+                    if (isInsideBossRoom) {
+                        renderActiveRoutine(); // Instantly locks all sets and inputs
                     }
+                    renderGateSelection();
 
                     window.showSystemPopup({
-                        title: "S-RANK RAID FAILED",
-                        tag: "[ RAID TIMEOUT ]",
-                        message: "The 20-minute combat timer has expired! The S-Rank Boss has sealed the gate. You suffered a -25 XP defeat penalty.",
+                        title: "S-RANK TIME EXPIRED",
+                        tag: "[ BOSS GATE SEALED ]",
+                        message: `The 30-minute combat timer has expired! The S-Rank Boss chamber has sealed for the day. You completed ${completedSets}/${totalSets} sets and were awarded +${xpResult.xpGained} XP.`,
                         icon: "fa-solid fa-skull text-rose-500",
                         type: "alert",
-                        isWarning: true
+                        isWarning: true,
+                        onConfirm: () => {
+                            if (isInsideBossRoom) {
+                                returnToGateSelect(false);
+                            }
+                        }
                     });
                 } else {
                     startBossTimerInterval();
@@ -1669,38 +1719,92 @@
         }
 
         
-        // --- 30-MINUTE NORMAL GATE TIMER & BRIEFING ENGINE ---
+        // --- 40-MINUTE NORMAL GATE TIMER & BRIEFING ENGINE ---
         window.window.pendingNormalGateId = null;
         let combatTimerGlobalInterval = null;
 
         function checkGateTimersStatus() {
             if (!window.appState.gateTimers) return;
-            let anyExpired = false;
             Object.keys(window.appState.gateTimers).forEach(key => {
                 const timer = window.appState.gateTimers[key];
                 if (timer && timer.active && Date.now() > timer.expiresAt) {
                     timer.active = false;
-                    anyExpired = true;
                     
-                    const activeScreen = document.getElementById('active-dungeon-screen');
-                    if (activeScreen && !activeScreen.classList.contains('hidden') && window.appState.activeRoutineKey === key) {
-                        returnToGateSelect(true);
+                    // Auto-lock the gate
+                    if (!window.appState.clearedGates) window.appState.clearedGates = {};
+                    window.appState.clearedGates[key] = true;
+
+                    // Calculate completed sets and reward whatever XP gained
+                    const routine = getGateRoutineData(key);
+                    let totalSets = 0;
+                    let completedSets = 0;
+                    let sessionVolume = 0;
+
+                    if (routine && routine.exercises) {
+                        routine.exercises.forEach(ex => {
+                            if (ex.sets) {
+                                ex.sets.forEach(s => {
+                                    totalSets++;
+                                    if (s.done) {
+                                        completedSets++;
+                                        const numericWt = parseFloat(s.wt) || 0;
+                                        const numericReps = parseInt(s.reps) || 0;
+                                        if (!ex.name.includes('(Secs)') && ex.wt !== 'Miles') sessionVolume += (numericWt * numericReps);
+                                        else sessionVolume += numericReps;
+                                    }
+                                });
+                            }
+                        });
                     }
-                    
+
+                    const completionPct = totalSets > 0 ? (completedSets / totalSets) : 0;
+                    const baseXp = 50;
+                    const xpAmount = Math.floor(baseXp * completionPct);
+                    const xpResult = awardXP(xpAmount);
+
+                    if (completedSets > 0) {
+                        if (window.appState.lifetimeStats) window.appState.lifetimeStats.gatesCleared++;
+                        window.appState.history.unshift({
+                            id: Date.now(),
+                            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                            title: (routine.title || "Dungeon Gate") + " (Time Expired)",
+                            completedSets: completedSets,
+                            volume: sessionVolume
+                        });
+                    }
+
+                    if (sessionVolume > 0 && window.globalRaidState && window.globalRaidState.active && window.damageGlobalRaid) {
+                        window.damageGlobalRaid(sessionVolume);
+                    }
+
+                    const newTitles = checkTitleUnlocks();
+                    saveStateToStorage();
+                    updateRPGNotifications();
+                    renderPlayerHUD();
+
+                    const activeScreen = document.getElementById('active-dungeon-screen');
+                    const isInsideThisGate = activeScreen && !activeScreen.classList.contains('hidden') && window.appState.activeRoutineKey === key;
+
+                    if (isInsideThisGate) {
+                        renderActiveRoutine(); // Instantly locks all sets and inputs
+                    }
+                    renderGateSelection();
+
                     window.showSystemPopup({
                         title: "GATE TIME EXPIRED",
-                        tag: "[ 30-MINUTE PROTOCOL TIMEOUT ]",
-                        message: "The 30-minute combat timer for this dungeon gate has expired! Take a rest and try again.",
+                        tag: "[ GATE AUTO-LOCKED ]",
+                        message: `The 40-minute combat timer has expired! This gate has sealed for the day. You completed ${completedSets}/${totalSets} sets and were awarded +${xpResult.xpGained} XP.`,
                         icon: "fa-solid fa-clock text-sky-400",
                         type: "alert",
-                        isWarning: true
+                        isWarning: true,
+                        onConfirm: () => {
+                            if (isInsideThisGate) {
+                                returnToGateSelect(false);
+                            }
+                        }
                     });
                 }
             });
-            if (anyExpired) {
-                saveStateToStorage();
-                renderGateSelection();
-            }
         }
 
         function startCombatTimerGlobalInterval() {
@@ -1805,7 +1909,7 @@
             if (!window.appState.gateTimers[gateId] || !window.appState.gateTimers[gateId].active || Date.now() > window.appState.gateTimers[gateId].expiresAt) {
                 window.appState.gateTimers[gateId] = {
                     active: true,
-                    expiresAt: Date.now() + (30 * 60 * 1000)
+                    expiresAt: Date.now() + (40 * 60 * 1000)
                 };
                 saveStateToStorage();
             }
@@ -1837,7 +1941,7 @@
                     const secs = Math.floor((remaining % 60000) / 1000);
                     startBtn.innerHTML = `<i class="fa-solid fa-swords text-sm"></i><span>RESUME RAID (${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} LEFT)</span>`;
                 } else {
-                    startBtn.innerHTML = `<i class="fa-solid fa-swords text-sm"></i><span>COMMENCE RAID (START 20M TIMER)</span>`;
+                    startBtn.innerHTML = `<i class="fa-solid fa-swords text-sm"></i><span>COMMENCE RAID (START 30M TIMER)</span>`;
                 }
             }
 
@@ -1856,7 +1960,7 @@
             if (!window.appState.bossRaidTimer || !window.appState.bossRaidTimer.active || Date.now() > window.appState.bossRaidTimer.expiresAt) {
                 window.appState.bossRaidTimer = {
                     active: true,
-                    expiresAt: Date.now() + (20 * 60 * 1000)
+                    expiresAt: Date.now() + (30 * 60 * 1000)
                 };
             }
             saveStateToStorage();
@@ -2136,7 +2240,7 @@
             if (window.appState.bossUnlocked === undefined) window.appState.bossUnlocked = false;
             if (window.appState.redKeyObtainedToday === undefined) window.appState.redKeyObtainedToday = false;
             if (!window.appState.clearedGates) window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false };
-            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
             if (!window.appState.weeklyReps) window.appState.weeklyReps = { weekStartStr: '', pushups: 0, pullups: 0, squats: 0 };
             if (!window.appState.stats) window.appState.stats = { unspentAP: 0, str: 1, agi: 1, int: 1, vit: 1 };
             if (!window.appState.inventory) window.appState.inventory = { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 };
@@ -2463,7 +2567,7 @@
 
             window.appState.workoutStartedToday = 0;
 
-            if (silent) { window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false }; window.appState.gateRoutines = {}; window.appState.gateTimers = {}; window.appState.bossClearedToday = false; window.appState.bossUnlocked = false; window.appState.bossBriefingSeen = false; window.appState.redKeyObtainedToday = false; }
+            if (silent) { window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false }; window.appState.gateRoutines = {}; window.appState.gateTimers = {}; window.appState.bossRaidTimer = { active: false, expiresAt: 0 }; window.appState.bossClearedToday = false; window.appState.bossUnlocked = false; window.appState.bossBriefingSeen = false; window.appState.redKeyObtainedToday = false; }
             if (!window.appState.penaltyActive) checkRestDayAutoCompletion();
             
             applyTheme(); saveStateToStorage();
@@ -3063,7 +3167,7 @@
                             window.appState.bossBriefingSeen = false;
                             window.appState.activeRoutineKey = 'boss';
                             const presets = getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass);
-                            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+                            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
                             window.appState.gateRoutines['boss'] = JSON.parse(JSON.stringify(presets['boss']));
                             window.appState.activeRoutineData = JSON.parse(JSON.stringify(getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass)['boss']));
                             saveStateToStorage();
@@ -3245,7 +3349,7 @@
                             window.appState.inventory.blue_key--;
                             window.appState.clearedGates[gateId] = false;
                             const presets = getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass);
-                            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+                            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
                             window.appState.gateRoutines[gateId] = JSON.parse(JSON.stringify(presets[gateId] || presets.pull));
                             saveStateToStorage();
                             updateRPGNotifications();
@@ -3267,7 +3371,7 @@
                 return;
             }
 
-            // If 30-minute combat timer for this gate has already started, resume directly!
+            // If 40-minute combat timer for this gate has already started, resume directly!
             const isTimerActive = window.appState.gateTimers && window.appState.gateTimers[gateId] && window.appState.gateTimers[gateId].active && Date.now() < window.appState.gateTimers[gateId].expiresAt;
             if (isTimerActive) {
                 switchRoutine(gateId);
@@ -3322,7 +3426,7 @@
                 }[state];
 
                 const onClickAction = `handleGateClick('${g.id}')`;
-                const rankHtml = isTimerActive ? `${g.rank} • <span id="gate-timer-${g.id}" class="text-sky-400 font-black">30:00</span>` : g.rank;
+                const rankHtml = isTimerActive ? `${g.rank} • <span id="gate-timer-${g.id}" class="text-sky-400 font-black">40:00</span>` : g.rank;
 
                 html += `<div id="gate-card-${g.id}" onclick="${onClickAction}" class="bg-system-900 border ${wrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden gap-3"><div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border border-system-border/80 shadow-inner"><i class="fa-solid ${g.icon} ${iconColor} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${g.name}</h3><span class="text-[10px] ${rankColor} font-bold tracking-widest uppercase">${rankHtml}</span></div></div><div class="text-right"><i class="fa-solid ${statusIcon}"></i><div class="text-[9px] ${statusColor} mt-1 font-bold">${statusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${progress > 0 ? (isThisCleared ? 'text-emerald-400 font-black' : 'text-system-neon font-black') : 'text-slate-500'}">${progress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${isThisCleared ? 'bg-emerald-500' : (progress > 0 ? 'bg-gradient-to-r from-sky-500 to-system-neon' : 'bg-slate-700')} transition-all duration-500" style="width: ${progress}%"></div></div></div></div>`;
             });
@@ -3381,7 +3485,7 @@
 
                 const currentBossName = getPresetRoutines(1, 'male').boss.title.split(' (')[0].toUpperCase();
 
-                html += `<div class="pt-3 border-t border-system-border/50 mt-3"><div id="gate-card-boss" onclick="handleBossGateClick()" class="bg-system-900 border ${bWrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors relative overflow-hidden gap-3">${isBossFullyUnlocked ? '<div class="absolute inset-0 bg-gradient-to-r from-rose-950/20 to-transparent"></div>' : ''}<div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border ${isBossFullyUnlocked ? 'border-system-boss' : 'border-system-border/80'} shadow-inner"><i class="fa-solid fa-skull ${isBossFullyUnlocked ? 'text-system-boss' : 'text-slate-500'} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${currentBossName}</h3><span class="text-[10px] ${isBossFullyUnlocked ? 'text-system-boss' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Boss Room${isTimerActive ? ' • <span id="boss-gate-timer-display" class="text-rose-400 font-black">20:00</span>' : ''}</span></div></div><div class="text-right"><i class="fa-solid ${bStatusIcon}"></i><div class="text-[9px] ${bStatusColor} mt-1 font-bold">${bStatusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${bossProgress > 0 ? (bossCleared ? 'text-emerald-400 font-black' : 'text-rose-400 font-black') : 'text-slate-500'}">${bossProgress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${bossCleared ? 'bg-emerald-500' : (bossProgress > 0 ? 'bg-gradient-to-r from-rose-600 to-rose-400' : 'bg-slate-700')} transition-all duration-500" style="width: ${bossProgress}%"></div></div></div></div><p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate consumes a Red Key to enter or re-open (Drops from normal gates).</p></div>`;
+                html += `<div class="pt-3 border-t border-system-border/50 mt-3"><div id="gate-card-boss" onclick="handleBossGateClick()" class="bg-system-900 border ${bWrapClass} rounded-2xl p-5 flex flex-col justify-between transition-colors relative overflow-hidden gap-3">${isBossFullyUnlocked ? '<div class="absolute inset-0 bg-gradient-to-r from-rose-950/20 to-transparent"></div>' : ''}<div class="flex items-center justify-between relative z-10 w-full"><div class="flex items-center space-x-4"><div class="w-14 h-14 rounded-xl bg-system-950 flex items-center justify-center border ${isBossFullyUnlocked ? 'border-system-boss' : 'border-system-border/80'} shadow-inner"><i class="fa-solid fa-skull ${isBossFullyUnlocked ? 'text-system-boss' : 'text-slate-500'} text-2xl"></i></div><div><h3 class="font-black text-white uppercase tracking-wider text-base">${currentBossName}</h3><span class="text-[10px] ${isBossFullyUnlocked ? 'text-system-boss' : 'text-slate-500'} font-bold tracking-widest uppercase">S-Rank Boss Room${isTimerActive ? ' • <span id="boss-gate-timer-display" class="text-rose-400 font-black">30:00</span>' : ''}</span></div></div><div class="text-right"><i class="fa-solid ${bStatusIcon}"></i><div class="text-[9px] ${bStatusColor} mt-1 font-bold">${bStatusText}</div></div></div><div class="w-full relative z-10"><div class="flex justify-between text-[9px] uppercase font-bold text-slate-500 mb-1.5"><span>Completion Progress</span><span class="${bossProgress > 0 ? (bossCleared ? 'text-emerald-400 font-black' : 'text-rose-400 font-black') : 'text-slate-500'}">${bossProgress}%</span></div><div class="w-full h-2 bg-system-950 rounded-full overflow-hidden border border-system-border/50"><div class="h-full ${bossCleared ? 'bg-emerald-500' : (bossProgress > 0 ? 'bg-gradient-to-r from-rose-600 to-rose-400' : 'bg-slate-700')} transition-all duration-500" style="width: ${bossProgress}%"></div></div></div></div><p class="text-[9px] text-center text-slate-500 uppercase tracking-widest font-bold mt-3">Boss gate consumes a Red Key to enter or re-open (Drops from normal gates).</p></div>`;
             }
             grid.innerHTML = html;
         }
@@ -3390,7 +3494,7 @@
 
         
         function getGateRoutineData(key) {
-            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
             if (!window.appState.gateRoutines[key] || !window.appState.gateRoutines[key].exercises) {
                 const presets = getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass || 'male');
                 window.appState.gateRoutines[key] = JSON.parse(JSON.stringify(presets[key] || presets.pull));
@@ -3462,7 +3566,7 @@
             const fallbackKey = window.appState.noEquipmentMode ? 'survival' : 'pull';
             const key = window.appState.activeRoutineKey || fallbackKey;
             const presets = getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass);
-            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
             window.appState.gateRoutines[key] = JSON.parse(JSON.stringify(presets[key]));
             window.appState.activeRoutineData = window.appState.gateRoutines[key];
             renderActiveRoutine(); saveStateToStorage(); showToast("Routine sets reset");
@@ -3478,6 +3582,8 @@
                 document.getElementById('routine-title').innerText = window.appState.activeRoutineData.title; document.getElementById('routine-desc').innerText = window.appState.activeRoutineData.desc;
                 clearBtn.className = "btn-active w-full py-3.5 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-orange-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer";
                 clearBtn.innerHTML = `<i class="fa-solid fa-skull text-base"></i><span>CLEAR PENALTY ZONE</span>`; clearBtn.onclick = finishWorkout;
+                    const rstBtn = document.getElementById('routine-reset-btn');
+                    if (rstBtn) { rstBtn.disabled = false; rstBtn.className = "text-xs text-system-neon hover:text-white bg-system-850 px-2.5 py-1 rounded-md border border-system-border cursor-pointer"; }
             } else {
                 penaltyBanner.classList.add('hidden');
                 if (window.appState.activeRoutineData && window.appState.activeRoutineData.title && window.appState.activeRoutineData.title.includes("Penalty")) resetCurrentRoutine(); 
@@ -3509,7 +3615,7 @@
                         const bIcon = document.getElementById('combat-timer-icon');
                         const bBadge = document.getElementById('boss-countdown-display');
                         if (bName) bName.innerText = (window.appState.activeRoutineData ? window.appState.activeRoutineData.title : "GATE COMBAT").toUpperCase();
-                        if (bTag) bTag.innerText = "[ 30-MINUTE GATE COMBAT TIMER ]";
+                        if (bTag) bTag.innerText = "[ 40-MINUTE GATE COMBAT TIMER ]";
                         if (bIcon) bIcon.className = "fa-solid fa-clock text-base text-sky-400";
                         if (bBadge) bBadge.className = "text-sm font-black text-white bg-sky-600 px-2 py-0.5 rounded shadow-sm";
                         bossBanner.classList.remove('hidden');
@@ -3525,9 +3631,13 @@
                     const label = isRest ? "REST DAY: DUNGEONS GREYED OUT" : "GATE CLEARED FOR TODAY (LOCKED)";
                     clearBtn.className = "w-full py-3.5 bg-system-850 border border-system-border text-slate-500 font-black text-xs rounded-xl flex items-center justify-center space-x-2 tracking-wider font-mono uppercase cursor-not-allowed opacity-60";
                     clearBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>${label}</span>`; clearBtn.onclick = null;
+                    const rstBtn = document.getElementById('routine-reset-btn');
+                    if (rstBtn) { rstBtn.disabled = true; rstBtn.className = "text-xs text-slate-600 bg-system-950 px-2.5 py-1 rounded-md border border-system-border/40 cursor-not-allowed"; }
                 } else {
                     clearBtn.className = `btn-active w-full py-3.5 ${isBoss ? 'bg-gradient-to-r from-system-boss to-rose-500 border-rose-300/40' : isBreak ? 'bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 border-rose-300/40' : (isSurvival ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-300/40' : 'bg-gradient-to-r from-purple-600 via-system-accent to-system-neon border-cyan-200/40')} text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border tracking-wider font-mono uppercase shadow-lg cursor-pointer`;
                     clearBtn.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i><span>${isBoss ? 'CLEAR BOSS (MAX 150 XP)' : isBreak ? 'SEAL DUNGEON BREAK (MAX 300 XP)' : 'CLEAR DUNGEON (MAX 50 XP)'}</span>`; clearBtn.onclick = finishWorkout;
+                    const rstBtn = document.getElementById('routine-reset-btn');
+                    if (rstBtn) { rstBtn.disabled = false; rstBtn.className = "text-xs text-system-neon hover:text-white bg-system-850 px-2.5 py-1 rounded-md border border-system-border cursor-pointer"; }
                 }
             }
 
@@ -3568,7 +3678,7 @@
             const set = window.appState.activeRoutineData.exercises[exIndex].sets[setIndex];
             if (set.done) return;
             set[field] = val;
-            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
             window.appState.gateRoutines[window.appState.activeRoutineKey] = window.appState.activeRoutineData;
             saveStateToStorage();
         }
@@ -3585,7 +3695,7 @@
             }
 
             targetSet.done = true;
-            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
             window.appState.gateRoutines[window.appState.activeRoutineKey] = window.appState.activeRoutineData;
             if (!window.appState.workoutStartedToday) window.appState.workoutStartedToday = Date.now();
             showToast("SET LOGGED! REST TIMER STARTED"); 
@@ -3600,7 +3710,7 @@
             if (isLockedGlobal && !window.appState.penaltyActive) return;
             const ex = window.appState.activeRoutineData.exercises[exIndex]; const lastSet = ex.sets[ex.sets.length - 1] || { reps: 8, wt: ex.defaultWt, done: false };
             ex.sets.push({ reps: lastSet.reps, wt: lastSet.wt, done: false });
-            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
             window.appState.gateRoutines[window.appState.activeRoutineKey] = window.appState.activeRoutineData;
             renderActiveRoutine(); saveStateToStorage();
         }
@@ -3651,7 +3761,7 @@
             // Clean-reset this gate's routine sets in gateRoutines for the next run
             const clearedKey = window.appState.activeRoutineKey;
             const presets = getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass);
-            if (!window.appState.gateRoutines) window.appState.gateRoutines = {}; window.appState.gateTimers = {};
+            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
             window.appState.gateRoutines[clearedKey] = JSON.parse(JSON.stringify(presets[clearedKey] || presets.pull));
 
             if (sessionVolume > 0 && window.globalRaidState && window.globalRaidState.active && window.damageGlobalRaid) {
