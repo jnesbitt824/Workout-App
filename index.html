@@ -507,6 +507,10 @@
                     <span class="font-bold text-purple-400 text-base">🌍 Global Raids & Loot</span>
                     <p class="text-xs text-slate-400">Collaborate with hunters worldwide to defeat World Bosses and collect Keys and Potions from your endeavors.</p>
                 </div>
+                <div class="bg-system-900 p-4 rounded-xl border border-system-border/60 space-y-1.5 shadow-sm">
+                    <span class="font-bold text-amber-400 text-base">⚡ Daily Quests & Timed Gates</span>
+                    <p class="text-xs text-slate-400">Complete physical training quotas to earn XP, unlock dungeon gates, and claim daily consecutive login streak bonuses!</p>
+                </div>
             </div>
 
             <button onclick="dismissFeaturesModal()" class="btn-active w-full py-4 mt-auto bg-gradient-to-r from-purple-600 to-system-neon text-system-950 font-black text-sm rounded-xl uppercase tracking-wider cursor-pointer shadow-lg">
@@ -748,7 +752,7 @@
                     <div id="loot-badge" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse shadow-[0_0_8px_#fbbf24] border border-system-900"></div>
                     <i class="fa-solid fa-briefcase text-sm"></i>
                 </button>
-                <button id="open-timer-btn" class="btn-active flex items-center space-x-1.5 bg-system-800 hover:bg-system-850 border border-system-border text-system-glow text-xs px-3 py-1.5 rounded-xl font-mono shadow-sm cursor-pointer">
+                <button id="open-timer-btn" class="hidden btn-active flex items-center space-x-1.5 bg-system-800 hover:bg-system-850 border border-system-border text-system-glow text-xs px-3 py-1.5 rounded-xl font-mono shadow-sm cursor-pointer">
                     <i class="fa-regular fa-clock text-system-neon"></i>
                     <span id="timer-badge">01:30</span>
                 </button>
@@ -824,13 +828,37 @@
                 </div>
             </div>
 
-            <!-- Hunter Metrics Grid (WEEKLY REPS) -->
+            <!-- Hunter Metrics Grid (LIFETIME STATS) -->
             <div class="space-y-2">
-                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">WEEKLY TRAINING RECORDS</span>
-                <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 grid grid-cols-3 text-center gap-1">
-                    <div><div class="text-[9px] text-slate-400 uppercase">Push-ups</div><div id="drawer-week-push" class="font-black text-rose-400">0</div></div>
-                    <div><div class="text-[9px] text-slate-400 uppercase" id="drawer-week-pull-label">Pull-ups</div><div id="drawer-week-pull" class="font-black text-emerald-400">0</div></div>
-                    <div><div class="text-[9px] text-slate-400 uppercase">Squats</div><div id="drawer-week-squat" class="font-black text-sky-400">0</div></div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">LIFETIME TRAINING RECORDS</span>
+                    <span class="text-[8px] bg-system-neon/10 border border-system-neon/40 text-system-neon px-1.5 py-0.5 rounded font-black tracking-widest uppercase">ALL-TIME</span>
+                </div>
+                <div class="bg-system-950 p-2.5 rounded-xl border border-system-border/40 grid grid-cols-3 text-center gap-2">
+                    <div>
+                        <div class="text-[9px] text-slate-400 uppercase font-semibold">Push-ups</div>
+                        <div id="drawer-life-push" class="font-black text-rose-400 text-sm">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] text-slate-400 uppercase font-semibold" id="drawer-life-pull-label">Pull-ups</div>
+                        <div id="drawer-life-pull" class="font-black text-emerald-400 text-sm">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] text-slate-400 uppercase font-semibold">Squats</div>
+                        <div id="drawer-life-squat" class="font-black text-sky-400 text-sm">0</div>
+                    </div>
+                    <div class="pt-1.5 border-t border-system-border/30">
+                        <div class="text-[9px] text-slate-400 uppercase font-semibold">Quests</div>
+                        <div id="drawer-life-quests" class="font-black text-amber-400 text-sm">0</div>
+                    </div>
+                    <div class="pt-1.5 border-t border-system-border/30">
+                        <div class="text-[9px] text-slate-400 uppercase font-semibold">Gates</div>
+                        <div id="drawer-life-gates" class="font-black text-cyan-400 text-sm">0</div>
+                    </div>
+                    <div class="pt-1.5 border-t border-system-border/30">
+                        <div class="text-[9px] text-slate-400 uppercase font-semibold">Volume</div>
+                        <div id="drawer-life-volume" class="font-black text-purple-400 text-sm">0</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1160,7 +1188,11 @@
                 </div>
             </div>
 
-            <div class="pt-2 border-t border-system-border/60">
+            <div class="pt-2 border-t border-system-border/60 space-y-2">
+                <button onclick="closeSettingsModal(); openFeaturesModal();" class="btn-active w-full py-2.5 bg-system-850 hover:bg-system-800 border border-system-border text-system-neon font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer transition-colors">
+                    <i class="fa-solid fa-star text-amber-400"></i>
+                    <span>SYSTEM FEATURE OVERVIEW</span>
+                </button>
                 <button onclick="clearAllData()" class="btn-active w-full py-2.5 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-500/40 text-rose-300 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 cursor-pointer">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                     <span>RESET ALL DATA / NEW ACCOUNT</span>
@@ -1209,9 +1241,9 @@
                 </div>
             </div>
 
-            <button onclick="claimDailyQuestReward()" id="claim-quest-btn" class="btn-active w-full py-3.5 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-cyan-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer">
-                <i class="fa-solid fa-award text-base"></i>
-                <span>CLAIM DAILY QUEST REWARDS (+100 XP)</span>
+            <button onclick="claimDailyQuestReward()" id="claim-quest-btn" class="w-full py-3.5 bg-system-950/80 border border-system-border/50 text-slate-500 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 font-mono uppercase cursor-not-allowed opacity-50 tracking-wider shadow-sm select-none transition-all">
+                <i class="fa-solid fa-lock text-slate-500 text-sm"></i>
+                <span>QUOTAS INCOMPLETE (CLAIM +100 XP)</span>
             </button>
         </section>
 
@@ -1385,9 +1417,9 @@
 
                 <div id="exercise-list-container" class="space-y-4"></div>
 
-                <button onclick="finishWorkout()" id="clear-dungeon-btn" class="btn-active w-full py-3.5 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-cyan-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer">
-                    <i class="fa-solid fa-circle-check text-base"></i>
-                    <span>CLEAR DUNGEON (+50 XP)</span>
+                <button onclick="finishWorkout()" id="clear-dungeon-btn" class="w-full py-3.5 bg-system-950/80 border border-system-border/50 text-slate-500 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 font-mono uppercase cursor-not-allowed opacity-50 tracking-wider shadow-sm select-none transition-all">
+                    <i class="fa-solid fa-lock text-slate-500 text-sm"></i>
+                    <span>COMPLETE AT LEAST 1 SET (+0 XP)</span>
                 </button>
             </div>
         </section>
@@ -1935,7 +1967,8 @@
             }, 300);
         };
 
-        window.promptPartialGateReentry = function(gateId) {
+        // Re-entry prompt ONLY when using a Blue Key
+        window.promptBlueKeyGateReentry = function(gateId, currentProg) {
             const routine = getGateRoutineData(gateId);
             let totalSets = 0;
             let completedSets = 0;
@@ -1949,25 +1982,84 @@
                     }
                 });
             }
-            const prog = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+            const prog = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : currentProg;
             const title = (routine.title || "Dungeon Gate").toUpperCase();
 
             window.showSystemPopup({
-                title: "GATE PROGRESSION DETECTED",
-                tag: "[ RE-ENTRY PROTOCOL ]",
-                message: `You currently have ${completedSets}/${totalSets} sets (${prog}%) logged in ${title}. Choose to continue where you left off and retain your progress, or reset and start over from Set 1:`,
-                icon: "fa-solid fa-rotate-left text-system-neon",
+                title: "BLUE KEY RE-ENTRY DIRECTIVE",
+                tag: "[ CONSUME 1 BLUE KEY ]",
+                message: `Consume 1 Blue Key to unlock ${title} (${completedSets}/${totalSets} sets, ${prog}% logged before lock). Choose to START OVER fresh from Set 1, or CONTINUE where you left off:`,
+                icon: "fa-solid fa-key text-blue-key",
                 type: "custom_choice",
                 customButtons: `
-                    <button onclick="executeGateRestart('${gateId}')" class="btn-active flex-1 py-3 bg-system-950 hover:bg-rose-950/60 text-rose-300 font-bold text-xs rounded-xl border border-system-border hover:border-rose-500/50 cursor-pointer transition-colors uppercase tracking-wider flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-rotate-left text-xs"></i> START OVER
+                    <button onclick="executeBlueKeyGateRestart('${gateId}')" class="btn-active flex-1 py-3 bg-system-950 hover:bg-rose-950/60 text-rose-300 font-bold text-xs rounded-xl border border-system-border hover:border-rose-500/50 cursor-pointer transition-colors uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-rotate-left text-xs"></i> START OVER (0%)
                     </button>
-                    <button onclick="executeGateResume('${gateId}')" class="btn-active flex-1 py-3 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl shadow-lg cursor-pointer transition-colors uppercase tracking-wider flex items-center justify-center gap-1">
+                    <button onclick="executeBlueKeyGateResume('${gateId}')" class="btn-active flex-1 py-3 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl shadow-lg cursor-pointer transition-colors uppercase tracking-wider flex items-center justify-center gap-1">
                         <span>CONTINUE (${prog}%)</span> <i class="fa-solid fa-forward text-xs"></i>
                     </button>
                 `
             });
         };
+
+        window.executeBlueKeyGateRestart = function(gateId) {
+            closeSystemDialog();
+            if ((window.appState.inventory.blue_key || 0) <= 0) {
+                showToast("No Blue Key available in inventory satchel!");
+                return;
+            }
+            window.appState.inventory.blue_key--;
+            window.appState.clearedGates[gateId] = false;
+            const presets = getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass || 'male');
+            if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
+            window.appState.gateRoutines[gateId] = JSON.parse(JSON.stringify(presets[gateId] || presets.pull));
+            window.appState.activeRoutineData = window.appState.gateRoutines[gateId];
+            
+            // Fresh 40-minute combat timer
+            if (!window.appState.gateTimers) window.appState.gateTimers = {};
+            window.appState.gateTimers[gateId] = {
+                active: true,
+                expiresAt: Date.now() + (40 * 60 * 1000)
+            };
+            saveStateToStorage();
+            updateRPGNotifications();
+            renderGateSelection();
+            startCombatTimerGlobalInterval();
+            animateGateUnlock(gateId, 'blue', () => {
+                renderGateSelection();
+                switchRoutine(gateId);
+            });
+            showToast("Consumed 1 Blue Key! Gate reset to 0%.");
+        };
+
+        window.executeBlueKeyGateResume = function(gateId) {
+            closeSystemDialog();
+            if ((window.appState.inventory.blue_key || 0) <= 0) {
+                showToast("No Blue Key available in inventory satchel!");
+                return;
+            }
+            window.appState.inventory.blue_key--;
+            window.appState.clearedGates[gateId] = false;
+            
+            // Fresh 40-minute combat timer for resumed attempt
+            if (!window.appState.gateTimers) window.appState.gateTimers = {};
+            window.appState.gateTimers[gateId] = {
+                active: true,
+                expiresAt: Date.now() + (40 * 60 * 1000)
+            };
+            saveStateToStorage();
+            updateRPGNotifications();
+            renderGateSelection();
+            startCombatTimerGlobalInterval();
+            animateGateUnlock(gateId, 'blue', () => {
+                renderGateSelection();
+                switchRoutine(gateId);
+            });
+            showToast("Consumed 1 Blue Key! Resuming gate progress.");
+        };
+
+        // Backward compatibility alias
+        window.promptPartialGateReentry = window.promptBlueKeyGateReentry;
 
         window.executeGateRestart = function(gateId) {
             closeSystemDialog();
@@ -2318,7 +2410,7 @@
             playerLevel: 1, playerXP: 0, completedQuestsCount: 0, completedDates: [], restDays: ['Wed', 'Sun'], noEquipmentMode: false,
             clearedGates: { pull: false, push: false, calisthenics: false, survival: false }, gateRoutines: {}, bossClearedToday: false, bossUnlocked: false, redKeyObtainedToday: false,
             dailyQuestState: { pushups: 0, pullups: 0, squats: 0, planks: 0, runMiles: 0.0, jumprope: 0, targets: null, claimed: false },
-            weeklyReps: { weekStartStr: '', pushups: 0, pullups: 0, squats: 0 }, waterIntake: 0, meals: [], activeRoutineKey: 'pull', activeRoutineData: null,
+            weeklyReps: { weekStartStr: '', pushups: 0, pullups: 0, squats: 0 }, lifetimeReps: { pushups: 0, pullups: 0, squats: 0 }, waterIntake: 0, meals: [], activeRoutineKey: 'pull', activeRoutineData: null,
             history: [], stats: { unspentAP: 0, str: 1, agi: 1, int: 1, vit: 1 }, inventory: { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 },
             equippedTitle: 'novice', unlockedTitles: ['novice'], penaltyActive: false, dungeonBreak: { active: false, expiresAt: 0 },
             lifetimeStats: { penaltyCleared: 0, gatesCleared: 0 }, notifications: { daily: false, vitals: false, raid: false, permission: 'default' },
@@ -2350,6 +2442,8 @@
                     splash.style.display = 'none';
                     if (!localStorage.getItem('solo_leveling_initialized')) {
                         document.getElementById('init-modal').classList.remove('hidden');
+                    } else if (!localStorage.getItem('solo_leveling_features_seen')) {
+                        document.getElementById('features-modal').classList.remove('hidden');
                     } else if (!localStorage.getItem('solo_leveling_starter_gifts_claimed')) {
                         triggerStarterGifts(500);
                     }
@@ -2362,7 +2456,7 @@
             window.systemInitialized = true;
             try {
                 loadStateFromStorage(); checkDailyMidnightReset(); checkRestDayAutoCompletion(); checkTitleUnlocks(); applyTheme();
-                renderPlayerHUD(); renderDailyQuests(); renderGateSelection(); renderNutritionSection(); renderStatsSection(); renderShadows();
+                renderPlayerHUD(); renderDailyQuests(); renderGateSelection(); renderNutritionSection(); renderStatsSection(); renderShadows(); updateTopRightTimerVisibility();
                 updateRPGNotifications(); checkDungeonBreakStatus(); checkBossRaidTimerStatus(); checkGateTimersStatus(); startCombatTimerGlobalInterval(); initNotifications(); setTimeout(() => checkConsecutiveLoginBonus(), 1800); if (window.renderLeaderboard) window.renderLeaderboard(); if (window.renderGlobalRaid) window.renderGlobalRaid();
             } catch (err) { console.error("Soft recovery executed.", err); } finally { setTimeout(forceHideSplash, 1500); }
         }
@@ -2432,8 +2526,14 @@
         function dismissFeaturesModal() { 
             localStorage.setItem('solo_leveling_features_seen', 'true'); 
             document.getElementById('features-modal').classList.add('hidden'); 
-            triggerStarterGifts(500);
+            if (!localStorage.getItem('solo_leveling_starter_gifts_claimed')) {
+                triggerStarterGifts(500);
+            }
         }
+
+        window.openFeaturesModal = function() {
+            document.getElementById('features-modal').classList.remove('hidden');
+        };
 
         function loadStateFromStorage() {
             const saved = localStorage.getItem('solo_leveling_v8_data');
@@ -2446,6 +2546,13 @@
             if (!window.appState.clearedGates) window.appState.clearedGates = { pull: false, push: false, calisthenics: false, survival: false };
             if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
             if (!window.appState.weeklyReps) window.appState.weeklyReps = { weekStartStr: '', pushups: 0, pullups: 0, squats: 0 };
+            if (!window.appState.lifetimeReps) {
+                window.appState.lifetimeReps = {
+                    pushups: window.appState.weeklyReps?.pushups || 0,
+                    pullups: window.appState.weeklyReps?.pullups || 0,
+                    squats: window.appState.weeklyReps?.squats || 0
+                };
+            }
             if (!window.appState.stats) window.appState.stats = { unspentAP: 0, str: 1, agi: 1, int: 1, vit: 1 };
             if (!window.appState.inventory) window.appState.inventory = { pot_recover: 0, scroll_reset: 0, rune_xp: 0, red_key: 0, blue_key: 0 };
             if (window.appState.inventory.red_key === undefined) window.appState.inventory.red_key = 0;
@@ -2967,14 +3074,17 @@
                 }
             }
             localStorage.setItem('solo_leveling_initialized', 'true'); 
-            localStorage.setItem('solo_leveling_features_seen', 'true'); 
             document.getElementById('init-modal').classList.add('hidden');
-            document.getElementById('features-modal').classList.add('hidden');
             
             applyTheme(); checkRestDayAutoCompletion(); resetCurrentRoutine(); saveStateToStorage(); renderDailyQuests(); renderNutritionSection(); renderPlayerHUD();
             if (window.syncHunterToLeaderboard) window.syncHunterToLeaderboard();
             
-            triggerStarterGifts(600);
+            // Show the Feature Overview page during initial setup
+            if (!localStorage.getItem('solo_leveling_features_seen')) {
+                document.getElementById('features-modal').classList.remove('hidden');
+            } else if (!localStorage.getItem('solo_leveling_starter_gifts_claimed')) {
+                triggerStarterGifts(600);
+            }
         }
 
         function setProfileClass(cls) {
@@ -3101,9 +3211,10 @@
             if (!complete) { showToast("COMPLETE ALL DAILY QUEST QUOTAS FIRST!"); return; }
 
             state.claimed = true; window.appState.completedQuestsCount = (window.appState.completedQuestsCount || 0) + 1;
-            if (state.pushups > 0) window.appState.weeklyReps.pushups += state.pushups;
-            if (state.pullups > 0) window.appState.weeklyReps.pullups += state.pullups;
-            if (state.squats > 0) window.appState.weeklyReps.squats += state.squats;
+            if (!window.appState.lifetimeReps) window.appState.lifetimeReps = { pushups: 0, pullups: 0, squats: 0 };
+            if (state.pushups > 0) { window.appState.weeklyReps.pushups += state.pushups; window.appState.lifetimeReps.pushups = (window.appState.lifetimeReps.pushups || 0) + state.pushups; }
+            if (state.pullups > 0) { window.appState.weeklyReps.pullups += state.pullups; window.appState.lifetimeReps.pullups = (window.appState.lifetimeReps.pullups || 0) + state.pullups; }
+            if (state.squats > 0) { window.appState.weeklyReps.squats += state.squats; window.appState.lifetimeReps.squats = (window.appState.lifetimeReps.squats || 0) + state.squats; }
             
             const todayStr = new Date().toDateString();
             if (!window.appState.completedDates) window.appState.completedDates = [];
@@ -3187,12 +3298,26 @@
                 });
 
                 const claimBtn = document.getElementById('claim-quest-btn');
+                let isRedeemable = true;
+                if (target.pushups > 0) isRedeemable = isRedeemable && (current.pushups >= target.pushups);
+                if (target.pullups > 0) isRedeemable = isRedeemable && (current.pullups >= target.pullups);
+                if (target.squats > 0) isRedeemable = isRedeemable && (current.squats >= target.squats);
+                if (target.planks > 0) isRedeemable = isRedeemable && (current.planks >= target.planks);
+                if (target.runMiles > 0) isRedeemable = isRedeemable && (current.runMiles >= target.runMiles);
+                else if (target.jumprope > 0) isRedeemable = isRedeemable && (current.jumprope >= target.jumprope);
+
                 if (current.claimed) {
-                    claimBtn.className = "w-full py-3.5 bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 font-black text-xs rounded-xl flex items-center justify-center space-x-2 font-mono uppercase cursor-default opacity-80";
-                    claimBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>DAILY QUEST REWARDS CLAIMED FOR TODAY</span>`; claimBtn.onclick = null;
+                    claimBtn.className = "w-full py-3.5 bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 font-black text-xs rounded-xl flex items-center justify-center space-x-2 font-mono uppercase cursor-default opacity-80 select-none";
+                    claimBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>DAILY QUEST REWARDS CLAIMED FOR TODAY</span>`;
+                    claimBtn.onclick = null;
+                } else if (!isRedeemable) {
+                    claimBtn.className = "w-full py-3.5 bg-system-950/80 border border-system-border/50 text-slate-500 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 font-mono uppercase cursor-not-allowed opacity-50 transition-all select-none";
+                    claimBtn.innerHTML = `<i class="fa-solid fa-lock text-slate-500 text-sm"></i><span>QUOTAS INCOMPLETE (CLAIM +100 XP)</span>`;
+                    claimBtn.onclick = () => showToast("COMPLETE ALL DAILY QUEST QUOTAS FIRST!");
                 } else {
-                    claimBtn.className = "btn-active w-full py-3.5 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-cyan-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer";
-                    claimBtn.innerHTML = `<i class="fa-solid fa-award text-base"></i><span>CLAIM DAILY QUEST REWARDS (+100 XP)</span>`; claimBtn.onclick = claimDailyQuestReward;
+                    claimBtn.className = "btn-active w-full py-3.5 bg-gradient-to-r from-purple-600 via-system-accent to-system-neon text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-cyan-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer animate-pulse select-none";
+                    claimBtn.innerHTML = `<i class="fa-solid fa-award text-base animate-bounce"></i><span>CLAIM DAILY QUEST REWARDS (+100 XP)</span>`;
+                    claimBtn.onclick = claimDailyQuestReward;
                 }
             }
         }
@@ -3293,6 +3418,7 @@
                     document.getElementById('gate-selection-screen').classList.remove('hidden'); 
                 }
             }
+            updateTopRightTimerVisibility();
         }
 
         function renderShadows() {
@@ -3340,10 +3466,26 @@
             if (document.getElementById('drawer-next-xp')) document.getElementById('drawer-next-xp').innerText = nextXP;
             if (document.getElementById('drawer-xp-bar')) document.getElementById('drawer-xp-bar').style.width = `${pct}%`;
             
-            if (document.getElementById('drawer-week-push')) document.getElementById('drawer-week-push').innerText = window.appState.weeklyReps?.pushups || 0;
-            if (document.getElementById('drawer-week-squat')) document.getElementById('drawer-week-squat').innerText = window.appState.weeklyReps?.squats || 0;
-            if (document.getElementById('drawer-week-pull-label')) document.getElementById('drawer-week-pull-label').innerText = window.appState.profileClass === 'female' ? 'DEAD HANGS' : 'PULL-UPS';
-            if (document.getElementById('drawer-week-pull')) document.getElementById('drawer-week-pull').innerText = window.appState.weeklyReps?.pullups || 0;
+            const lifePush = window.appState.lifetimeReps?.pushups || 0;
+            const lifeSquat = window.appState.lifetimeReps?.squats || 0;
+            const lifePull = window.appState.lifetimeReps?.pullups || 0;
+            const pullLabel = window.appState.profileClass === 'female' ? 'DEAD HANGS' : 'PULL-UPS';
+            const lifeQuests = window.appState.completedQuestsCount || 0;
+            const lifeGates = (window.appState.lifetimeStats?.gatesCleared || (window.appState.history || []).length || 0);
+            const lifeVol = (window.appState.history || []).reduce((acc, curr) => acc + (curr.volume || 0), 0);
+
+            if (document.getElementById('drawer-life-push')) document.getElementById('drawer-life-push').innerText = lifePush.toLocaleString();
+            if (document.getElementById('drawer-life-squat')) document.getElementById('drawer-life-squat').innerText = lifeSquat.toLocaleString();
+            if (document.getElementById('drawer-life-pull-label')) document.getElementById('drawer-life-pull-label').innerText = pullLabel;
+            if (document.getElementById('drawer-life-pull')) document.getElementById('drawer-life-pull').innerText = lifePull.toLocaleString();
+            if (document.getElementById('drawer-life-quests')) document.getElementById('drawer-life-quests').innerText = lifeQuests.toLocaleString();
+            if (document.getElementById('drawer-life-gates')) document.getElementById('drawer-life-gates').innerText = lifeGates.toLocaleString();
+            if (document.getElementById('drawer-life-volume')) document.getElementById('drawer-life-volume').innerText = lifeVol >= 10000 ? `${(lifeVol/1000).toFixed(1)}k` : lifeVol.toLocaleString();
+
+            if (document.getElementById('drawer-week-push')) document.getElementById('drawer-week-push').innerText = lifePush.toLocaleString();
+            if (document.getElementById('drawer-week-squat')) document.getElementById('drawer-week-squat').innerText = lifeSquat.toLocaleString();
+            if (document.getElementById('drawer-week-pull-label')) document.getElementById('drawer-week-pull-label').innerText = pullLabel;
+            if (document.getElementById('drawer-week-pull')) document.getElementById('drawer-week-pull').innerText = lifePull.toLocaleString();
 
             const config = CLASS_QUEST_CONFIGS[window.appState.profileClass || 'male'].targets; const intStat = window.appState.stats?.int || 1;
             const dynamicWater = Math.max(40, config.water - ((intStat - 1) * 2)); const dynamicCals = Math.max(1200, config.cals - ((intStat - 1) * 20));
@@ -3410,12 +3552,7 @@
                     });
                 }
             } else if (bossUnlocked) {
-                const currentBossProg = getGateProgress('boss');
-                if (currentBossProg > 0 && currentBossProg < 100) {
-                    window.promptPartialBossReentry();
-                    return;
-                }
-
+                // When simply exiting and returning to an active boss gate, resume directly without prompt!
                 const isCombatStarted = window.appState.bossBriefingSeen || (window.appState.bossRaidTimer && window.appState.bossRaidTimer.active);
                 if (isCombatStarted) {
                     switchRoutine('boss');
@@ -3567,8 +3704,16 @@
 
             if (isCleared) {
                 if (hasBlueKey) {
+                    const currentProg = getGateProgress(gateId);
+                    if (currentProg > 0 && currentProg < 100) {
+                        // Re-entry selection prompt ONLY when using Blue Key!
+                        window.promptBlueKeyGateReentry(gateId, currentProg);
+                        return;
+                    }
+
                     window.showSystemPopup({
                         title: "GATE RE-ENTRY DIRECTIVE",
+                        tag: "[ CONSUME 1 BLUE KEY ]",
                         message: "Consume 1 Blue Key to unlock this conquered gate for repeat clearance?",
                         icon: "fa-solid fa-key text-blue-key",
                         type: "confirm",
@@ -3578,11 +3723,14 @@
                             const presets = getPresetRoutines(window.appState.playerLevel || 1, window.appState.profileClass);
                             if (!window.appState.gateRoutines) window.appState.gateRoutines = {};
                             window.appState.gateRoutines[gateId] = JSON.parse(JSON.stringify(presets[gateId] || presets.pull));
+                            if (!window.appState.gateTimers) window.appState.gateTimers = {};
+                            window.appState.gateTimers[gateId] = { active: true, expiresAt: Date.now() + (40 * 60 * 1000) };
                             saveStateToStorage();
                             updateRPGNotifications();
                             renderGateSelection();
                             animateGateUnlock(gateId, 'blue', () => {
                                 renderGateSelection();
+                                switchRoutine(gateId);
                             });
                         }
                     });
@@ -3590,7 +3738,7 @@
                     window.showSystemPopup({
                         title: "GATE ACCESS SEALED",
                         tag: "[ SYSTEM RE-ENTRY PROTOCOL ]",
-                        message: "This dungeon gate has already been conquered today. A Blue Gate Key is required to break the daily seal and re-enter.",
+                        message: "This dungeon gate has already been conquered or locked today. A Blue Gate Key is required to break the daily seal and re-enter.",
                         icon: "fa-solid fa-key text-blue-key",
                         type: "alert"
                     });
@@ -3598,14 +3746,7 @@
                 return;
             }
 
-            // Check if gate has partial completion (some sets done, but < 100%)
-            const currentProg = getGateProgress(gateId);
-            if (currentProg > 0 && currentProg < 100) {
-                window.promptPartialGateReentry(gateId);
-                return;
-            }
-
-            // If 40-minute combat timer for this gate has already started, resume directly!
+            // When simply exiting and returning to an active gate, resume directly without prompt!
             const isTimerActive = window.appState.gateTimers && window.appState.gateTimers[gateId] && window.appState.gateTimers[gateId].active && Date.now() < window.appState.gateTimers[gateId].expiresAt;
             if (isTimerActive) {
                 switchRoutine(gateId);
@@ -3789,7 +3930,7 @@
             const selectionScreen = document.getElementById('gate-selection-screen'); const activeScreen = document.getElementById('active-dungeon-screen');
             
             if (skipAnim) {
-                selectionScreen.classList.add('hidden'); renderActiveRoutine(); saveStateToStorage(); activeScreen.classList.remove('hidden'); return;
+                selectionScreen.classList.add('hidden'); renderActiveRoutine(); saveStateToStorage(); activeScreen.classList.remove('hidden'); updateTopRightTimerVisibility(); return;
             }
 
             selectionScreen.classList.remove('anim-gate-return-enter', 'animate-fade-in-up');
@@ -3801,14 +3942,18 @@
                 activeScreen.classList.remove('hidden', 'anim-gate-return-leave', 'animate-fade-in-up');
                 void activeScreen.offsetWidth; 
                 activeScreen.classList.add('anim-gate-enter');
+                updateTopRightTimerVisibility();
             }, 300);
         }
 
         function returnToGateSelect(skipAnim = false) { 
+            stopRestTimer();
+            if (typeof closeTimerModal === 'function') closeTimerModal();
+            updateTopRightTimerVisibility();
             const selectionScreen = document.getElementById('gate-selection-screen'); const activeScreen = document.getElementById('active-dungeon-screen');
             
             if (skipAnim) {
-                activeScreen.classList.add('hidden'); renderGateSelection(); selectionScreen.classList.remove('hidden'); return;
+                activeScreen.classList.add('hidden'); renderGateSelection(); selectionScreen.classList.remove('hidden'); updateTopRightTimerVisibility(); return;
             }
 
             activeScreen.classList.remove('anim-gate-enter', 'animate-fade-in-up');
@@ -3820,6 +3965,7 @@
                 selectionScreen.classList.remove('hidden', 'anim-gate-leave', 'animate-fade-in-up');
                 void selectionScreen.offsetWidth;
                 selectionScreen.classList.add('anim-gate-return-enter');
+                updateTopRightTimerVisibility();
             }, 300);
         }
 
@@ -3841,8 +3987,22 @@
                 penaltyBanner.classList.remove('hidden'); restBanner.classList.add('hidden'); breakBg.classList.add('hidden');
                 window.appState.activeRoutineData = JSON.parse(JSON.stringify(getPresetRoutines(window.appState.playerLevel, window.appState.profileClass)['penalty']));
                 document.getElementById('routine-title').innerText = window.appState.activeRoutineData.title; document.getElementById('routine-desc').innerText = window.appState.activeRoutineData.desc;
-                clearBtn.className = "btn-active w-full py-3.5 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-orange-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer";
-                clearBtn.innerHTML = `<i class="fa-solid fa-skull text-base"></i><span>CLEAR PENALTY ZONE</span>`; clearBtn.onclick = finishWorkout;
+                let penaltyCompletedSets = 0;
+                if (window.appState.activeRoutineData && window.appState.activeRoutineData.exercises) {
+                    window.appState.activeRoutineData.exercises.forEach(ex => {
+                        if (ex.sets) ex.sets.forEach(s => { if (s.done) penaltyCompletedSets++; });
+                    });
+                }
+
+                if (penaltyCompletedSets === 0) {
+                    clearBtn.className = "w-full py-3.5 bg-system-950/80 border border-system-border/50 text-slate-500 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 font-mono uppercase cursor-not-allowed opacity-50 transition-all select-none";
+                    clearBtn.innerHTML = `<i class="fa-solid fa-lock text-slate-500 text-sm"></i><span>CLEAR PENALTY ZONE (COMPLETE 1 SET)</span>`;
+                    clearBtn.onclick = () => showToast("COMPLETE AT LEAST 1 SET FIRST!");
+                } else {
+                    clearBtn.className = "btn-active w-full py-3.5 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border border-orange-200/40 tracking-wider font-mono uppercase shadow-lg cursor-pointer animate-pulse select-none";
+                    clearBtn.innerHTML = `<i class="fa-solid fa-skull text-base"></i><span>CLEAR PENALTY ZONE (RESTORE ACCESS)</span>`;
+                    clearBtn.onclick = finishWorkout;
+                }
                     const rstBtn = document.getElementById('routine-reset-btn');
                     if (rstBtn) { rstBtn.disabled = false; rstBtn.className = "text-xs text-system-neon hover:text-white bg-system-850 px-2.5 py-1 rounded-md border border-system-border cursor-pointer"; }
             } else {
@@ -3895,8 +4055,48 @@
                     const rstBtn = document.getElementById('routine-reset-btn');
                     if (rstBtn) { rstBtn.disabled = true; rstBtn.className = "text-xs text-slate-600 bg-system-950 px-2.5 py-1 rounded-md border border-system-border/40 cursor-not-allowed"; }
                 } else {
-                    clearBtn.className = `btn-active w-full py-3.5 ${isBoss ? 'bg-gradient-to-r from-system-boss to-rose-500 border-rose-300/40' : isBreak ? 'bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 border-rose-300/40' : (isSurvival ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-300/40' : 'bg-gradient-to-r from-purple-600 via-system-accent to-system-neon border-cyan-200/40')} text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border tracking-wider font-mono uppercase shadow-lg cursor-pointer`;
-                    clearBtn.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i><span>${isBoss ? 'CLEAR BOSS (MAX 150 XP)' : isBreak ? 'SEAL DUNGEON BREAK (MAX 300 XP)' : 'CLEAR DUNGEON (MAX 50 XP)'}</span>`; clearBtn.onclick = finishWorkout;
+                    let totalSetsInRoutine = 0;
+                    let totalCompletedSets = 0;
+                    if (window.appState.activeRoutineData && window.appState.activeRoutineData.exercises) {
+                        window.appState.activeRoutineData.exercises.forEach(ex => {
+                            if (ex.sets) {
+                                ex.sets.forEach(s => {
+                                    totalSetsInRoutine++;
+                                    if (s.done) totalCompletedSets++;
+                                });
+                            }
+                        });
+                    }
+
+                    let baseXpAmount = 50;
+                    let actionTitle = 'CLEAR DUNGEON';
+                    if (isBoss) {
+                        baseXpAmount = 150;
+                        actionTitle = 'CONQUER BOSS';
+                    } else if (isBreak) {
+                        baseXpAmount = 300;
+                        actionTitle = 'SEAL DUNGEON BREAK';
+                    }
+
+                    const completionPct = totalSetsInRoutine > 0 ? (totalCompletedSets / totalSetsInRoutine) : 0;
+                    const currentXp = Math.floor(baseXpAmount * completionPct);
+
+                    if (totalCompletedSets === 0) {
+                        clearBtn.className = "w-full py-3.5 bg-system-950/80 border border-system-border/50 text-slate-500 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 font-mono uppercase cursor-not-allowed opacity-50 transition-all select-none";
+                        clearBtn.innerHTML = `<i class="fa-solid fa-lock text-slate-500 text-sm"></i><span>${actionTitle} (+0 XP • COMPLETE 1 SET)</span>`;
+                        clearBtn.onclick = () => showToast("COMPLETE AT LEAST 1 SET FIRST!");
+                    } else {
+                        const gradientClass = isBoss
+                            ? 'bg-gradient-to-r from-system-boss to-rose-500 border-rose-300/40'
+                            : isBreak
+                            ? 'bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 border-rose-300/40'
+                            : (isSurvival ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-300/40' : 'bg-gradient-to-r from-purple-600 via-system-accent to-system-neon border-cyan-200/40');
+                        
+                        clearBtn.className = `btn-active w-full py-3.5 ${gradientClass} text-system-950 font-black text-xs rounded-xl flex items-center justify-center space-x-2 border tracking-wider font-mono uppercase shadow-lg cursor-pointer animate-pulse select-none`;
+                        clearBtn.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i><span>${actionTitle} (+${currentXp} XP)</span>`;
+                        clearBtn.onclick = finishWorkout;
+                    }
+
                     const rstBtn = document.getElementById('routine-reset-btn');
                     if (rstBtn) { rstBtn.disabled = false; rstBtn.className = "text-xs text-system-neon hover:text-white bg-system-850 px-2.5 py-1 rounded-md border border-system-border cursor-pointer"; }
                 }
@@ -4019,6 +4219,29 @@
             }
 
             window.appState.history.unshift({ id: Date.now(), date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), title: activeData.title, completedSets: totalCompletedSets, volume: sessionVolume });
+            
+            if (!window.appState.lifetimeReps) window.appState.lifetimeReps = { pushups: 0, pullups: 0, squats: 0 };
+            if (activeData && activeData.exercises) {
+                activeData.exercises.forEach(ex => {
+                    const exNameLower = (ex.name || '').toLowerCase();
+                    let repKey = null;
+                    if (exNameLower.includes('push-up') || exNameLower.includes('push up') || exNameLower.includes('dip')) repKey = 'pushups';
+                    else if (exNameLower.includes('pull-up') || exNameLower.includes('pull up') || exNameLower.includes('hang') || exNameLower.includes('row')) repKey = 'pullups';
+                    else if (exNameLower.includes('squat') || exNameLower.includes('lunge') || exNameLower.includes('leg press')) repKey = 'squats';
+                    
+                    if (repKey && ex.sets) {
+                        ex.sets.forEach(s => {
+                            if (s.done) {
+                                const r = parseInt(s.reps) || 0;
+                                if (r > 0) {
+                                    window.appState.lifetimeReps[repKey] = (window.appState.lifetimeReps[repKey] || 0) + r;
+                                    if (window.appState.weeklyReps) window.appState.weeklyReps[repKey] = (window.appState.weeklyReps[repKey] || 0) + r;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
 
             if (sessionVolume > 0 && window.globalRaidState && window.globalRaidState.active && window.damageGlobalRaid) {
                 window.damageGlobalRaid(sessionVolume);
@@ -4417,6 +4640,21 @@
 
         function toggleTimerPause() { if (timerRemainingSeconds <= 0) { startRestTimer(90); return; } isTimerRunning = !isTimerRunning; updateTimerDisplay(); }
         function stopRestTimer() { clearInterval(timerInterval); isTimerRunning = false; timerRemainingSeconds = timerTotalSeconds; updateTimerDisplay(); }
+        
+        function updateTopRightTimerVisibility() {
+            const timerBtn = document.getElementById('open-timer-btn');
+            if (!timerBtn) return;
+            const activeScreen = document.getElementById('active-dungeon-screen');
+            const isInsideGate = activeScreen && !activeScreen.classList.contains('hidden');
+            if (isInsideGate) {
+                timerBtn.classList.remove('hidden');
+            } else {
+                timerBtn.classList.add('hidden');
+                stopRestTimer();
+                if (typeof closeTimerModal === 'function') closeTimerModal();
+            }
+        }
+        
         function updateTimerDisplay() {
             const mins = Math.floor(timerRemainingSeconds / 60); const secs = timerRemainingSeconds % 60;
             const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
